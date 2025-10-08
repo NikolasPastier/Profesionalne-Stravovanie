@@ -4,6 +4,7 @@ import { User, LogOut, Menu as MenuIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import logo from "@/assets/logo.svg";
 export const Navigation = () => {
   const [user, setUser] = useState<any>(null);
   const navigate = useNavigate();
@@ -47,7 +48,9 @@ export const Navigation = () => {
     </>;
   return <nav className="fixed top-0 w-full bg-background/95 backdrop-blur-md border-b border-primary/20 z-50">
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-        <Link to="/" className="text-xl font-display font-bold text-gradient-gold">Profesionálne Stravovanie</Link>
+        <Link to="/" className="flex items-center">
+          <img src={logo} alt="Profesionálne Stravovanie" className="h-12 w-auto" />
+        </Link>
 
         {/* Desktop Navigation */}
         <div className="hidden md:flex items-center gap-6">
