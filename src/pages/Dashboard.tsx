@@ -69,6 +69,7 @@ const Dashboard = () => {
   const [newWeight, setNewWeight] = useState("");
   const [aiAdvice, setAiAdvice] = useState("");
   const [loadingAI, setLoadingAI] = useState(false);
+  const [userOrders, setUserOrders] = useState<Order[]>([]);
 
   useEffect(() => {
     checkUserAndLoadProfile();
@@ -118,8 +119,9 @@ const Dashboard = () => {
 
         setProfile(data as UserProfile);
         
-        // Load progress data
+        // Load progress data and orders
         await loadProgressData(user.id);
+        await loadUserOrders(user.id);
       }
     } catch (error: any) {
       toast({
@@ -283,6 +285,21 @@ const Dashboard = () => {
       setProgressData(data || []);
     } catch (error: any) {
       console.error("Error loading progress:", error);
+    }
+  };
+
+  const loadUserOrders = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from("orders")
+        .select("*")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      setUserOrders(data || []);
+    } catch (error: any) {
+      console.error("Error loading user orders:", error);
     }
   };
 
@@ -771,6 +788,65 @@ const Dashboard = () => {
               >
                 Upraviť profil
               </Button>
+            </CardContent>
+          </Card>
+
+          {/* Order History */}
+          <Card className="mt-6">
+            <CardHeader>
+              <CardTitle>História objednávok</CardTitle>
+              <CardDescription>
+                Prehľad vašich posledných objednávok
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {userOrders.length > 0 ? (
+                <div className="space-y-4">
+                  {userOrders.slice(0, 5).map((order) => (
+                    <div
+                      key={order.id}
+                      className="flex items-center justify-between p-4 border rounded-lg"
+                    >
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <p className="font-medium">
+                            Objednávka #{order.id.slice(0, 8)}
+                          </p>
+                          <Badge className={getStatusColor(order.status)}>
+                            {getStatusLabel(order.status)}
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          {new Date(order.created_at).toLocaleDateString("sk-SK", {
+                            day: "numeric",
+                            month: "long",
+                            year: "numeric",
+                          })}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          Doručenie: {order.delivery_type}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-lg font-bold">{order.total_price}€</p>
+                      </div>
+                    </div>
+                  ))}
+                  {userOrders.length > 5 && (
+                    <Button
+                      onClick={() => navigate("/orders")}
+                      variant="outline"
+                      className="w-full"
+                    >
+                      Zobraziť všetky objednávky
+                    </Button>
+                  )}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  Zatiaľ nemáte žiadne objednávky
+                </div>
+              )}
             </CardContent>
           </Card>
 
