@@ -66,7 +66,6 @@ const Index = () => {
           <p className="text-2xl md:text-3xl mb-4 text-primary">
             Jedz zdravo. Sleduj progres. Dosiahni svoj cieľ.
           </p>
-          <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto mb-8">Profesionálne Stravovanie</p>
           <Button onClick={() => navigate("/menu")} className="bg-primary text-primary-foreground hover:glow-gold-strong text-lg px-8 py-6" size="lg">Pozri si aktuálmne týždenné menu →</Button>
           
           {/* Stats */}
