@@ -50,6 +50,7 @@ const Index = () => {
   const navigate = useNavigate();
   const [currentFact, setCurrentFact] = useState(0);
   const autoplayPlugin = Autoplay({ delay: 4000, stopOnInteraction: true });
+  const autoplayPluginReverse = Autoplay({ delay: 4000, stopOnInteraction: true });
   
   useEffect(() => {
     const interval = setInterval(() => {
@@ -105,27 +106,45 @@ const Index = () => {
           <h2 className="font-display text-4xl md:text-5xl font-bold text-center mb-16 text-gradient-gold">
             💡 Prečo krabičkovať?
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {[{
-            title: "Pohodlie a časová úspora",
-            desc: "Ušetri hodiny varenia, plánovania a nakupovania."
-          }, {
-            title: "Kontrola porcií a makroživín",
-            desc: "Presne vypočítané živiny pre tvoje ciele."
-          }, {
-            title: "Výber podľa tvojich cieľov",
-            desc: "Redukcia váhy, naberanie svalov alebo udržanie formy."
-          }, {
-            title: "Vyvážená strava bez kompromisov",
-            desc: "Všetko, čo tvoje telo potrebuje."
-          }, {
-            title: "Bez starostí o nákup a skladovanie",
-            desc: "Čerstvé jedlá priamo k tvojim dverám."
-          }].map((item, idx) => <div key={idx} className="card-premium p-8 hover:glow-gold transition-smooth">
-                <h3 className="font-display text-2xl font-bold mb-4 text-primary">{idx + 1}. {item.title}</h3>
-                <p className="text-muted-foreground">{item.desc}</p>
-              </div>)}
-          </div>
+          <Carousel
+            opts={{
+              align: "start",
+              loop: true,
+              direction: "rtl",
+            }}
+            plugins={[autoplayPluginReverse]}
+            className="w-full max-w-6xl mx-auto"
+          >
+            <CarouselContent className="-ml-4">
+              {[{
+                title: "Pohodlie a časová úspora",
+                desc: "Ušetri hodiny varenia, plánovania a nakupovania."
+              }, {
+                title: "Kontrola porcií a makroživín",
+                desc: "Presne vypočítané živiny pre tvoje ciele."
+              }, {
+                title: "Výber podľa tvojich cieľov",
+                desc: "Redukcia váhy, naberanie svalov alebo udržanie formy."
+              }, {
+                title: "Vyvážená strava bez kompromisov",
+                desc: "Všetko, čo tvoje telo potrebuje."
+              }, {
+                title: "Bez starostí o nákup a skladovanie",
+                desc: "Čerstvé jedlá priamo k tvojim dverám."
+              }].map((item, idx) => (
+                <CarouselItem key={idx} className="pl-4 md:basis-1/2 lg:basis-1/3">
+                  <div className="card-premium p-8 h-full hover:glow-gold transition-smooth">
+                    <h3 className="font-display text-2xl font-bold mb-4 text-primary">
+                      {idx + 1}. {item.title}
+                    </h3>
+                    <p className="text-muted-foreground">{item.desc}</p>
+                  </div>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <CarouselPrevious className="hidden md:flex" />
+            <CarouselNext className="hidden md:flex" />
+          </Carousel>
         </div>
       </section>
 
