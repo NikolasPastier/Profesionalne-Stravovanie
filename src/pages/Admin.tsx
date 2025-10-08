@@ -13,7 +13,9 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Bell, Package, Check } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Bell, Package, Check, UtensilsCrossed } from "lucide-react";
+import { MenuManagement } from "@/components/admin/MenuManagement";
 
 interface Order {
   id: string;
@@ -230,87 +232,106 @@ const Admin = () => {
           </Card>
         )}
 
-        <Card className="border-primary/20">
-          <CardHeader>
-            <CardTitle className="text-primary flex items-center gap-2">
-              <Package className="h-5 w-5" />
-              Všetky objednávky
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>ID</TableHead>
-                  <TableHead>Dátum</TableHead>
-                  <TableHead>Veľkosť</TableHead>
-                  <TableHead>Cena</TableHead>
-                  <TableHead>Telefón</TableHead>
-                  <TableHead>Adresa</TableHead>
-                  <TableHead>Stav</TableHead>
-                  <TableHead>Akcie</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {orders.map((order) => (
-                  <TableRow key={order.id}>
-                    <TableCell className="font-mono text-xs">
-                      {order.id.slice(0, 8)}
-                    </TableCell>
-                    <TableCell>
-                      {new Date(order.created_at).toLocaleDateString("sk-SK")}
-                    </TableCell>
-                    <TableCell>{order.menu_size}</TableCell>
-                    <TableCell className="font-bold">
-                      {order.total_price.toFixed(2)} €
-                    </TableCell>
-                    <TableCell>{order.phone}</TableCell>
-                    <TableCell>{order.address}</TableCell>
-                    <TableCell>
-                      <Badge
-                        className={
-                          order.status === "pending"
-                            ? "bg-yellow-500"
-                            : order.status === "confirmed"
-                            ? "bg-blue-500"
-                            : order.status === "delivered"
-                            ? "bg-green-500"
-                            : "bg-red-500"
-                        }
-                      >
-                        {order.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex gap-2">
-                        {order.status === "pending" && (
-                          <Button
-                            size="sm"
-                            onClick={() =>
-                              updateOrderStatus(order.id, "confirmed")
+        <Tabs defaultValue="orders" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 mb-6">
+            <TabsTrigger value="orders" className="flex items-center gap-2">
+              <Package className="h-4 w-4" />
+              Objednávky
+            </TabsTrigger>
+            <TabsTrigger value="menu" className="flex items-center gap-2">
+              <UtensilsCrossed className="h-4 w-4" />
+              Správa menu
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="orders">
+            <Card className="border-primary/20">
+              <CardHeader>
+                <CardTitle className="text-primary flex items-center gap-2">
+                  <Package className="h-5 w-5" />
+                  Všetky objednávky
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>ID</TableHead>
+                      <TableHead>Dátum</TableHead>
+                      <TableHead>Veľkosť</TableHead>
+                      <TableHead>Cena</TableHead>
+                      <TableHead>Telefón</TableHead>
+                      <TableHead>Adresa</TableHead>
+                      <TableHead>Stav</TableHead>
+                      <TableHead>Akcie</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {orders.map((order) => (
+                      <TableRow key={order.id}>
+                        <TableCell className="font-mono text-xs">
+                          {order.id.slice(0, 8)}
+                        </TableCell>
+                        <TableCell>
+                          {new Date(order.created_at).toLocaleDateString("sk-SK")}
+                        </TableCell>
+                        <TableCell>{order.menu_size}</TableCell>
+                        <TableCell className="font-bold">
+                          {order.total_price.toFixed(2)} €
+                        </TableCell>
+                        <TableCell>{order.phone}</TableCell>
+                        <TableCell>{order.address}</TableCell>
+                        <TableCell>
+                          <Badge
+                            className={
+                              order.status === "pending"
+                                ? "bg-yellow-500"
+                                : order.status === "confirmed"
+                                ? "bg-blue-500"
+                                : order.status === "delivered"
+                                ? "bg-green-500"
+                                : "bg-red-500"
                             }
                           >
-                            Potvrdiť
-                          </Button>
-                        )}
-                        {order.status === "confirmed" && (
-                          <Button
-                            size="sm"
-                            onClick={() =>
-                              updateOrderStatus(order.id, "delivered")
-                            }
-                          >
-                            Doručené
-                          </Button>
-                        )}
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
+                            {order.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex gap-2">
+                            {order.status === "pending" && (
+                              <Button
+                                size="sm"
+                                onClick={() =>
+                                  updateOrderStatus(order.id, "confirmed")
+                                }
+                              >
+                                Potvrdiť
+                              </Button>
+                            )}
+                            {order.status === "confirmed" && (
+                              <Button
+                                size="sm"
+                                onClick={() =>
+                                  updateOrderStatus(order.id, "delivered")
+                                }
+                              >
+                                Doručené
+                              </Button>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="menu">
+            <MenuManagement />
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
