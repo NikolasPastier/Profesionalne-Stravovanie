@@ -90,7 +90,7 @@ const Cennik = () => {
           {pricingTiers.map((tier, idx) => (
             <Card 
               key={idx} 
-              className={`card-premium relative ${tier.popular ? 'border-2 border-primary glow-gold' : ''}`}
+              className={`card-premium relative hover:scale-110 transition-transform duration-300 cursor-pointer ${tier.popular ? 'border-2 border-primary glow-gold' : ''}`}
             >
               {tier.popular && (
                 <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
@@ -144,7 +144,7 @@ const Cennik = () => {
               Objednajte si celý týždeň a ušetrite!
             </p>
             <div className="grid md:grid-cols-2 gap-6 mt-8">
-              <div className="border border-primary/20 rounded-lg p-6">
+              <div className="border border-primary/20 rounded-lg p-6 hover:scale-110 transition-transform duration-300 cursor-pointer">
                 <h3 className="font-bold text-xl mb-2 text-primary">Týždenný balík</h3>
                 <p className="text-3xl font-bold mb-2">5 dní</p>
                 <p className="text-muted-foreground mb-4">Pondelok - Piatok</p>
@@ -152,7 +152,7 @@ const Cennik = () => {
                   Ušetrite čas a peniaze s týždennou objednávkou
                 </p>
               </div>
-              <div className="border border-primary/20 rounded-lg p-6">
+              <div className="border border-primary/20 rounded-lg p-6 hover:scale-110 transition-transform duration-300 cursor-pointer">
                 <h3 className="font-bold text-xl mb-2 text-primary">Platba</h3>
                 <p className="text-lg mb-2">Hotovosť</p>
                 <p className="text-muted-foreground mb-4">Pri doručení prvej objednávky</p>
