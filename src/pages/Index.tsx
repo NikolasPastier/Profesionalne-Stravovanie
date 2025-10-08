@@ -13,45 +13,42 @@ import client4 from "@/assets/client-4.png";
 import client5 from "@/assets/client-5.png";
 import client6 from "@/assets/client-6.png";
 const facts = ["Makroživiny sa vždy rátajú v surovom stave.", "100 g surového kuracieho mäsa = 40–60 g vareného, preto kalórie často nesedia.", "Varená ryža v tabuľkách je nepresná – množstvo vody mení výsledok.", "315 g surového kuracieho mäsa = 72,8 g bielkovín + 5 g tuku + 5 ml oleja (1100 kcal).", "Chudnutie = kalorický deficit. Žiadny spomalený metabolizmus.", "Príjem cukru z kávy, nápojov či drobných snackov ruší tvoj deficit.", "Váha kolíše kvôli vode, soli či menštruácii – sleduj telo, nie váhu.", "Aktívny športovec potrebuje 1,6–2 g bielkovín/kg hmotnosti.", "Denne pi 30–50 ml vody/kg – napr. 80 kg = 2,4–4 litre.", "Najčastejšia chyba - malé prehrešky a nedôslednosť rušia tvoje výsledky."];
-
-const testimonials = [
-  {
-    image: client1,
-    title: "Zdravé chudnutie s jojoefektom",
-    description: "Jedálníček nastavený s optimálnym jedlom + 2x týždenne yoga 🙌\n-11kg\nŽiadne rýchlo chudnutie s jojoefektom, ale pomaly a podstivo\nBravo🙌"
-  },
-  {
-    image: client2,
-    title: "Úžasná transformácia",
-    description: "Skvelé výsledky vďaka správnemu stravovaciemu plánu a cvičeniu."
-  },
-  {
-    image: client3,
-    title: "105 kg VS 75 kg",
-    description: "Rok a pol rozdiel medzi fotkami\nKalorický deficit, silový tréning a kardio\nKcal v rozmedzí 2200-3500"
-  },
-  {
-    image: client4,
-    title: "99 kg hore vs 85 kg dole",
-    description: "Z objemovej fázy do diétnej\nKcal vlny 2200-2600\nCca 3.5 mesiaca"
-  },
-  {
-    image: client5,
-    title: "Kompletná premena",
-    description: "Od nuly k sebaistote. Výborná cesta k zdraviu."
-  },
-  {
-    image: client6,
-    title: "151 kg VS 120 kg",
-    description: "7.7.23 VS 8.1.24\nbez výraznej deformácie kože, jojo efekt vďaka postupnému chudnutiu na 2200-3000 kcal nemožný"
-  }
-];
+const testimonials = [{
+  image: client1,
+  title: "Zdravé chudnutie s jojoefektom",
+  description: "Jedálníček nastavený s optimálnym jedlom + 2x týždenne yoga 🙌\n-11kg\nŽiadne rýchlo chudnutie s jojoefektom, ale pomaly a podstivo\nBravo🙌"
+}, {
+  image: client2,
+  title: "Úžasná transformácia",
+  description: "Skvelé výsledky vďaka správnemu stravovaciemu plánu a cvičeniu."
+}, {
+  image: client3,
+  title: "105 kg VS 75 kg",
+  description: "Rok a pol rozdiel medzi fotkami\nKalorický deficit, silový tréning a kardio\nKcal v rozmedzí 2200-3500"
+}, {
+  image: client4,
+  title: "99 kg hore vs 85 kg dole",
+  description: "Z objemovej fázy do diétnej\nKcal vlny 2200-2600\nCca 3.5 mesiaca"
+}, {
+  image: client5,
+  title: "Kompletná premena",
+  description: "Od nuly k sebaistote. Výborná cesta k zdraviu."
+}, {
+  image: client6,
+  title: "151 kg VS 120 kg",
+  description: "7.7.23 VS 8.1.24\nbez výraznej deformácie kože, jojo efekt vďaka postupnému chudnutiu na 2200-3000 kcal nemožný"
+}];
 const Index = () => {
   const navigate = useNavigate();
   const [currentFact, setCurrentFact] = useState(0);
-  const autoplayPlugin = Autoplay({ delay: 4000, stopOnInteraction: true });
-  const autoplayPluginReverse = Autoplay({ delay: 4000, stopOnInteraction: true });
-  
+  const autoplayPlugin = Autoplay({
+    delay: 4000,
+    stopOnInteraction: true
+  });
+  const autoplayPluginReverse = Autoplay({
+    delay: 4000,
+    stopOnInteraction: true
+  });
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentFact(prev => (prev + 1) % facts.length);
@@ -65,9 +62,7 @@ const Index = () => {
       <section className="pt-32 pb-20 px-4 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-gold-subtle opacity-30"></div>
         <div className="container mx-auto text-center relative z-10 animate-fade-in">
-          <h1 className="font-display text-5xl md:text-7xl font-bold mb-6 text-gradient-gold">
-            VIP Profesionálne Krabičkové Stravovanie
-          </h1>
+          <h1 className="font-display text-5xl md:text-7xl font-bold mb-6 text-gradient-gold">Profesionálne Krabičkové Stravovanie</h1>
           <p className="text-2xl md:text-3xl mb-4 text-primary">
             Jedz zdravo. Sleduj progres. Dosiahni svoj cieľ.
           </p>
@@ -107,40 +102,34 @@ const Index = () => {
             💡 Prečo krabičkovať?
           </h2>
           <div className="relative px-12">
-            <Carousel
-              opts={{
-                align: "center",
-                loop: true,
-              }}
-              plugins={[autoplayPluginReverse]}
-              className="w-full max-w-5xl mx-auto"
-            >
+            <Carousel opts={{
+            align: "center",
+            loop: true
+          }} plugins={[autoplayPluginReverse]} className="w-full max-w-5xl mx-auto">
               <CarouselContent>
                 {[{
-                  title: "Pohodlie a časová úspora",
-                  desc: "Ušetri hodiny varenia, plánovania a nakupovania."
-                }, {
-                  title: "Kontrola porcií a makroživín",
-                  desc: "Presne vypočítané živiny pre tvoje ciele."
-                }, {
-                  title: "Výber podľa tvojich cieľov",
-                  desc: "Redukcia váhy, naberanie svalov alebo udržanie formy."
-                }, {
-                  title: "Vyvážená strava bez kompromisov",
-                  desc: "Všetko, čo tvoje telo potrebuje."
-                }, {
-                  title: "Bez starostí o nákup a skladovanie",
-                  desc: "Čerstvé jedlá priamo k tvojim dverám."
-                }].map((item, idx) => (
-                  <CarouselItem key={idx} className="basis-full">
+                title: "Pohodlie a časová úspora",
+                desc: "Ušetri hodiny varenia, plánovania a nakupovania."
+              }, {
+                title: "Kontrola porcií a makroživín",
+                desc: "Presne vypočítané živiny pre tvoje ciele."
+              }, {
+                title: "Výber podľa tvojich cieľov",
+                desc: "Redukcia váhy, naberanie svalov alebo udržanie formy."
+              }, {
+                title: "Vyvážená strava bez kompromisov",
+                desc: "Všetko, čo tvoje telo potrebuje."
+              }, {
+                title: "Bez starostí o nákup a skladovanie",
+                desc: "Čerstvé jedlá priamo k tvojim dverám."
+              }].map((item, idx) => <CarouselItem key={idx} className="basis-full">
                     <div className="card-premium p-12 hover:glow-gold transition-smooth min-h-[300px] flex flex-col items-center justify-center">
                       <h3 className="font-display text-3xl md:text-4xl font-bold mb-6 text-primary text-center">
                         {item.title}
                       </h3>
                       <p className="text-muted-foreground text-xl text-center max-w-2xl">{item.desc}</p>
                     </div>
-                  </CarouselItem>
-                ))}
+                  </CarouselItem>)}
               </CarouselContent>
               <CarouselPrevious className="absolute left-0 top-1/2 -translate-y-1/2" />
               <CarouselNext className="absolute right-0 top-1/2 -translate-y-1/2" />
@@ -155,24 +144,15 @@ const Index = () => {
           <h2 className="font-display text-4xl md:text-5xl font-bold text-center mb-16 text-gradient-gold">
             💪 Výsledky našich klientov
           </h2>
-          <Carousel
-            opts={{
-              align: "start",
-              loop: true,
-            }}
-            plugins={[autoplayPlugin]}
-            className="w-full max-w-6xl mx-auto"
-          >
+          <Carousel opts={{
+          align: "start",
+          loop: true
+        }} plugins={[autoplayPlugin]} className="w-full max-w-6xl mx-auto">
             <CarouselContent className="-ml-4">
-              {testimonials.map((testimonial, index) => (
-                <CarouselItem key={index} className="pl-4 md:basis-1/2 lg:basis-1/3">
+              {testimonials.map((testimonial, index) => <CarouselItem key={index} className="pl-4 md:basis-1/2 lg:basis-1/3">
                   <div className="card-premium p-4 h-full">
                     <div className="relative aspect-[3/4] mb-4 overflow-hidden rounded-lg">
-                      <img
-                        src={testimonial.image}
-                        alt={testimonial.title}
-                        className="w-full h-full object-cover"
-                      />
+                      <img src={testimonial.image} alt={testimonial.title} className="w-full h-full object-cover" />
                     </div>
                     <h3 className="font-display text-xl font-bold mb-2 text-primary">
                       {testimonial.title}
@@ -181,8 +161,7 @@ const Index = () => {
                       {testimonial.description}
                     </p>
                   </div>
-                </CarouselItem>
-              ))}
+                </CarouselItem>)}
             </CarouselContent>
             <CarouselPrevious className="hidden md:flex" />
             <CarouselNext className="hidden md:flex" />
