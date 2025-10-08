@@ -76,22 +76,22 @@ const Index = () => {
           
           {/* Stats */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-16 max-w-4xl mx-auto">
-            <div className="card-premium p-6">
+            <div className="card-premium p-6 hover:scale-110 transition-transform duration-300 cursor-pointer">
               <Star className="h-8 w-8 text-primary mx-auto mb-2" />
               <p className="font-bold text-xl text-primary">500+</p>
               <p className="text-sm text-muted-foreground">Spokojných zákazníkov</p>
             </div>
-            <div className="card-premium p-6">
+            <div className="card-premium p-6 hover:scale-110 transition-transform duration-300 cursor-pointer">
               <UtensilsCrossed className="h-8 w-8 text-primary mx-auto mb-2" />
               <p className="font-bold text-xl text-primary">50+</p>
               <p className="text-sm text-muted-foreground">Druhov jedál</p>
             </div>
-            <div className="card-premium p-6">
+            <div className="card-premium p-6 hover:scale-110 transition-transform duration-300 cursor-pointer">
               <Beef className="h-8 w-8 text-primary mx-auto mb-2" />
               <p className="font-bold text-xl text-primary">100%</p>
               <p className="text-sm text-muted-foreground">Čerstvé suroviny</p>
             </div>
-            <div className="card-premium p-6">
+            <div className="card-premium p-6 hover:scale-110 transition-transform duration-300 cursor-pointer">
               <Clock className="h-8 w-8 text-primary mx-auto mb-2" />
               <p className="font-bold text-xl text-primary">24/7</p>
               <p className="text-sm text-muted-foreground">Podpora</p>
