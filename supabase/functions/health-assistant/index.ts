@@ -12,7 +12,7 @@ serve(async (req) => {
   }
 
   try {
-    const { userProfile, progressData } = await req.json();
+    const { userProfile, progressData, type = "advice" } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 
     if (!LOVABLE_API_KEY) {
@@ -24,8 +24,47 @@ serve(async (req) => {
     const goalWeight = userProfile.goal === 'hubnutie' ? userProfile.weight * 0.9 : userProfile.weight * 1.1;
     const weightChange = progressData.length > 1 ? 
       progressData[progressData.length - 1].weight - progressData[0].weight : 0;
+    
+    // Calculate trend
+    let trend = "stagnuje";
+    if (progressData.length >= 2) {
+      const recentWeights = progressData.slice(-3);
+      const avgRecent = recentWeights.reduce((sum: number, p: any) => sum + p.weight, 0) / recentWeights.length;
+      const olderWeights = progressData.slice(0, Math.min(3, progressData.length - 2));
+      if (olderWeights.length > 0) {
+        const avgOlder = olderWeights.reduce((sum: number, p: any) => sum + p.weight, 0) / olderWeights.length;
+        if (userProfile.goal === 'hubnutie') {
+          trend = avgRecent < avgOlder ? "zlepšuje sa" : avgRecent > avgOlder ? "potrebuje podporu" : "stagnuje";
+        } else {
+          trend = avgRecent > avgOlder ? "zlepšuje sa" : avgRecent < avgOlder ? "potrebuje podporu" : "stagnuje";
+        }
+      }
+    }
 
-    const systemPrompt = `Si profesionálny fitness a výživový poradca. Analyzuj progres používateľa a poskytni stručné, motivujúce odporúčania.
+    let systemPrompt = "";
+    let userMessage = "";
+
+    if (type === "motivation") {
+      systemPrompt = `Si profesionálny motivačný fitness tréner, ktorý povzbudzuje a motivuje ľudí na ich fitness ceste.
+
+Profil používateľa:
+- Meno: ${userProfile.name}
+- Cieľ: ${userProfile.goal}
+- Aktuálna váha: ${latestWeight} kg
+- Cieľová váha: ~${goalWeight.toFixed(1)} kg
+- Trend: ${trend}
+- Zmena váhy: ${weightChange > 0 ? '+' : ''}${weightChange.toFixed(1)} kg
+- Počet záznamov: ${progressData.length}
+
+Na základe trendu poskyni:
+1. Osobnú motivačnú správu (2-3 vety) priamo osloveného používateľa
+2. Konrétne povzbudenie založené na ich pokroku
+3. Mini výzvu na nasledujúci týždeň
+
+Odpovedaj v slovenčine, buď energický, pozitívny a motivujúci. Používaj emojis.`;
+      userMessage = "Potrebujem motiváciu na pokračovanie v mojej fitness ceste!";
+    } else {
+      systemPrompt = `Si profesionálny fitness a výživový poradca. Analyzuj progres používateľa a poskytni stručné, motivujúce odporúčania.
 
 Profil používateľa:
 - Meno: ${userProfile.name}
@@ -44,6 +83,8 @@ Poskytni:
 3. 2-3 konkrétne tipy na dosiahnutie cieľa
 
 Odpovedaj v slovenčine, buď pozitívny a podnetný.`;
+      userMessage = 'Daj mi analýzu môjho progresu a odporúčania.';
+    }
 
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -55,7 +96,7 @@ Odpovedaj v slovenčine, buď pozitívny a podnetný.`;
         model: 'google/gemini-2.5-flash',
         messages: [
           { role: 'system', content: systemPrompt },
-          { role: 'user', content: 'Daj mi analýzu môjho progresu a odporúčania.' }
+          { role: 'user', content: userMessage }
         ],
       }),
     });

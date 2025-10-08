@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      achievements: {
+        Row: {
+          achievement_type: string
+          created_at: string
+          description: string
+          earned_at: string
+          icon: string
+          id: string
+          title: string
+          user_id: string
+        }
+        Insert: {
+          achievement_type: string
+          created_at?: string
+          description: string
+          earned_at?: string
+          icon: string
+          id?: string
+          title: string
+          user_id: string
+        }
+        Update: {
+          achievement_type?: string
+          created_at?: string
+          description?: string
+          earned_at?: string
+          icon?: string
+          id?: string
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       admin_notifications: {
         Row: {
           created_at: string | null

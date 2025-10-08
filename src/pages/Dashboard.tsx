@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { User, Target, Activity, TrendingUp, UtensilsCrossed, Package, Scale, TrendingDown, Calendar, Sparkles, Mail, Lock, Trash2 } from "lucide-react";
+import { User, Target, Activity, TrendingUp, UtensilsCrossed, Package, Scale, TrendingDown, Calendar, Sparkles, Mail, Lock, Trash2, Camera, Trophy } from "lucide-react";
 import { MenuManagement } from "@/components/admin/MenuManagement";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import {
@@ -32,6 +32,11 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { ProgressGallery } from "@/components/dashboard/ProgressGallery";
+import { AchievementBadge } from "@/components/dashboard/AchievementBadge";
+import { MotivationalQuote } from "@/components/dashboard/MotivationalQuote";
+import { AIMotivator } from "@/components/dashboard/AIMotivator";
+import { checkAndAwardAchievements } from "@/utils/achievementChecker";
 
 interface UserProfile {
   name: string;
@@ -88,6 +93,9 @@ const Dashboard = () => {
   const [aiAdvice, setAiAdvice] = useState("");
   const [loadingAI, setLoadingAI] = useState(false);
   const [userOrders, setUserOrders] = useState<Order[]>([]);
+  const [achievements, setAchievements] = useState<any[]>([]);
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [userId, setUserId] = useState<string>("");
   
   // Account management states
   const [isEmailDialogOpen, setIsEmailDialogOpen] = useState(false);
@@ -144,10 +152,12 @@ const Dashboard = () => {
         }
 
         setProfile(data as UserProfile);
+        setUserId(user.id);
         
-        // Load progress data and orders
+        // Load progress data, orders, and achievements
         await loadProgressData(user.id);
         await loadUserOrders(user.id);
+        await loadAchievements(user.id);
       }
     } catch (error: any) {
       toast({
@@ -329,6 +339,21 @@ const Dashboard = () => {
     }
   };
 
+  const loadAchievements = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from("achievements")
+        .select("*")
+        .eq("user_id", userId)
+        .order("earned_at", { ascending: false });
+
+      if (error) throw error;
+      setAchievements(data || []);
+    } catch (error: any) {
+      console.error("Error loading achievements:", error);
+    }
+  };
+
   const handleAddWeight = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newWeight || !profile) return;
@@ -340,19 +365,48 @@ const Dashboard = () => {
 
       if (!user) return;
 
+      let photoUrl = null;
+
+      // Upload photo if selected
+      if (photoFile) {
+        const fileExt = photoFile.name.split(".").pop();
+        const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+        
+        const { error: uploadError } = await supabase.storage
+          .from("progress-photos")
+          .upload(fileName, photoFile);
+
+        if (uploadError) throw uploadError;
+        photoUrl = fileName;
+      }
+
       const { error } = await supabase.from("progress").insert({
         user_id: user.id,
         weight: parseFloat(newWeight),
         date: new Date().toISOString().split("T")[0],
+        photo_url: photoUrl,
       });
 
       if (error) throw error;
+
+      // Check for new achievements
+      const updatedProgress = await supabase
+        .from("progress")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("date", { ascending: true });
+
+      if (updatedProgress.data) {
+        await checkAndAwardAchievements(user.id, updatedProgress.data, profile);
+        await loadAchievements(user.id);
+      }
 
       toast({
         title: "Úspech",
         description: "Váha bola úspešne pridaná!",
       });
       setNewWeight("");
+      setPhotoFile(null);
       await loadProgressData(user.id);
     } catch (error: any) {
       toast({
@@ -784,12 +838,12 @@ const Dashboard = () => {
                   </CardContent>
                 </Card>
 
-                {/* Add Weight Form */}
+                 {/* Add Weight Form */}
                 <Card>
                   <CardHeader>
                     <CardTitle>Pridať váhu</CardTitle>
                     <CardDescription>
-                      Zaznamenajte svoju týždennú váhu
+                      Zaznamenajte svoju týždennú váhu a fotku
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
@@ -806,6 +860,21 @@ const Dashboard = () => {
                           required
                         />
                       </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="photo">Progress fotka (voliteľné)</Label>
+                        <Input
+                          id="photo"
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => setPhotoFile(e.target.files?.[0] || null)}
+                        />
+                        {photoFile && (
+                          <p className="text-sm text-muted-foreground">
+                            <Camera className="inline h-3 w-3 mr-1" />
+                            {photoFile.name}
+                          </p>
+                        )}
+                      </div>
                       <Button type="submit" className="w-full">
                         Uložiť váhu
                       </Button>
@@ -817,11 +886,21 @@ const Dashboard = () => {
                         <li>• Vážte sa ráno na prázdny žalúdok</li>
                         <li>• Buďte konzistentní s meraním</li>
                         <li>• Sledujte dlhodobý trend</li>
+                        <li>• Pridajte fotku pre lepšiu motiváciu</li>
                       </ul>
                     </div>
                   </CardContent>
                 </Card>
               </div>
+
+              {/* Motivational Quote */}
+              <MotivationalQuote />
+
+              {/* Progress Photo Gallery */}
+              <ProgressGallery userId={userId} />
+
+              {/* Achievements */}
+              <AchievementBadge achievements={achievements} />
 
               {/* Menu Recommendation */}
               <Card>
@@ -852,7 +931,11 @@ const Dashboard = () => {
               </Card>
             </TabsContent>
 
-            <TabsContent value="ai-assistant">
+            <TabsContent value="ai-assistant" className="space-y-6">
+              {/* AI Motivator */}
+              <AIMotivator userProfile={profile} progressData={progressData} />
+
+              {/* AI Health Assistant */}
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
