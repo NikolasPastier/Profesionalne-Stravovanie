@@ -4,13 +4,16 @@ import { supabase } from "@/integrations/supabase/client";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { User, Target, Activity, TrendingUp, UtensilsCrossed, Package } from "lucide-react";
+import { User, Target, Activity, TrendingUp, UtensilsCrossed, Package, Scale, TrendingDown, Calendar, Sparkles } from "lucide-react";
 import { MenuManagement } from "@/components/admin/MenuManagement";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 interface UserProfile {
   name: string;
@@ -47,6 +50,13 @@ interface Notification {
   created_at: string;
 }
 
+interface ProgressEntry {
+  id: string;
+  date: string;
+  weight: number;
+  created_at: string;
+}
+
 const Dashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -55,6 +65,10 @@ const Dashboard = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [orders, setOrders] = useState<Order[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [progressData, setProgressData] = useState<ProgressEntry[]>([]);
+  const [newWeight, setNewWeight] = useState("");
+  const [aiAdvice, setAiAdvice] = useState("");
+  const [loadingAI, setLoadingAI] = useState(false);
 
   useEffect(() => {
     checkUserAndLoadProfile();
@@ -103,6 +117,9 @@ const Dashboard = () => {
         }
 
         setProfile(data as UserProfile);
+        
+        // Load progress data
+        await loadProgressData(user.id);
       }
     } catch (error: any) {
       toast({
@@ -252,6 +269,102 @@ const Dashboard = () => {
     if (baseCalories < 2500) return "L";
     if (baseCalories < 3000) return "XL";
     return "XXL";
+  };
+
+  const loadProgressData = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from("progress")
+        .select("*")
+        .eq("user_id", userId)
+        .order("date", { ascending: true });
+
+      if (error) throw error;
+      setProgressData(data || []);
+    } catch (error: any) {
+      console.error("Error loading progress:", error);
+    }
+  };
+
+  const handleAddWeight = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newWeight || !profile) return;
+
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) return;
+
+      const { error } = await supabase.from("progress").insert({
+        user_id: user.id,
+        weight: parseFloat(newWeight),
+        date: new Date().toISOString().split("T")[0],
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Úspech",
+        description: "Váha bola úspešne pridaná!",
+      });
+      setNewWeight("");
+      await loadProgressData(user.id);
+    } catch (error: any) {
+      toast({
+        title: "Chyba",
+        description: "Chyba pri pridávaní váhy: " + error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const getAIAdvice = async () => {
+    if (!profile) return;
+
+    setLoadingAI(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("health-assistant", {
+        body: { userProfile: profile, progressData },
+      });
+
+      if (error) throw error;
+      setAiAdvice(data.advice);
+    } catch (error: any) {
+      toast({
+        title: "Chyba",
+        description: "Chyba pri načítaní AI rád: " + error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setLoadingAI(false);
+    }
+  };
+
+  const getGoalWeight = () => {
+    if (!profile) return 0;
+    return profile.goal === "hubnutie" ? profile.weight * 0.9 : profile.weight * 1.1;
+  };
+
+  const getCurrentWeight = () => {
+    if (progressData.length > 0) {
+      return progressData[progressData.length - 1].weight;
+    }
+    return profile?.weight || 0;
+  };
+
+  const getRemainingWeight = () => {
+    const current = getCurrentWeight();
+    const goal = getGoalWeight();
+    return Math.abs(current - goal);
+  };
+
+  const getChartData = () => {
+    return progressData.map((entry) => ({
+      date: new Date(entry.date).toLocaleDateString("sk-SK", { day: "numeric", month: "numeric" }),
+      weight: entry.weight,
+    }));
   };
 
   const handleLogout = async () => {
@@ -410,14 +523,14 @@ const Dashboard = () => {
       <Navigation />
 
       <main className="container mx-auto px-4 py-20">
-        <div className="max-w-6xl mx-auto">
-          <div className="flex justify-between items-center mb-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex justify-between items-center mb-2">
             <div>
-              <h1 className="text-4xl font-display text-primary mb-2">
-                Vitaj, {profile.name}! 👋
+              <h1 className="text-4xl font-display text-foreground mb-2">
+                Vitajte späť, {profile.name}! 👋
               </h1>
               <p className="text-muted-foreground text-lg">
-                Pokračuj v ceste za svojim cieľom • Tvoj odporúčaný balíček: {getRecommendedMenuSize()}
+                Sledujte svoj pokrok a dosahujte svoje ciele
               </p>
             </div>
             <Button onClick={handleLogout} variant="outline">
@@ -425,124 +538,245 @@ const Dashboard = () => {
             </Button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <Card className="border-primary/20">
+          {/* Stats Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 mt-8">
+            <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Meno</CardTitle>
-                <User className="h-4 w-4 text-primary" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-primary">
-                  {profile.name}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="border-primary/20">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Cieľ</CardTitle>
-                <Target className="h-4 w-4 text-primary" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-primary">
-                  {profile.goal}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="border-primary/20">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Aktivita</CardTitle>
-                <Activity className="h-4 w-4 text-primary" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-primary">
-                  {profile.activity}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="border-primary/20">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Váha</CardTitle>
-                <TrendingUp className="h-4 w-4 text-primary" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-primary">
-                  {profile.weight} kg
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card className="border-primary/20">
-              <CardHeader>
-                <CardTitle className="text-primary">
-                  Odporúčaná veľkosť menu
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  Aktuálna váha
                 </CardTitle>
+                <Scale className="h-5 w-5 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-center py-8">
-                  <div className="text-6xl font-display text-primary mb-4">
-                    {getRecommendedMenuSize()}
-                  </div>
-                  <p className="text-muted-foreground">
-                    Na základe vášho profilu odporúčame túto veľkosť menu
-                  </p>
-                  <Button
-                    onClick={() => navigate("/menu")}
-                    className="mt-6 bg-primary hover:bg-primary/90"
-                  >
-                    Zobraziť menu
-                  </Button>
+                <div className="text-3xl font-bold">
+                  {getCurrentWeight().toFixed(1)} kg
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="border-primary/20">
-              <CardHeader>
-                <CardTitle className="text-primary">Osobné údaje</CardTitle>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  Cieľová váha
+                </CardTitle>
+                <TrendingDown className="h-5 w-5 text-muted-foreground" />
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Vek:</span>
-                  <span className="font-semibold">{profile.age} rokov</span>
+              <CardContent>
+                <div className="text-3xl font-bold">
+                  {getGoalWeight().toFixed(1)} kg
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Výška:</span>
-                  <span className="font-semibold">{profile.height} cm</span>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  Zostáva
+                </CardTitle>
+                <Calendar className="h-5 w-5 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold text-orange-500">
+                  {getRemainingWeight().toFixed(1)} kg
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Váha:</span>
-                  <span className="font-semibold">{profile.weight} kg</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Alergie:</span>
-                  <span className="font-semibold">
-                    {profile.allergies?.join(", ") || "Žiadne"}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Preferencie:</span>
-                  <span className="font-semibold">
-                    {profile.preferences?.join(", ") || "Žiadne"}
-                  </span>
-                </div>
-                <Button
-                  onClick={() => navigate("/onboarding")}
-                  variant="outline"
-                  className="w-full mt-4"
-                >
-                  Upraviť profil
-                </Button>
               </CardContent>
             </Card>
           </div>
 
-          <Card className="border-primary/20 mt-6">
+          <Tabs defaultValue="progress" className="space-y-6">
+            <TabsList className="grid w-full max-w-md grid-cols-2">
+              <TabsTrigger value="progress">
+                <TrendingUp className="h-4 w-4 mr-2" />
+                Pokrok
+              </TabsTrigger>
+              <TabsTrigger value="ai-assistant">
+                <Sparkles className="h-4 w-4 mr-2" />
+                AI Asistent
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="progress" className="space-y-6">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Progress Chart */}
+                <Card className="lg:col-span-2">
+                  <CardHeader>
+                    <CardTitle>Graf pokroku</CardTitle>
+                    <CardDescription>
+                      Váš pokrok za posledných 6 týždňov
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    {getChartData().length > 0 ? (
+                      <ResponsiveContainer width="100%" height={300}>
+                        <LineChart data={getChartData()}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="date" />
+                          <YAxis domain={['auto', 'auto']} />
+                          <Tooltip />
+                          <Line 
+                            type="monotone" 
+                            dataKey="weight" 
+                            stroke="hsl(var(--foreground))" 
+                            strokeWidth={2}
+                            dot={{ fill: 'hsl(var(--foreground))', r: 4 }}
+                          />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    ) : (
+                      <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+                        Zatiaľ nemáte žiadne záznamy. Pridajte svoju prvú váhu.
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* Add Weight Form */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Pridať váhu</CardTitle>
+                    <CardDescription>
+                      Zaznamenajte svoju týždennú váhu
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <form onSubmit={handleAddWeight} className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="weight">Váha (kg)</Label>
+                        <Input
+                          id="weight"
+                          type="number"
+                          step="0.1"
+                          value={newWeight}
+                          onChange={(e) => setNewWeight(e.target.value)}
+                          placeholder="Napr. 75.5"
+                          required
+                        />
+                      </div>
+                      <Button type="submit" className="w-full">
+                        Uložiť váhu
+                      </Button>
+                    </form>
+
+                    <div className="mt-6 space-y-3">
+                      <h4 className="font-medium">Tipy na úspech:</h4>
+                      <ul className="space-y-2 text-sm text-muted-foreground">
+                        <li>• Vážte sa ráno na prázdny žalúdok</li>
+                        <li>• Buďte konzistentní s meraním</li>
+                        <li>• Sledujte dlhodobý trend</li>
+                      </ul>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Menu Recommendation */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Odporúčaná veľkosť menu</CardTitle>
+                  <CardDescription>
+                    Na základe vášho profilu a cieľov
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-4xl font-display text-primary mb-2">
+                        {getRecommendedMenuSize()}
+                      </div>
+                      <p className="text-muted-foreground">
+                        Optimálna veľkosť pre váš cieľ: {profile.goal}
+                      </p>
+                    </div>
+                    <Button
+                      onClick={() => navigate("/menu")}
+                      className="bg-primary hover:bg-primary/90"
+                    >
+                      Zobraziť menu
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="ai-assistant">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Sparkles className="h-5 w-5" />
+                    AI Zdravotný Asistent
+                  </CardTitle>
+                  <CardDescription>
+                    Personalizované odporúčania na základe vášho progresu
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <Button
+                    onClick={getAIAdvice}
+                    disabled={loadingAI}
+                    className="w-full"
+                  >
+                    {loadingAI ? "Generujem rady..." : "Získať AI analýzu a rady"}
+                  </Button>
+
+                  {aiAdvice && (
+                    <div className="p-4 bg-muted rounded-lg whitespace-pre-wrap">
+                      {aiAdvice}
+                    </div>
+                  )}
+
+                  {!aiAdvice && !loadingAI && (
+                    <div className="text-center text-muted-foreground py-8">
+                      Kliknite na tlačidlo vyššie pre získanie personalizovaných rád od AI asistenta.
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
+
+          {/* Personal Info Card */}
+          <Card className="mt-6">
             <CardHeader>
-              <CardTitle className="text-primary">Rýchle akcie</CardTitle>
+              <CardTitle>Osobné údaje</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Vek:</span>
+                <span className="font-semibold">{profile.age} rokov</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Výška:</span>
+                <span className="font-semibold">{profile.height} cm</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Váha:</span>
+                <span className="font-semibold">{profile.weight} kg</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Alergie:</span>
+                <span className="font-semibold">
+                  {profile.allergies?.join(", ") || "Žiadne"}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Preferencie:</span>
+                <span className="font-semibold">
+                  {profile.preferences?.join(", ") || "Žiadne"}
+                </span>
+              </div>
+              <Button
+                onClick={() => navigate("/onboarding")}
+                variant="outline"
+                className="w-full mt-4"
+              >
+                Upraviť profil
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card className="mt-6">
+            <CardHeader>
+              <CardTitle>Rýchle akcie</CardTitle>
             </CardHeader>
             <CardContent className="flex flex-wrap gap-4">
               <Button
@@ -558,7 +792,7 @@ const Dashboard = () => {
                 Košík
               </Button>
               <Button
-                onClick={() => navigate("/cennik")}
+                onClick={() => navigate("/cenník")}
                 variant="outline"
               >
                 Cenník
