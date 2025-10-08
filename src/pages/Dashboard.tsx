@@ -412,9 +412,14 @@ const Dashboard = () => {
       <main className="container mx-auto px-4 py-20">
         <div className="max-w-6xl mx-auto">
           <div className="flex justify-between items-center mb-8">
-            <h1 className="text-4xl font-display text-primary">
-              Môj Dashboard
-            </h1>
+            <div>
+              <h1 className="text-4xl font-display text-primary mb-2">
+                Vitaj, {profile.name}! 👋
+              </h1>
+              <p className="text-muted-foreground text-lg">
+                Pokračuj v ceste za svojim cieľom • Tvoj odporúčaný balíček: {getRecommendedMenuSize()}
+              </p>
+            </div>
             <Button onClick={handleLogout} variant="outline">
               Odhlásiť sa
             </Button>
