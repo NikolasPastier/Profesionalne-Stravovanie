@@ -132,12 +132,12 @@ const Index = () => {
                 title: "Bez starostí o nákup a skladovanie",
                 desc: "Čerstvé jedlá priamo k tvojim dverám."
               }].map((item, idx) => (
-                <CarouselItem key={idx} className="pl-4 md:basis-1/2 lg:basis-1/3">
-                  <div className="card-premium p-8 h-full hover:glow-gold transition-smooth">
-                    <h3 className="font-display text-2xl font-bold mb-4 text-primary">
-                      {idx + 1}. {item.title}
+                <CarouselItem key={idx} className="pl-4 basis-full">
+                  <div className="card-premium p-12 hover:glow-gold transition-smooth">
+                    <h3 className="font-display text-3xl md:text-4xl font-bold mb-6 text-primary text-center">
+                      {item.title}
                     </h3>
-                    <p className="text-muted-foreground">{item.desc}</p>
+                    <p className="text-muted-foreground text-xl text-center">{item.desc}</p>
                   </div>
                 </CarouselItem>
               ))}
