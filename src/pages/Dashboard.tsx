@@ -11,9 +11,27 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { User, Target, Activity, TrendingUp, UtensilsCrossed, Package, Scale, TrendingDown, Calendar, Sparkles } from "lucide-react";
+import { User, Target, Activity, TrendingUp, UtensilsCrossed, Package, Scale, TrendingDown, Calendar, Sparkles, Mail, Lock, Trash2 } from "lucide-react";
 import { MenuManagement } from "@/components/admin/MenuManagement";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface UserProfile {
   name: string;
@@ -70,6 +88,14 @@ const Dashboard = () => {
   const [aiAdvice, setAiAdvice] = useState("");
   const [loadingAI, setLoadingAI] = useState(false);
   const [userOrders, setUserOrders] = useState<Order[]>([]);
+  
+  // Account management states
+  const [isEmailDialogOpen, setIsEmailDialogOpen] = useState(false);
+  const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [newEmail, setNewEmail] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
 
   useEffect(() => {
     checkUserAndLoadProfile();
@@ -387,6 +413,117 @@ const Dashboard = () => {
   const handleLogout = async () => {
     await supabase.auth.signOut();
     navigate("/");
+  };
+
+  const handleEmailChange = async () => {
+    if (!newEmail) {
+      toast({
+        title: "Chyba",
+        description: "Zadajte nový email",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const { error } = await supabase.auth.updateUser({ email: newEmail });
+      
+      if (error) throw error;
+
+      toast({
+        title: "Úspech",
+        description: "Email bol úspešne zmenený. Skontrolujte váš email pre potvrdenie.",
+      });
+      
+      setIsEmailDialogOpen(false);
+      setNewEmail("");
+    } catch (error: any) {
+      toast({
+        title: "Chyba",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handlePasswordChange = async () => {
+    if (!newPassword || !confirmPassword) {
+      toast({
+        title: "Chyba",
+        description: "Vyplňte všetky polia",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      toast({
+        title: "Chyba",
+        description: "Heslá sa nezhodujú",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      toast({
+        title: "Chyba",
+        description: "Heslo musí mať aspoň 6 znakov",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      
+      if (error) throw error;
+
+      toast({
+        title: "Úspech",
+        description: "Heslo bolo úspešne zmenené",
+      });
+      
+      setIsPasswordDialogOpen(false);
+      setNewPassword("");
+      setConfirmPassword("");
+    } catch (error: any) {
+      toast({
+        title: "Chyba",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleAccountDelete = async () => {
+    try {
+      // First delete user data
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) return;
+
+      // Delete user profile
+      await supabase.from("user_profiles").delete().eq("user_id", user.id);
+      
+      // Delete progress data
+      await supabase.from("progress").delete().eq("user_id", user.id);
+
+      toast({
+        title: "Účet vymazaný",
+        description: "Váš účet a všetky údaje boli úspešne vymazané",
+      });
+
+      // Sign out and redirect
+      await supabase.auth.signOut();
+      navigate("/");
+    } catch (error: any) {
+      toast({
+        title: "Chyba",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
   };
 
   if (loading) {
@@ -875,8 +1012,136 @@ const Dashboard = () => {
               </Button>
             </CardContent>
           </Card>
+
+          {/* Account Settings */}
+          <Card className="mt-6">
+            <CardHeader>
+              <CardTitle>Nastavenia účtu</CardTitle>
+              <CardDescription>
+                Spravujte svoje prihlásenie a bezpečnosť
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <Button
+                onClick={() => setIsEmailDialogOpen(true)}
+                variant="outline"
+                className="w-full justify-start"
+              >
+                <Mail className="h-4 w-4 mr-2" />
+                Zmeniť email
+              </Button>
+              <Button
+                onClick={() => setIsPasswordDialogOpen(true)}
+                variant="outline"
+                className="w-full justify-start"
+              >
+                <Lock className="h-4 w-4 mr-2" />
+                Zmeniť heslo
+              </Button>
+              <Button
+                onClick={() => setIsDeleteDialogOpen(true)}
+                variant="destructive"
+                className="w-full justify-start"
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Vymazať účet
+              </Button>
+            </CardContent>
+          </Card>
         </div>
       </main>
+
+      {/* Email Change Dialog */}
+      <Dialog open={isEmailDialogOpen} onOpenChange={setIsEmailDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Zmeniť email</DialogTitle>
+            <DialogDescription>
+              Zadajte nový email. Budete musieť potvrdiť zmenu cez email.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="new-email">Nový email</Label>
+              <Input
+                id="new-email"
+                type="email"
+                value={newEmail}
+                onChange={(e) => setNewEmail(e.target.value)}
+                placeholder="novy@email.sk"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEmailDialogOpen(false)}>
+              Zrušiť
+            </Button>
+            <Button onClick={handleEmailChange}>Zmeniť email</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Password Change Dialog */}
+      <Dialog open={isPasswordDialogOpen} onOpenChange={setIsPasswordDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Zmeniť heslo</DialogTitle>
+            <DialogDescription>
+              Zadajte nové heslo. Musí mať aspoň 6 znakov.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="new-password">Nové heslo</Label>
+              <Input
+                id="new-password"
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="••••••••"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="confirm-password">Potvrďte heslo</Label>
+              <Input
+                id="confirm-password"
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="••••••••"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsPasswordDialogOpen(false)}>
+              Zrušiť
+            </Button>
+            <Button onClick={handlePasswordChange}>Zmeniť heslo</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Account Dialog */}
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Naozaj chcete vymazať účet?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Táto akcia je nenávratná. Všetky vaše údaje, objednávky a progres
+              budú natrvalo vymazané.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Zrušiť</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleAccountDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Áno, vymazať účet
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <Footer />
     </div>
