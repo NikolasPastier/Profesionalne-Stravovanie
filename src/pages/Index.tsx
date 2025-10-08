@@ -28,9 +28,7 @@ const Index = () => {
             Jedz zdravo. Sleduj progres. Dosiahni svoj cieľ.
           </p>
           <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto mb-8">Profesionálne Stravovanie</p>
-          <Button onClick={() => navigate("/menu")} className="bg-primary text-primary-foreground hover:glow-gold-strong text-lg px-8 py-6" size="lg">
-            Objednaj si jedlo na týždeň →
-          </Button>
+          <Button onClick={() => navigate("/menu")} className="bg-primary text-primary-foreground hover:glow-gold-strong text-lg px-8 py-6" size="lg">Pozri si aktuálmne týždenné menu →</Button>
           
           {/* Stats */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-16 max-w-4xl mx-auto">
