@@ -106,45 +106,46 @@ const Index = () => {
           <h2 className="font-display text-4xl md:text-5xl font-bold text-center mb-16 text-gradient-gold">
             💡 Prečo krabičkovať?
           </h2>
-          <Carousel
-            opts={{
-              align: "start",
-              loop: true,
-              direction: "rtl",
-            }}
-            plugins={[autoplayPluginReverse]}
-            className="w-full max-w-6xl mx-auto"
-          >
-            <CarouselContent className="-ml-4">
-              {[{
-                title: "Pohodlie a časová úspora",
-                desc: "Ušetri hodiny varenia, plánovania a nakupovania."
-              }, {
-                title: "Kontrola porcií a makroživín",
-                desc: "Presne vypočítané živiny pre tvoje ciele."
-              }, {
-                title: "Výber podľa tvojich cieľov",
-                desc: "Redukcia váhy, naberanie svalov alebo udržanie formy."
-              }, {
-                title: "Vyvážená strava bez kompromisov",
-                desc: "Všetko, čo tvoje telo potrebuje."
-              }, {
-                title: "Bez starostí o nákup a skladovanie",
-                desc: "Čerstvé jedlá priamo k tvojim dverám."
-              }].map((item, idx) => (
-                <CarouselItem key={idx} className="pl-4 basis-full">
-                  <div className="card-premium p-12 hover:glow-gold transition-smooth">
-                    <h3 className="font-display text-3xl md:text-4xl font-bold mb-6 text-primary text-center">
-                      {item.title}
-                    </h3>
-                    <p className="text-muted-foreground text-xl text-center">{item.desc}</p>
-                  </div>
-                </CarouselItem>
-              ))}
-            </CarouselContent>
-            <CarouselPrevious className="hidden md:flex" />
-            <CarouselNext className="hidden md:flex" />
-          </Carousel>
+          <div className="relative px-12">
+            <Carousel
+              opts={{
+                align: "center",
+                loop: true,
+              }}
+              plugins={[autoplayPluginReverse]}
+              className="w-full max-w-5xl mx-auto"
+            >
+              <CarouselContent>
+                {[{
+                  title: "Pohodlie a časová úspora",
+                  desc: "Ušetri hodiny varenia, plánovania a nakupovania."
+                }, {
+                  title: "Kontrola porcií a makroživín",
+                  desc: "Presne vypočítané živiny pre tvoje ciele."
+                }, {
+                  title: "Výber podľa tvojich cieľov",
+                  desc: "Redukcia váhy, naberanie svalov alebo udržanie formy."
+                }, {
+                  title: "Vyvážená strava bez kompromisov",
+                  desc: "Všetko, čo tvoje telo potrebuje."
+                }, {
+                  title: "Bez starostí o nákup a skladovanie",
+                  desc: "Čerstvé jedlá priamo k tvojim dverám."
+                }].map((item, idx) => (
+                  <CarouselItem key={idx} className="basis-full">
+                    <div className="card-premium p-12 hover:glow-gold transition-smooth min-h-[300px] flex flex-col items-center justify-center">
+                      <h3 className="font-display text-3xl md:text-4xl font-bold mb-6 text-primary text-center">
+                        {item.title}
+                      </h3>
+                      <p className="text-muted-foreground text-xl text-center max-w-2xl">{item.desc}</p>
+                    </div>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <CarouselPrevious className="absolute left-0 top-1/2 -translate-y-1/2" />
+              <CarouselNext className="absolute right-0 top-1/2 -translate-y-1/2" />
+            </Carousel>
+          </div>
         </div>
       </section>
 
