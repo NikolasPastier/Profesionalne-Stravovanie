@@ -1,9 +1,7 @@
 import { Link } from "react-router-dom";
 import { Instagram, Facebook } from "lucide-react";
-
 export const Footer = () => {
-  return (
-    <footer className="bg-background border-t border-primary/20 py-12">
+  return <footer className="bg-background border-t border-primary/20 py-12">
       <div className="container mx-auto px-4">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
           <div>
@@ -37,21 +35,11 @@ export const Footer = () => {
           <div>
             <h4 className="font-semibold mb-4 text-primary">Sleduj nás</h4>
             <div className="flex gap-4">
-              <a 
-                href="https://instagram.com" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="text-primary hover:text-primary/80 transition-smooth"
-              >
+              <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/80 transition-smooth">
                 <Instagram className="h-6 w-6" />
               </a>
-              <a 
-                href="https://facebook.com" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="text-primary hover:text-primary/80 transition-smooth"
-              >
-                <Facebook className="h-6 w-6" />
+              <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/80 transition-smooth">
+                
               </a>
             </div>
           </div>
@@ -61,6 +49,5 @@ export const Footer = () => {
           <p>© 2025 VIP Profesionálne Krabičkové Stravovanie. Všetky práva vyhradené.</p>
         </div>
       </div>
-    </footer>
-  );
+    </footer>;
 };
