@@ -48,8 +48,9 @@ export const Navigation = () => {
     </>;
   return <nav className="fixed top-0 w-full bg-background/95 backdrop-blur-md border-b border-primary/20 z-50">
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-        <Link to="/" className="flex items-center">
+        <Link to="/" className="flex items-center gap-3">
           <img src={logo} alt="Profesionálne Stravovanie" className="h-12 w-auto" />
+          <span className="text-xl font-display font-bold text-gradient-gold">Profesionálne Stravovanie</span>
         </Link>
 
         {/* Desktop Navigation */}
