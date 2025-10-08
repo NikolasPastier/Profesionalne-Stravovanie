@@ -4,30 +4,31 @@ import { User, LogOut, Menu as MenuIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-
 export const Navigation = () => {
   const [user, setUser] = useState<any>(null);
   const navigate = useNavigate();
-
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(({
+      data: {
+        session
+      }
+    }) => {
       setUser(session?.user ?? null);
     });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const {
+      data: {
+        subscription
+      }
+    } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
     });
-
     return () => subscription.unsubscribe();
   }, []);
-
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     navigate("/");
   };
-
-  const NavLinks = () => (
-    <>
+  const NavLinks = () => <>
       <Link to="/" className="text-foreground hover:text-primary transition-smooth">
         Domov
       </Link>
@@ -43,49 +44,27 @@ export const Navigation = () => {
       <Link to="/onas" className="text-foreground hover:text-primary transition-smooth">
         O nás
       </Link>
-    </>
-  );
-
-  return (
-    <nav className="fixed top-0 w-full bg-background/95 backdrop-blur-md border-b border-primary/20 z-50">
+    </>;
+  return <nav className="fixed top-0 w-full bg-background/95 backdrop-blur-md border-b border-primary/20 z-50">
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-        <Link to="/" className="text-xl font-display font-bold text-gradient-gold">
-          VIP Stravovanie
-        </Link>
+        <Link to="/" className="text-xl font-display font-bold text-gradient-gold">Profesionálne Stravovanie</Link>
 
         {/* Desktop Navigation */}
         <div className="hidden md:flex items-center gap-6">
           <NavLinks />
           
-          {user ? (
-            <div className="flex items-center gap-3">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => navigate("/dashboard")}
-                className="gap-2"
-              >
+          {user ? <div className="flex items-center gap-3">
+              <Button variant="outline" size="sm" onClick={() => navigate("/dashboard")} className="gap-2">
                 <User className="h-4 w-4" />
                 Profil
               </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleSignOut}
-                className="gap-2"
-              >
+              <Button variant="ghost" size="sm" onClick={handleSignOut} className="gap-2">
                 <LogOut className="h-4 w-4" />
                 Odhlásiť sa
               </Button>
-            </div>
-          ) : (
-            <Button
-              onClick={() => navigate("/auth")}
-              className="bg-primary text-primary-foreground hover:glow-gold-strong"
-            >
+            </div> : <Button onClick={() => navigate("/auth")} className="bg-primary text-primary-foreground hover:glow-gold-strong">
               Prihlásiť sa
-            </Button>
-          )}
+            </Button>}
         </div>
 
         {/* Mobile Navigation */}
@@ -98,34 +77,21 @@ export const Navigation = () => {
           <SheetContent side="right" className="bg-background">
             <div className="flex flex-col gap-6 mt-8">
               <NavLinks />
-              {user ? (
-                <>
-                  <Button
-                    variant="outline"
-                    onClick={() => navigate("/dashboard")}
-                    className="gap-2 justify-start"
-                  >
+              {user ? <>
+                  <Button variant="outline" onClick={() => navigate("/dashboard")} className="gap-2 justify-start">
                     <User className="h-4 w-4" />
                     Profil
                   </Button>
-                  <Button
-                    variant="ghost"
-                    onClick={handleSignOut}
-                    className="gap-2 justify-start"
-                  >
+                  <Button variant="ghost" onClick={handleSignOut} className="gap-2 justify-start">
                     <LogOut className="h-4 w-4" />
                     Odhlásiť sa
                   </Button>
-                </>
-              ) : (
-                <Button onClick={() => navigate("/auth")} className="bg-primary">
+                </> : <Button onClick={() => navigate("/auth")} className="bg-primary">
                   Prihlásiť sa
-                </Button>
-              )}
+                </Button>}
             </div>
           </SheetContent>
         </Sheet>
       </div>
-    </nav>
-  );
+    </nav>;
 };
