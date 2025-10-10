@@ -35,7 +35,7 @@ export const Footer = () => {
           <div>
             <h4 className="font-semibold mb-4 text-primary">Sleduj nás</h4>
             <div className="flex gap-4">
-              <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/80 transition-smooth">
+              <a href="https://www.instagram.com/profesionalne_stravovanie/" target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/80 transition-smooth">
                 <Instagram className="h-6 w-6" />
               </a>
               <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/80 transition-smooth">
