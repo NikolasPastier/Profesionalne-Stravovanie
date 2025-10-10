@@ -86,22 +86,17 @@ const Auth = () => {
       } else if (data.user) {
         toast.success("Úspešne prihlásený!");
         
-        // Check if user is admin
-        if (email === "admin@vipstrava.sk") {
-          navigate("/admin");
-        } else {
-          // Check if user has completed onboarding
-          const { data: profile } = await supabase
-            .from("user_profiles")
-            .select("*")
-            .eq("user_id", data.user.id)
-            .single();
+        // Check if user has completed onboarding
+        const { data: profile } = await supabase
+          .from("user_profiles")
+          .select("*")
+          .eq("user_id", data.user.id)
+          .single();
 
-          if (!profile) {
-            navigate("/onboarding");
-          } else {
-            navigate("/dashboard");
-          }
+        if (!profile) {
+          navigate("/onboarding");
+        } else {
+          navigate("/dashboard");
         }
       }
     } catch (error: any) {

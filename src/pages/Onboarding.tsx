@@ -13,6 +13,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { z } from "zod";
+
+const profileSchema = z.object({
+  name: z.string().trim().min(2, "Meno musí mať aspoň 2 znaky").max(100, "Meno je príliš dlhé"),
+  age: z.number().min(13, "Minimálny vek je 13 rokov").max(120, "Neplatný vek"),
+  height: z.number().min(100, "Výška musí byť aspoň 100 cm").max(250, "Výška nemôže byť viac ako 250 cm"),
+  weight: z.number().min(30, "Váha musí byť aspoň 30 kg").max(300, "Váha nemôže byť viac ako 300 kg"),
+  phone: z.string().trim().regex(/^\+?[0-9]{9,15}$/, "Neplatné telefónne číslo"),
+  address: z.string().trim().min(10, "Adresa musí mať aspoň 10 znakov").max(500, "Adresa je príliš dlhá"),
+  health_issues: z.string().max(2000, "Text je príliš dlhý").optional(),
+});
 
 const Onboarding = () => {
   const navigate = useNavigate();
@@ -41,6 +52,27 @@ const Onboarding = () => {
 
   const handleSubmit = async () => {
     try {
+      // Validate form data
+      const validationResult = profileSchema.safeParse({
+        name: formData.name,
+        age: parseInt(formData.age),
+        height: parseInt(formData.height),
+        weight: parseFloat(formData.weight),
+        phone: formData.phone,
+        address: formData.address,
+        health_issues: formData.health_issues,
+      });
+
+      if (!validationResult.success) {
+        const firstError = validationResult.error.errors[0];
+        toast({
+          title: "Chyba validácie",
+          description: firstError.message,
+          variant: "destructive",
+        });
+        return;
+      }
+
       const {
         data: { user },
       } = await supabase.auth.getUser();

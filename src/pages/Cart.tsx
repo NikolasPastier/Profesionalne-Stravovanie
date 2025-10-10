@@ -10,6 +10,15 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { z } from "zod";
+
+const orderSchema = z.object({
+  name: z.string().trim().min(2, "Meno musí mať aspoň 2 znaky").max(100, "Meno je príliš dlhé"),
+  email: z.string().trim().email("Neplatný email").max(255, "Email je príliš dlhý"),
+  phone: z.string().trim().regex(/^\+?[0-9]{9,15}$/, "Neplatné telefónne číslo"),
+  address: z.string().trim().min(10, "Adresa musí mať aspoň 10 znakov").max(500, "Adresa je príliš dlhá"),
+  note: z.string().max(1000, "Poznámka je príliš dlhá").optional(),
+});
 
 const Cart = () => {
   const [cartItem, setCartItem] = useState<any>(null);
@@ -54,6 +63,22 @@ const Cart = () => {
     setLoading(true);
 
     try {
+      // Validate form data
+      const validationResult = orderSchema.safeParse({
+        name,
+        email,
+        phone,
+        address,
+        note,
+      });
+
+      if (!validationResult.success) {
+        const firstError = validationResult.error.errors[0];
+        toast.error(firstError.message);
+        setLoading(false);
+        return;
+      }
+
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session) {
@@ -92,11 +117,21 @@ const Cart = () => {
         return;
       }
 
-      // Create admin notification
-      await supabase.from("admin_notifications").insert({
-        order_id: order.id,
-        seen: false
-      });
+      // Create admin notification with error handling
+      try {
+        const { error: notifError } = await supabase
+          .from("admin_notifications")
+          .insert({
+            order_id: order.id,
+            seen: false
+          });
+        
+        if (notifError) {
+          console.error("Failed to create admin notification:", notifError);
+        }
+      } catch (err) {
+        console.error("Unexpected error creating notification:", err);
+      }
 
       // Update user profile
       await supabase
