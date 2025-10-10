@@ -592,7 +592,7 @@ const Dashboard = () => {
                         <TableRow>
                           <TableHead>Dátum</TableHead>
                           <TableHead>Zákazník</TableHead>
-                          <TableHead>Typ doručenia</TableHead>
+                          
                           <TableHead>Telefón</TableHead>
                           <TableHead>Suma</TableHead>
                           <TableHead>Status</TableHead>
@@ -652,7 +652,7 @@ const Dashboard = () => {
 
       <main className="container mx-auto px-4 py-20">
         <div className="max-w-7xl mx-auto">
-          <div className="flex justify-between items-center mb-2 mt-5">
+          <div className="flex justify-between items-center mb-2">
             <div>
               <h1 className="text-4xl font-display text-foreground mb-2">
                 Vitajte späť, {profile.name}! 👋
