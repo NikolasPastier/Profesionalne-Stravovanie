@@ -3,10 +3,8 @@ import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Instagram } from "lucide-react";
-
 const ONas = () => {
-  return (
-    <div className="min-h-screen bg-background">
+  return <div className="min-h-screen bg-background">
       <Navigation />
 
       <div className="container mx-auto px-4 pt-32 pb-20">
@@ -44,24 +42,13 @@ const ONas = () => {
                       Nebojte sa zmeny - začnite dnes!
                     </p>
                   </div>
-                  <Button
-                    onClick={() => window.open("https://instagram.com", "_blank")}
-                    className="bg-primary hover:glow-gold-strong gap-2"
-                    size="lg"
-                  >
+                  <Button onClick={() => window.open("https://instagram.com", "_blank")} className="bg-primary hover:glow-gold-strong gap-2" size="lg">
                     <Instagram className="h-5 w-5" />
                     Sleduj ma na Instagrame
                   </Button>
                 </div>
                 <div className="relative">
-                  <div className="aspect-square rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 border-2 border-primary/30 flex items-center justify-center">
-                    <div className="text-center p-8">
-                      <div className="text-6xl mb-4">🏋️</div>
-                      <p className="text-sm text-muted-foreground">
-                        Profesionálny tréner<br/>a výživový poradca
-                      </p>
-                    </div>
-                  </div>
+                  
                 </div>
               </div>
             </CardContent>
@@ -132,8 +119,6 @@ const ONas = () => {
       </div>
 
       <Footer />
-    </div>
-  );
+    </div>;
 };
-
 export default ONas;
