@@ -661,18 +661,13 @@ const Dashboard = () => {
 
       <main className="container mx-auto px-4 py-20">
         <div className="max-w-7xl mx-auto">
-          <div className="flex justify-between items-center mb-2">
-            <div>
-              <h1 className="text-4xl font-display text-foreground mb-2">
-                Vitajte späť, {profile.name}! 👋
-              </h1>
-              <p className="text-muted-foreground text-lg">
-                Sledujte svoj pokrok a dosahujte svoje ciele
-              </p>
-            </div>
-            <Button onClick={handleLogout} variant="outline">
-              Odhlásiť sa
-            </Button>
+          <div className="mt-5">
+            <h1 className="text-4xl font-display text-foreground mb-2">
+              Vitajte späť, {profile.name}! 👋
+            </h1>
+            <p className="text-muted-foreground text-lg">
+              Sledujte svoj pokrok a dosahujte svoje ciele
+            </p>
           </div>
 
           {/* Stats Cards */}
