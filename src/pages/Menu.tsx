@@ -103,35 +103,34 @@ const Menu = () => {
             Aktuálne týždenné menu
           </h2>
 
-          {currentMenu ? (
-            <Card className="card-premium">
-              <CardHeader>
-                <CardTitle className="text-2xl text-gradient-gold">
-                  {new Date(currentMenu.start_date).toLocaleDateString("sk-SK")} - {new Date(currentMenu.end_date).toLocaleDateString("sk-SK")}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-6">
-                  {currentMenu.items && Array.isArray(currentMenu.items) && currentMenu.items.map((day: any, idx: number) => (
-                    <div key={idx} className="border-l-4 border-primary pl-6">
-                      <h3 className="font-display text-xl font-bold mb-3 text-primary">
-                        {day.day}
-                      </h3>
-                      <div className="grid gap-3">
-                        {day.meals && day.meals.map((meal: string, mealIdx: number) => (
-                          <p key={mealIdx} className="text-foreground">
-                            {meal}
-                          </p>
-                        ))}
-                      </div>
+        {currentMenu ? (
+          <Card className="card-premium">
+            <CardHeader>
+              <CardTitle className="text-2xl text-gradient-gold">
+                Menu na týždeň {new Date(currentMenu.start_date).toLocaleDateString("sk-SK")} - {new Date(currentMenu.end_date).toLocaleDateString("sk-SK")}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {currentMenu.items && Array.isArray(currentMenu.items) && currentMenu.items.map((day: any, idx: number) => (
+                  <div key={idx} className="border border-border rounded-lg p-4 bg-card/50">
+                    <h3 className="font-display text-xl font-bold mb-3 text-accent border-b border-accent pb-2">
+                      {day.day}
+                    </h3>
+                    <div className="space-y-2">
+                      {day.meals && day.meals.map((meal: string, mealIdx: number) => (
+                        <p key={mealIdx} className="text-foreground text-sm">
+                          {meal}
+                        </p>
+                      ))}
                     </div>
-                  ))}
-                </div>
-
+                  </div>
+                ))}
+              </div>
                 <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                   <DialogTrigger asChild>
-                    <Button className="mt-8 w-full bg-primary hover:glow-gold-strong text-lg py-6">
-                      Pridať menu do košíka 🍱
+                    <Button className="mt-8 w-full md:w-auto bg-accent text-accent-foreground hover:glow-gold-strong text-lg py-6 px-8 transition-smooth">
+                      Objednať toto menu 🍱
                     </Button>
                   </DialogTrigger>
                   <DialogContent className="bg-background">
@@ -154,10 +153,10 @@ const Menu = () => {
                     </RadioGroup>
                     <Button
                       onClick={handleAddToCart}
-                      className="w-full bg-primary hover:glow-gold-strong"
+                      className="w-full bg-accent text-accent-foreground hover:glow-gold-strong transition-smooth"
                       disabled={!selectedSize}
                     >
-                      Pokračovať
+                      Pokračovať do košíka
                     </Button>
                   </DialogContent>
                 </Dialog>
@@ -176,26 +175,36 @@ const Menu = () => {
             <h2 className="font-display text-3xl font-bold mb-8 text-primary">
               História menu
             </h2>
-            <div className="grid gap-6">
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               {menuHistory.map((menu) => (
                 <Card key={menu.id} className="card-premium">
                   <CardHeader>
-                    <CardTitle className="text-xl text-gradient-gold">
+                    <CardTitle className="text-lg text-accent">
                       {new Date(menu.start_date).toLocaleDateString("sk-SK")} - {new Date(menu.end_date).toLocaleDateString("sk-SK")}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {menu.items && Array.isArray(menu.items) && menu.items.map((day: any, idx: number) => (
-                        <div key={idx} className="border border-primary/20 rounded-lg p-4">
-                          <h4 className="font-bold mb-2 text-primary">{day.day}</h4>
-                          <div className="space-y-1 text-sm">
-                            {day.meals && day.meals.map((meal: string, mealIdx: number) => (
-                              <p key={mealIdx} className="text-muted-foreground">{meal}</p>
+                    <div className="space-y-3">
+                      {menu.items && Array.isArray(menu.items) && menu.items.slice(0, 3).map((day: any, idx: number) => (
+                        <div key={idx} className="border-l-2 border-accent/40 pl-3">
+                          <h4 className="font-semibold text-sm text-foreground mb-1">{day.day}</h4>
+                          <div className="space-y-1">
+                            {day.meals && day.meals.slice(0, 2).map((meal: string, mealIdx: number) => (
+                              <p key={mealIdx} className="text-xs text-muted-foreground">{meal}</p>
                             ))}
+                            {day.meals && day.meals.length > 2 && (
+                              <p className="text-xs text-muted-foreground italic">
+                                +{day.meals.length - 2} ďalších jedál
+                              </p>
+                            )}
                           </div>
                         </div>
                       ))}
+                      {menu.items && menu.items.length > 3 && (
+                        <p className="text-sm text-muted-foreground italic text-center pt-2">
+                          ... a {menu.items.length - 3} ďalších dní
+                        </p>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
