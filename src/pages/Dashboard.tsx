@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { User, Target, Activity, TrendingUp, UtensilsCrossed, Package, Scale, TrendingDown, Calendar, Sparkles, Mail, Lock, Trash2, Camera, Trophy } from "lucide-react";
 import { MenuManagement } from "@/components/admin/MenuManagement";
+import { WeeklyMenuManagement } from "@/components/admin/WeeklyMenuManagement";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -577,7 +578,7 @@ const Dashboard = () => {
                   <UtensilsCrossed className="h-4 w-4 mr-2" />
                   Správa jedál
                 </TabsTrigger>
-                <TabsTrigger value="weekly-menu" onClick={() => navigate("/admin/menu")}>
+                <TabsTrigger value="weekly-menu">
                   <Calendar className="h-4 w-4 mr-2" />
                   Menu
                 </TabsTrigger>
@@ -638,6 +639,10 @@ const Dashboard = () => {
 
               <TabsContent value="dishes">
                 <MenuManagement />
+              </TabsContent>
+
+              <TabsContent value="weekly-menu">
+                <WeeklyMenuManagement />
               </TabsContent>
             </Tabs>
           </div>
