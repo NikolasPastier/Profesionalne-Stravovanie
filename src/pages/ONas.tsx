@@ -4,44 +4,39 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Instagram } from "lucide-react";
 const ONas = () => {
-  return <div className="min-h-screen bg-background">
+  return (
+    <div className="min-h-screen bg-background">
       <Navigation />
 
       <div className="container mx-auto px-4 pt-32 pb-20">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-16 animate-fade-in">
-            <h1 className="font-display text-4xl md:text-6xl font-bold mb-6 text-gradient-gold">
-              O nás
-            </h1>
-            <p className="text-xl text-muted-foreground">
-              Tvoje telo. Tvoje ciele. Naša zodpovednosť.
-            </p>
+            <h1 className="font-display text-4xl md:text-6xl font-bold mb-6 text-gradient-gold">O nás</h1>
+            <p className="text-xl text-muted-foreground">Tvoje telo. Tvoje ciele. Naša zodpovednosť.</p>
           </div>
 
           <Card className="card-premium mb-12">
             <CardContent className="p-8 md:p-12">
               <div className="space-y-6">
-                <h2 className="font-display text-3xl font-bold text-gradient-gold">
-                  Patrik Rigodanzo
-                </h2>
-                <p className="text-lg text-muted-foreground">
-                  Profesionálny tréner a výživový poradca
-                </p>
+                <h2 className="font-display text-3xl font-bold text-gradient-gold">Patrik Rigodanzo</h2>
+                <p className="text-lg text-muted-foreground">Profesionálny tréner a výživový poradca</p>
                 <div className="space-y-4 text-foreground">
                   <p>
-                    Vítajte vo svete VIP Profesionálneho Krabičkového Stravovania! Som Patrik Rigodanzo, 
-                    osobný tréner a výživový poradca s viac ako 10-ročnými skúsenosťami v oblasti fitness a zdravého životného štýlu.
+                    Vítajte vo svete VIP Profesionálneho Krabičkového Stravovania! Som Patrik Rigodanzo, osobný tréner a
+                    výživový poradca s viac ako 10-ročnými skúsenosťami v oblasti fitness a zdravého životného štýlu.
                   </p>
                   <p>
-                    Mojou víziou je pomôcť vám dosiahnuť vaše ciele bez kompromisov v chuti a kvalite. 
-                    Každé jedlo, ktoré pripravujeme, je starostlivo navrhnuté s ohľadom na vaše individuálne potreby 
-                    a presne prepočítané makroživiny.
+                    Mojou víziou je pomôcť vám dosiahnuť vaše ciele bez kompromisov v chuti a kvalite. Každé jedlo,
+                    ktoré pripravujeme, je starostlivo navrhnuté s ohľadom na vaše individuálne potreby a presne
+                    prepočítané makroživiny.
                   </p>
-                  <p className="font-bold text-primary">
-                    Nebojte sa zmeny - začnite dnes!
-                  </p>
+                  <p className="font-bold text-primary">Nebojte sa zmeny - začnite dnes!</p>
                 </div>
-                <Button onClick={() => window.open("https://instagram.com", "_blank")} className="bg-primary hover:glow-gold-strong gap-2" size="lg">
+                <Button
+                  onClick={() => window.open("https://instagram.com/patrik.rigodanzo/", "_blank")}
+                  className="bg-primary hover:glow-gold-strong gap-2"
+                  size="lg"
+                >
                   <Instagram className="h-5 w-5" />
                   Sleduj ma na Instagrame
                 </Button>
@@ -69,17 +64,15 @@ const ONas = () => {
 
           <Card className="card-premium">
             <CardContent className="p-8 md:p-12">
-              <h2 className="font-display text-3xl font-bold mb-6 text-gradient-gold text-center">
-                Naša filozofia
-              </h2>
+              <h2 className="font-display text-3xl font-bold mb-6 text-gradient-gold text-center">Naša filozofia</h2>
               <div className="space-y-4 text-foreground">
                 <p>
-                  Veríme, že zdravé stravovanie nemusí byť nudné ani komplikované. Naše menu je navrhnuté tak, 
-                  aby bolo nielen výživné, ale aj chutné a rozmanité.
+                  Veríme, že zdravé stravovanie nemusí byť nudné ani komplikované. Naše menu je navrhnuté tak, aby bolo
+                  nielen výživné, ale aj chutné a rozmanité.
                 </p>
                 <p>
-                  Používame len najkvalitnejšie suroviny od overených dodávateľov. Každé jedlo pripravujeme 
-                  čerstvé, s láskou a odbornosťou, aby ste dosiahli svoje ciele a pritom si užili každé jedlo.
+                  Používame len najkvalitnejšie suroviny od overených dodávateľov. Každé jedlo pripravujeme čerstvé, s
+                  láskou a odbornosťou, aby ste dosiahli svoje ciele a pritom si užili každé jedlo.
                 </p>
                 <div className="grid md:grid-cols-2 gap-4 mt-8">
                   <div className="border-l-4 border-primary pl-4">
@@ -114,6 +107,7 @@ const ONas = () => {
       </div>
 
       <Footer />
-    </div>;
+    </div>
+  );
 };
 export default ONas;
