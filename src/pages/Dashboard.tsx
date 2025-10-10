@@ -568,17 +568,13 @@ const Dashboard = () => {
               </Card>}
 
             <Tabs defaultValue="orders" className="space-y-6">
-              <TabsList className="grid w-full max-w-md grid-cols-3">
+              <TabsList className="grid w-full max-w-md grid-cols-2">
                 <TabsTrigger value="orders">
                   <Package className="h-4 w-4 mr-2" />
                   Objednávky
                 </TabsTrigger>
-                <TabsTrigger value="dishes">
+                <TabsTrigger value="menu">
                   <UtensilsCrossed className="h-4 w-4 mr-2" />
-                  Správa jedál
-                </TabsTrigger>
-                <TabsTrigger value="weekly-menu" onClick={() => navigate("/admin/menu")}>
-                  <Calendar className="h-4 w-4 mr-2" />
                   Menu
                 </TabsTrigger>
               </TabsList>
@@ -600,7 +596,7 @@ const Dashboard = () => {
                           <TableHead>Telefón</TableHead>
                           <TableHead>Suma</TableHead>
                           <TableHead>Status</TableHead>
-                          <TableHead>Akcie</TableHead>
+                          
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -636,7 +632,7 @@ const Dashboard = () => {
                 </Card>
               </TabsContent>
 
-              <TabsContent value="dishes">
+              <TabsContent value="menu">
                 <MenuManagement />
               </TabsContent>
             </Tabs>
