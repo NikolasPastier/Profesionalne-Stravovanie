@@ -20,36 +20,31 @@ const ONas = () => {
 
           <Card className="card-premium mb-12">
             <CardContent className="p-8 md:p-12">
-              <div className="grid md:grid-cols-2 gap-8 items-center">
-                <div className="space-y-6">
-                  <h2 className="font-display text-3xl font-bold text-gradient-gold">
-                    Patrik Rigodanzo
-                  </h2>
-                  <p className="text-lg text-muted-foreground">
-                    Profesionálny tréner a výživový poradca
+              <div className="space-y-6">
+                <h2 className="font-display text-3xl font-bold text-gradient-gold">
+                  Patrik Rigodanzo
+                </h2>
+                <p className="text-lg text-muted-foreground">
+                  Profesionálny tréner a výživový poradca
+                </p>
+                <div className="space-y-4 text-foreground">
+                  <p>
+                    Vítajte vo svete VIP Profesionálneho Krabičkového Stravovania! Som Patrik Rigodanzo, 
+                    osobný tréner a výživový poradca s viac ako 10-ročnými skúsenosťami v oblasti fitness a zdravého životného štýlu.
                   </p>
-                  <div className="space-y-4 text-foreground">
-                    <p>
-                      Vítajte vo svete VIP Profesionálneho Krabičkového Stravovania! Som Patrik Rigodanzo, 
-                      osobný tréner a výživový poradca s viac ako 10-ročnými skúsenosťami v oblasti fitness a zdravého životného štýlu.
-                    </p>
-                    <p>
-                      Mojou víziou je pomôcť vám dosiahnuť vaše ciele bez kompromisov v chuti a kvalite. 
-                      Každé jedlo, ktoré pripravujeme, je starostlivo navrhnuté s ohľadom na vaše individuálne potreby 
-                      a presne prepočítané makroživiny.
-                    </p>
-                    <p className="font-bold text-primary">
-                      Nebojte sa zmeny - začnite dnes!
-                    </p>
-                  </div>
-                  <Button onClick={() => window.open("https://instagram.com", "_blank")} className="bg-primary hover:glow-gold-strong gap-2" size="lg">
-                    <Instagram className="h-5 w-5" />
-                    Sleduj ma na Instagrame
-                  </Button>
+                  <p>
+                    Mojou víziou je pomôcť vám dosiahnuť vaše ciele bez kompromisov v chuti a kvalite. 
+                    Každé jedlo, ktoré pripravujeme, je starostlivo navrhnuté s ohľadom na vaše individuálne potreby 
+                    a presne prepočítané makroživiny.
+                  </p>
+                  <p className="font-bold text-primary">
+                    Nebojte sa zmeny - začnite dnes!
+                  </p>
                 </div>
-                <div className="relative">
-                  
-                </div>
+                <Button onClick={() => window.open("https://instagram.com", "_blank")} className="bg-primary hover:glow-gold-strong gap-2" size="lg">
+                  <Instagram className="h-5 w-5" />
+                  Sleduj ma na Instagrame
+                </Button>
               </div>
             </CardContent>
           </Card>
