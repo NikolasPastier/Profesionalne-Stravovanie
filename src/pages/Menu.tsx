@@ -39,6 +39,7 @@ const Menu = () => {
   const [selectedDay, setSelectedDay] = useState<any>(null);
   const [isDayDetailOpen, setIsDayDetailOpen] = useState(false);
   const [selectedDaySize, setSelectedDaySize] = useState("");
+  const [selectedMenuContext, setSelectedMenuContext] = useState<WeeklyMenu | null>(null);
   const [mealDetails, setMealDetails] = useState<Record<string, MenuItem>>({});
   const [mealDetailsByName, setMealDetailsByName] = useState<Record<string, MenuItem>>({});
   const navigate = useNavigate();
@@ -136,7 +137,7 @@ const Menu = () => {
       return;
     }
 
-    if (!selectedDay || !currentMenu) {
+    if (!selectedDay || !selectedMenuContext) {
       toast.error("Chyba pri pridávaní do košíka");
       return;
     }
@@ -148,11 +149,11 @@ const Menu = () => {
     // Add day to cart
     const dayItem = {
       type: 'day',
-      menuId: currentMenu.id,
+      menuId: selectedMenuContext.id,
       size: selectedDaySize,
       day: selectedDay.day,
       meals: selectedDay.meals,
-      weekRange: `${new Date(currentMenu.start_date).toLocaleDateString("sk-SK")} - ${new Date(currentMenu.end_date).toLocaleDateString("sk-SK")}`
+      weekRange: `${new Date(selectedMenuContext.start_date).toLocaleDateString("sk-SK")} - ${new Date(selectedMenuContext.end_date).toLocaleDateString("sk-SK")}`
     };
 
     cart.push(dayItem);
@@ -193,6 +194,7 @@ const Menu = () => {
                     className="border border-border rounded-lg p-4 bg-card/50 cursor-pointer hover:bg-card/70 hover:border-accent/50 transition-smooth hover:glow-gold"
                     onClick={() => {
                       setSelectedDay(day);
+                      setSelectedMenuContext(currentMenu);
                       setIsDayDetailOpen(true);
                     }}
                   >
@@ -391,27 +393,36 @@ const Menu = () => {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-3">
-                      {menu.items && Array.isArray(menu.items) && menu.items.slice(0, 3).map((day: any, idx: number) => (
-                        <div key={idx} className="border-l-2 border-accent/40 pl-3">
-                          <h4 className="font-semibold text-sm text-foreground mb-1">{day.day}</h4>
+                    <div className="grid grid-cols-1 gap-3">
+                      {menu.items && Array.isArray(menu.items) && menu.items.map((day: any, idx: number) => (
+                        <div 
+                          key={idx} 
+                          className="border border-border rounded-lg p-3 bg-card/30 cursor-pointer hover:bg-card/60 hover:border-accent/50 transition-smooth"
+                          onClick={() => {
+                            setSelectedDay(day);
+                            setSelectedMenuContext(menu);
+                            setIsDayDetailOpen(true);
+                          }}
+                        >
+                          <h4 className="font-semibold text-sm text-primary mb-2">{day.day}</h4>
                           <div className="space-y-1">
-                            {day.meals && day.meals.slice(0, 2).map((meal: string, mealIdx: number) => (
-                              <p key={mealIdx} className="text-xs text-muted-foreground">{meal}</p>
-                            ))}
+                            {day.meals && day.meals.slice(0, 2).map((meal: any, mealIdx: number) => {
+                              const mealName = typeof meal === 'string' ? meal.replace(/^[🍳🍽️🥤]\s*/, '') : meal.name;
+                              return (
+                                <p key={mealIdx} className="text-xs text-muted-foreground">• {mealName}</p>
+                              );
+                            })}
                             {day.meals && day.meals.length > 2 && (
                               <p className="text-xs text-muted-foreground italic">
                                 +{day.meals.length - 2} ďalších jedál
                               </p>
                             )}
                           </div>
+                          <p className="text-xs text-muted-foreground mt-2 italic">
+                            Kliknite pre detaily →
+                          </p>
                         </div>
                       ))}
-                      {menu.items && menu.items.length > 3 && (
-                        <p className="text-sm text-muted-foreground italic text-center pt-2">
-                          ... a {menu.items.length - 3} ďalších dní
-                        </p>
-                      )}
                     </div>
                   </CardContent>
                 </Card>
