@@ -336,37 +336,39 @@ const Menu = () => {
                       })}
                     </div>
                     
-                    {/* Size selection and add to cart */}
-                    <div className="mt-6 pt-6 border-t border-border space-y-4">
-                      <h4 className="font-bold text-lg text-foreground">Vyberte veľkosť</h4>
-                      <RadioGroup value={selectedDaySize} onValueChange={setSelectedDaySize}>
-                        {menuSizes.map((size) => (
-                          <div key={size.value} className="flex items-center space-x-3 card-premium p-3">
-                            <RadioGroupItem value={size.value} id={`day-${size.value}`} />
-                            <Label htmlFor={`day-${size.value}`} className="flex-1 cursor-pointer">
-                              <div className="font-bold text-primary text-sm">{size.label}</div>
-                              <div className="text-xs text-muted-foreground">{size.description}</div>
-                            </Label>
-                          </div>
-                        ))}
-                      </RadioGroup>
-                      <div className="flex gap-3">
-                        <Button
-                          onClick={handleAddDayToCart}
-                          className="flex-1 bg-accent text-accent-foreground hover:glow-gold-strong transition-smooth"
-                          disabled={!selectedDaySize}
-                        >
-                          Pridať do košíka
-                        </Button>
-                        <Button
-                          onClick={() => navigate("/cart")}
-                          variant="outline"
-                          className="border-accent text-accent hover:bg-accent/10"
-                        >
-                          Zobraziť košík
-                        </Button>
+                    {/* Size selection and add to cart - only for current menu */}
+                    {selectedMenuContext?.id === currentMenu?.id && (
+                      <div className="mt-6 pt-6 border-t border-border space-y-4">
+                        <h4 className="font-bold text-lg text-foreground">Vyberte veľkosť</h4>
+                        <RadioGroup value={selectedDaySize} onValueChange={setSelectedDaySize}>
+                          {menuSizes.map((size) => (
+                            <div key={size.value} className="flex items-center space-x-3 card-premium p-3">
+                              <RadioGroupItem value={size.value} id={`day-${size.value}`} />
+                              <Label htmlFor={`day-${size.value}`} className="flex-1 cursor-pointer">
+                                <div className="font-bold text-primary text-sm">{size.label}</div>
+                                <div className="text-xs text-muted-foreground">{size.description}</div>
+                              </Label>
+                            </div>
+                          ))}
+                        </RadioGroup>
+                        <div className="flex gap-3">
+                          <Button
+                            onClick={handleAddDayToCart}
+                            className="flex-1 bg-accent text-accent-foreground hover:glow-gold-strong transition-smooth"
+                            disabled={!selectedDaySize}
+                          >
+                            Pridať do košíka
+                          </Button>
+                          <Button
+                            onClick={() => navigate("/cart")}
+                            variant="outline"
+                            className="border-accent text-accent hover:bg-accent/10"
+                          >
+                            Zobraziť košík
+                          </Button>
+                        </div>
                       </div>
-                    </div>
+                    )}
                   </DialogContent>
                 </Dialog>
               </CardContent>
