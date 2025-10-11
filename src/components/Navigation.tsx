@@ -1,13 +1,15 @@
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { User, LogOut, Menu as MenuIcon } from "lucide-react";
+import { User, LogOut, Menu as MenuIcon, ShoppingCart } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import logo from "@/assets/logo.svg";
 export const Navigation = () => {
   const [user, setUser] = useState<any>(null);
+  const [cartCount, setCartCount] = useState(0);
   const navigate = useNavigate();
+  
   useEffect(() => {
     supabase.auth.getSession().then(({
       data: {
@@ -24,6 +26,33 @@ export const Navigation = () => {
       setUser(session?.user ?? null);
     });
     return () => subscription.unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    // Update cart count from localStorage
+    const updateCartCount = () => {
+      const cart = localStorage.getItem("cart");
+      if (cart) {
+        const parsed = JSON.parse(cart);
+        const count = Array.isArray(parsed) ? parsed.length : 1;
+        setCartCount(count);
+      } else {
+        setCartCount(0);
+      }
+    };
+
+    updateCartCount();
+
+    // Listen for storage changes (updates from other tabs/windows)
+    window.addEventListener("storage", updateCartCount);
+    
+    // Custom event for same-tab updates
+    window.addEventListener("cartUpdated", updateCartCount);
+
+    return () => {
+      window.removeEventListener("storage", updateCartCount);
+      window.removeEventListener("cartUpdated", updateCartCount);
+    };
   }, []);
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -57,6 +86,20 @@ export const Navigation = () => {
         <div className="hidden md:flex items-center gap-6">
           <NavLinks />
           
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => navigate("/cart")} 
+            className="relative gap-2"
+          >
+            <ShoppingCart className="h-5 w-5" />
+            {cartCount > 0 && (
+              <span className="absolute -top-1 -right-1 bg-accent text-accent-foreground text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                {cartCount}
+              </span>
+            )}
+          </Button>
+
           {user ? <div className="flex items-center gap-3">
               <Button variant="outline" size="sm" onClick={() => navigate("/dashboard")} className="gap-2">
                 <User className="h-4 w-4" />
@@ -81,6 +124,21 @@ export const Navigation = () => {
           <SheetContent side="right" className="bg-background">
             <div className="flex flex-col gap-6 mt-8">
               <NavLinks />
+              
+              <Button 
+                variant="ghost" 
+                onClick={() => navigate("/cart")} 
+                className="relative gap-2 justify-start"
+              >
+                <ShoppingCart className="h-5 w-5" />
+                Košík
+                {cartCount > 0 && (
+                  <span className="ml-auto bg-accent text-accent-foreground text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                    {cartCount}
+                  </span>
+                )}
+              </Button>
+
               {user ? <>
                   <Button variant="outline" onClick={() => navigate("/dashboard")} className="gap-2 justify-start">
                     <User className="h-4 w-4" />

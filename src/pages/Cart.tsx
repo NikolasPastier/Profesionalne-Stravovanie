@@ -163,6 +163,7 @@ const Cart = () => {
         });
 
       localStorage.removeItem("cart");
+      window.dispatchEvent(new Event("cartUpdated"));
       toast.success("Objednávka úspešne odoslaná!");
       navigate("/orders");
     } catch (error: any) {
@@ -193,6 +194,7 @@ const Cart = () => {
     const newCart = cartItems.filter((_, i) => i !== index);
     setCartItems(newCart);
     localStorage.setItem("cart", JSON.stringify(newCart));
+    window.dispatchEvent(new Event("cartUpdated"));
     toast.success("Položka odstránená z košíka");
   };
 

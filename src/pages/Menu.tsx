@@ -124,6 +124,7 @@ const Menu = () => {
     };
 
     localStorage.setItem("cart", JSON.stringify([cartItem]));
+    window.dispatchEvent(new Event("cartUpdated"));
     toast.success("Menu pridané do košíka!");
     setIsDialogOpen(false);
     navigate("/cart");
@@ -156,6 +157,7 @@ const Menu = () => {
 
     cart.push(dayItem);
     localStorage.setItem("cart", JSON.stringify(cart));
+    window.dispatchEvent(new Event("cartUpdated"));
     toast.success(`${selectedDay.day} pridaný do košíka!`);
     setIsDayDetailOpen(false);
     setSelectedDaySize("");
