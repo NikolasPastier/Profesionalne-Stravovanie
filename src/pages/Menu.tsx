@@ -33,6 +33,8 @@ const Menu = () => {
   const [menuHistory, setMenuHistory] = useState<WeeklyMenu[]>([]);
   const [selectedSize, setSelectedSize] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [selectedDay, setSelectedDay] = useState<any>(null);
+  const [isDayDetailOpen, setIsDayDetailOpen] = useState(false);
   const navigate = useNavigate();
 
   const menuSizes = [
@@ -113,7 +115,14 @@ const Menu = () => {
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {currentMenu.items && Array.isArray(currentMenu.items) && currentMenu.items.map((day: any, idx: number) => (
-                  <div key={idx} className="border border-border rounded-lg p-4 bg-card/50">
+                  <div 
+                    key={idx} 
+                    className="border border-border rounded-lg p-4 bg-card/50 cursor-pointer hover:bg-card/70 hover:border-accent/50 transition-smooth hover:glow-gold"
+                    onClick={() => {
+                      setSelectedDay(day);
+                      setIsDayDetailOpen(true);
+                    }}
+                  >
                     <h3 className="font-display text-xl font-bold mb-3 text-accent border-b border-accent pb-2">
                       {day.day}
                     </h3>
@@ -124,6 +133,9 @@ const Menu = () => {
                         </p>
                       ))}
                     </div>
+                    <p className="text-xs text-muted-foreground mt-3 italic">
+                      Kliknite pre detaily →
+                    </p>
                   </div>
                 ))}
               </div>
@@ -158,6 +170,81 @@ const Menu = () => {
                     >
                       Pokračovať do košíka
                     </Button>
+                  </DialogContent>
+                </Dialog>
+
+                {/* Day Detail Modal */}
+                <Dialog open={isDayDetailOpen} onOpenChange={setIsDayDetailOpen}>
+                  <DialogContent className="bg-background max-w-2xl max-h-[80vh] overflow-y-auto">
+                    <DialogHeader>
+                      <DialogTitle className="text-gradient-gold text-2xl">
+                        {selectedDay?.day}
+                      </DialogTitle>
+                      <DialogDescription>
+                        Kompletný prehľad jedál a nutričných hodnôt
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 mt-4">
+                      {selectedDay?.meals && selectedDay.meals.map((meal: any, idx: number) => (
+                        <div key={idx} className="card-premium p-4 space-y-2">
+                          <h4 className="font-bold text-lg text-accent">
+                            {typeof meal === 'string' ? meal : meal.name || `Jedlo ${idx + 1}`}
+                          </h4>
+                          
+                          {typeof meal === 'object' && (
+                            <>
+                              {meal.description && (
+                                <p className="text-sm text-muted-foreground">
+                                  {meal.description}
+                                </p>
+                              )}
+                              
+                              {(meal.calories || meal.proteins || meal.carbs || meal.fats) && (
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-3 pt-3 border-t border-border">
+                                  {meal.calories && (
+                                    <div className="text-center">
+                                      <div className="text-xs text-muted-foreground">Kalórie</div>
+                                      <div className="font-bold text-primary">{meal.calories} kcal</div>
+                                    </div>
+                                  )}
+                                  {meal.proteins && (
+                                    <div className="text-center">
+                                      <div className="text-xs text-muted-foreground">Bielkoviny</div>
+                                      <div className="font-bold text-primary">{meal.proteins}g</div>
+                                    </div>
+                                  )}
+                                  {meal.carbs && (
+                                    <div className="text-center">
+                                      <div className="text-xs text-muted-foreground">Sacharidy</div>
+                                      <div className="font-bold text-primary">{meal.carbs}g</div>
+                                    </div>
+                                  )}
+                                  {meal.fats && (
+                                    <div className="text-center">
+                                      <div className="text-xs text-muted-foreground">Tuky</div>
+                                      <div className="font-bold text-primary">{meal.fats}g</div>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                              
+                              {meal.allergens && meal.allergens.length > 0 && (
+                                <div className="mt-3 pt-3 border-t border-border">
+                                  <div className="text-xs text-muted-foreground mb-1">Alergény:</div>
+                                  <div className="flex flex-wrap gap-1">
+                                    {meal.allergens.map((allergen: string, aIdx: number) => (
+                                      <span key={aIdx} className="text-xs bg-destructive/20 text-destructive px-2 py-1 rounded">
+                                        {allergen}
+                                      </span>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                            </>
+                          )}
+                        </div>
+                      ))}
+                    </div>
                   </DialogContent>
                 </Dialog>
               </CardContent>
