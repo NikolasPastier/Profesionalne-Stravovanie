@@ -21,7 +21,7 @@ const orderSchema = z.object({
 });
 
 const Cart = () => {
-  const [cartItem, setCartItem] = useState<any>(null);
+  const [cartItems, setCartItems] = useState<any[]>([]);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -34,7 +34,8 @@ const Cart = () => {
   useEffect(() => {
     const storedCart = localStorage.getItem("cart");
     if (storedCart) {
-      setCartItem(JSON.parse(storedCart));
+      const parsed = JSON.parse(storedCart);
+      setCartItems(Array.isArray(parsed) ? parsed : [parsed]);
     }
 
     // Load user data if available
@@ -87,50 +88,67 @@ const Cart = () => {
         return;
       }
 
-      if (!cartItem) {
+      if (!cartItems || cartItems.length === 0) {
         toast.error("Košík je prázdny");
         return;
       }
 
-      // Create order
-      const { data: order, error: orderError } = await supabase
-        .from("orders")
-        .insert({
+      // Create orders for each cart item
+      for (const item of cartItems) {
+        const orderData = item.type === 'week' ? {
           user_id: session.user.id,
-          menu_id: cartItem.menuId,
-          items: cartItem.menu.items,
-          menu_size: cartItem.size,
-          calories: parseInt(cartItem.size.match(/\d+/)?.[0] || "2000"),
-          total_price: 45.95, // Base price, can be calculated
+          menu_id: item.menuId,
+          items: item.menu.items,
+          menu_size: item.size,
+          calories: parseInt(item.size.match(/\d+/)?.[0] || "2000"),
+          total_price: 45.95,
           delivery_type: deliveryType,
           address,
           phone,
           note,
           payment_type: "cash",
           status: "pending"
-        })
-        .select()
-        .single();
+        } : {
+          user_id: session.user.id,
+          menu_id: item.menuId,
+          items: [{ day: item.day, meals: item.meals }],
+          menu_size: item.size,
+          calories: parseInt(item.size.match(/\d+/)?.[0] || "2000"),
+          total_price: 6.99,
+          delivery_type: deliveryType,
+          address,
+          phone,
+          note,
+          payment_type: "cash",
+          status: "pending"
+        };
 
-      if (orderError) {
-        toast.error("Chyba pri vytváraní objednávky");
-        return;
-      }
+        const { data: order, error: orderError } = await supabase
+          .from("orders")
+          .insert(orderData)
+          .select()
+          .single();
 
-      // Create admin notification with error handling
-      try {
-        const { error: notifError } = await supabase
-          .from("admin_notifications")
-          .insert({
-            order_id: order.id,
-            seen: false
-          });
-        
-        if (notifError) {
-          console.error("Failed to create admin notification:", notifError);
+        if (orderError) {
+          toast.error("Chyba pri vytváraní objednávky");
+          return;
         }
-      } catch (err) {
-        console.error("Unexpected error creating notification:", err);
+
+        // Create admin notification with error handling
+        try {
+          const { error: notifError } = await supabase
+            .from("admin_notifications")
+            .insert({
+              order_id: order.id,
+              seen: false
+            });
+          
+          if (notifError) {
+            console.error("Failed to create admin notification:", notifError);
+          }
+        } catch (err) {
+          console.error("Unexpected error creating notification:", err);
+        }
       }
 
       // Update user profile
@@ -154,7 +172,7 @@ const Cart = () => {
     }
   };
 
-  if (!cartItem) {
+  if (!cartItems || cartItems.length === 0) {
     return (
       <div className="min-h-screen bg-background">
         <Navigation />
@@ -170,6 +188,17 @@ const Cart = () => {
       </div>
     );
   }
+
+  const removeFromCart = (index: number) => {
+    const newCart = cartItems.filter((_, i) => i !== index);
+    setCartItems(newCart);
+    localStorage.setItem("cart", JSON.stringify(newCart));
+    toast.success("Položka odstránená z košíka");
+  };
+
+  const totalPrice = cartItems.reduce((sum, item) => {
+    return sum + (item.type === 'week' ? 45.95 : 6.99);
+  }, 0);
 
   return (
     <div className="min-h-screen bg-background">
@@ -187,14 +216,48 @@ const Cart = () => {
               <CardTitle className="text-2xl text-gradient-gold">Vaša objednávka</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="border border-primary/20 rounded-lg p-4">
-                <h3 className="font-bold text-lg mb-2 text-primary">Týždenné menu</h3>
-                <p className="text-muted-foreground mb-2">
-                  {new Date(cartItem.menu.start_date).toLocaleDateString("sk-SK")} - {new Date(cartItem.menu.end_date).toLocaleDateString("sk-SK")}
-                </p>
-                <div className="flex justify-between items-center mt-4">
-                  <span className="font-bold text-primary">Veľkosť: {cartItem.size}</span>
-                  <span className="font-bold text-xl text-primary">€45.95</span>
+              {cartItems.map((item, index) => (
+                <div key={index} className="border border-primary/20 rounded-lg p-4">
+                  <div className="flex justify-between items-start mb-2">
+                    <div>
+                      <h3 className="font-bold text-lg text-primary">
+                        {item.type === 'week' ? 'Týždenné menu' : item.day}
+                      </h3>
+                      <p className="text-muted-foreground text-sm">
+                        {item.type === 'week' 
+                          ? `${new Date(item.menu.start_date).toLocaleDateString("sk-SK")} - ${new Date(item.menu.end_date).toLocaleDateString("sk-SK")}`
+                          : item.weekRange}
+                      </p>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removeFromCart(index)}
+                      className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                    >
+                      Odstrániť
+                    </Button>
+                  </div>
+                  {item.type === 'day' && (
+                    <div className="mt-2 text-sm text-muted-foreground">
+                      {item.meals?.map((meal: any, idx: number) => {
+                        const mealName = typeof meal === 'string' ? meal.replace(/^[🍳🍽️🥤]\s*/, '') : meal.name;
+                        return <div key={idx}>• {mealName}</div>;
+                      })}
+                    </div>
+                  )}
+                  <div className="flex justify-between items-center mt-4">
+                    <span className="font-bold text-primary">Veľkosť: {item.size}</span>
+                    <span className="font-bold text-xl text-primary">
+                      €{item.type === 'week' ? '45.95' : '6.99'}
+                    </span>
+                  </div>
+                </div>
+              ))}
+              <div className="border-t pt-4 mt-4">
+                <div className="flex justify-between items-center">
+                  <span className="font-bold text-xl text-foreground">Celkom:</span>
+                  <span className="font-bold text-2xl text-gradient-gold">€{totalPrice.toFixed(2)}</span>
                 </div>
               </div>
             </CardContent>
