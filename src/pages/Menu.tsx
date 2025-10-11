@@ -39,7 +39,24 @@ const Menu = () => {
   const [selectedDay, setSelectedDay] = useState<any>(null);
   const [isDayDetailOpen, setIsDayDetailOpen] = useState(false);
   const [mealDetails, setMealDetails] = useState<Record<string, MenuItem>>({});
+  const [mealDetailsByName, setMealDetailsByName] = useState<Record<string, MenuItem>>({});
   const navigate = useNavigate();
+
+  // Helpers to support legacy weekly_menus that store meal names as strings with emojis
+  const cleanMealString = (label: string) => {
+    if (!label) return "";
+    return label
+      .replace(/^🍳\s*/, '')
+      .replace(/^🍽️\s*/, '')
+      .replace(/^🥤\s*/, '')
+      .trim();
+  };
+  const categoryFromString = (label: string) => {
+    if (label?.startsWith('🍳')) return { emoji: '🍳', label: 'Raňajky' };
+    if (label?.startsWith('🍽️')) return { emoji: '🍽️', label: 'Obed' };
+    if (label?.startsWith('🥤')) return { emoji: '🥤', label: 'Snack' };
+    return { emoji: '🍽️', label: 'Jedlo' };
+  };
 
   const menuSizes = [
     { value: "S", label: "S (1600 kcal)", description: "Ženy, redukcia tuku" },
@@ -68,35 +85,20 @@ const Menu = () => {
       setCurrentMenu(data[0]);
       setMenuHistory(data.slice(1));
       
-      // Fetch all meal details
-      const mealIds = new Set<string>();
-      data.forEach(menu => {
-        if (menu.items && Array.isArray(menu.items)) {
-          menu.items.forEach((day: any) => {
-            if (day.meals && Array.isArray(day.meals)) {
-              day.meals.forEach((meal: any) => {
-                if (typeof meal === 'object' && meal.id) {
-                  mealIds.add(meal.id);
-                }
-              });
-            }
-          });
-        }
-      });
+      // Fetch meal details for both new (object with id) and legacy (string with emoji) menus
+      const { data: mealsData, error: mealsError } = await supabase
+        .from("menu_items")
+        .select("*");
 
-      if (mealIds.size > 0) {
-        const { data: mealsData } = await supabase
-          .from("menu_items")
-          .select("*")
-          .in("id", Array.from(mealIds));
-
-        if (mealsData) {
-          const mealsMap: Record<string, MenuItem> = {};
-          mealsData.forEach(meal => {
-            mealsMap[meal.id] = meal as MenuItem;
-          });
-          setMealDetails(mealsMap);
-        }
+      if (!mealsError && mealsData) {
+        const byId: Record<string, MenuItem> = {};
+        const byName: Record<string, MenuItem> = {};
+        mealsData.forEach((m: any) => {
+          byId[m.id] = m as MenuItem;
+          byName[m.name] = m as MenuItem;
+        });
+        setMealDetails(byId);
+        setMealDetailsByName(byName);
       }
     }
   };
@@ -225,10 +227,10 @@ const Menu = () => {
                     </DialogHeader>
                     <div className="space-y-4 mt-4">
                       {selectedDay?.meals && selectedDay.meals.map((meal: any, idx: number) => {
-                        const mealData = typeof meal === 'object' && meal.id ? mealDetails[meal.id] : null;
-                        const mealName = typeof meal === 'string' ? meal : (mealData?.name || meal.name || `Jedlo ${idx + 1}`);
-                        const categoryEmoji = meal.category === 'breakfast' ? '🍳' : meal.category === 'lunch' ? '🍽️' : '🥤';
-                        const categoryLabel = meal.category === 'breakfast' ? 'Raňajky' : meal.category === 'lunch' ? 'Obed' : 'Snack';
+                        const cleanName = typeof meal === 'string' ? cleanMealString(meal) : (meal.name || '');
+                        const mealData = typeof meal === 'object' && meal.id ? mealDetails[meal.id] : (mealDetailsByName[cleanName] || null);
+                        const mealName = typeof meal === 'string' ? cleanName : (mealData?.name || meal.name || `Jedlo ${idx + 1}`);
+                        const { emoji: categoryEmoji, label: categoryLabel } = typeof meal === 'string' ? categoryFromString(meal) : (meal.category === 'breakfast' ? { emoji: '🍳', label: 'Raňajky' } : meal.category === 'lunch' ? { emoji: '🍽️', label: 'Obed' } : { emoji: '🥤', label: 'Snack' });
 
                         return (
                           <div key={idx} className="card-premium p-4 space-y-3">
