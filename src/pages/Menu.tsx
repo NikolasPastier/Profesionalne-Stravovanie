@@ -18,6 +18,9 @@ interface MenuItem {
   price: number;
   calories: number;
   proteins: number;
+  carbs: number;
+  fats: number;
+  allergens: string[];
   image_url: string;
 }
 
@@ -35,6 +38,7 @@ const Menu = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedDay, setSelectedDay] = useState<any>(null);
   const [isDayDetailOpen, setIsDayDetailOpen] = useState(false);
+  const [mealDetails, setMealDetails] = useState<Record<string, MenuItem>>({});
   const navigate = useNavigate();
 
   const menuSizes = [
@@ -63,6 +67,37 @@ const Menu = () => {
     if (data && data.length > 0) {
       setCurrentMenu(data[0]);
       setMenuHistory(data.slice(1));
+      
+      // Fetch all meal details
+      const mealIds = new Set<string>();
+      data.forEach(menu => {
+        if (menu.items && Array.isArray(menu.items)) {
+          menu.items.forEach((day: any) => {
+            if (day.meals && Array.isArray(day.meals)) {
+              day.meals.forEach((meal: any) => {
+                if (typeof meal === 'object' && meal.id) {
+                  mealIds.add(meal.id);
+                }
+              });
+            }
+          });
+        }
+      });
+
+      if (mealIds.size > 0) {
+        const { data: mealsData } = await supabase
+          .from("menu_items")
+          .select("*")
+          .in("id", Array.from(mealIds));
+
+        if (mealsData) {
+          const mealsMap: Record<string, MenuItem> = {};
+          mealsData.forEach(meal => {
+            mealsMap[meal.id] = meal as MenuItem;
+          });
+          setMealDetails(mealsMap);
+        }
+      }
     }
   };
 
@@ -127,11 +162,15 @@ const Menu = () => {
                       {day.day}
                     </h3>
                     <div className="space-y-2">
-                      {day.meals && day.meals.map((meal: string, mealIdx: number) => (
-                        <p key={mealIdx} className="text-foreground text-sm">
-                          {meal}
-                        </p>
-                      ))}
+                      {day.meals && day.meals.map((meal: any, mealIdx: number) => {
+                        const mealName = typeof meal === 'string' ? meal : meal.name;
+                        const categoryEmoji = meal.category === 'breakfast' ? '🍳' : meal.category === 'lunch' ? '🍽️' : '🥤';
+                        return (
+                          <p key={mealIdx} className="text-foreground text-sm">
+                            {typeof meal === 'string' ? meal : `${categoryEmoji} ${mealName}`}
+                          </p>
+                        );
+                      })}
                     </div>
                     <p className="text-xs text-muted-foreground mt-3 italic">
                       Kliknite pre detaily →
@@ -185,65 +224,76 @@ const Menu = () => {
                       </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4 mt-4">
-                      {selectedDay?.meals && selectedDay.meals.map((meal: any, idx: number) => (
-                        <div key={idx} className="card-premium p-4 space-y-2">
-                          <h4 className="font-bold text-lg text-accent">
-                            {typeof meal === 'string' ? meal : meal.name || `Jedlo ${idx + 1}`}
-                          </h4>
-                          
-                          {typeof meal === 'object' && (
-                            <>
-                              {meal.description && (
-                                <p className="text-sm text-muted-foreground">
-                                  {meal.description}
-                                </p>
-                              )}
-                              
-                              {(meal.calories || meal.proteins || meal.carbs || meal.fats) && (
-                                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-3 pt-3 border-t border-border">
-                                  {meal.calories && (
-                                    <div className="text-center">
-                                      <div className="text-xs text-muted-foreground">Kalórie</div>
-                                      <div className="font-bold text-primary">{meal.calories} kcal</div>
-                                    </div>
-                                  )}
-                                  {meal.proteins && (
-                                    <div className="text-center">
-                                      <div className="text-xs text-muted-foreground">Bielkoviny</div>
-                                      <div className="font-bold text-primary">{meal.proteins}g</div>
-                                    </div>
-                                  )}
-                                  {meal.carbs && (
-                                    <div className="text-center">
-                                      <div className="text-xs text-muted-foreground">Sacharidy</div>
-                                      <div className="font-bold text-primary">{meal.carbs}g</div>
-                                    </div>
-                                  )}
-                                  {meal.fats && (
-                                    <div className="text-center">
-                                      <div className="text-xs text-muted-foreground">Tuky</div>
-                                      <div className="font-bold text-primary">{meal.fats}g</div>
-                                    </div>
-                                  )}
+                      {selectedDay?.meals && selectedDay.meals.map((meal: any, idx: number) => {
+                        const mealData = typeof meal === 'object' && meal.id ? mealDetails[meal.id] : null;
+                        const mealName = typeof meal === 'string' ? meal : (mealData?.name || meal.name || `Jedlo ${idx + 1}`);
+                        const categoryEmoji = meal.category === 'breakfast' ? '🍳' : meal.category === 'lunch' ? '🍽️' : '🥤';
+                        const categoryLabel = meal.category === 'breakfast' ? 'Raňajky' : meal.category === 'lunch' ? 'Obed' : 'Snack';
+
+                        return (
+                          <div key={idx} className="card-premium p-4 space-y-3">
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <span className="text-2xl">{categoryEmoji}</span>
+                                  <span className="text-xs bg-accent/20 text-accent px-2 py-1 rounded font-semibold">
+                                    {categoryLabel}
+                                  </span>
                                 </div>
-                              )}
-                              
-                              {meal.allergens && meal.allergens.length > 0 && (
-                                <div className="mt-3 pt-3 border-t border-border">
-                                  <div className="text-xs text-muted-foreground mb-1">Alergény:</div>
-                                  <div className="flex flex-wrap gap-1">
-                                    {meal.allergens.map((allergen: string, aIdx: number) => (
-                                      <span key={aIdx} className="text-xs bg-destructive/20 text-destructive px-2 py-1 rounded">
-                                        {allergen}
-                                      </span>
-                                    ))}
+                                <h4 className="font-bold text-lg text-primary">
+                                  {mealName}
+                                </h4>
+                              </div>
+                            </div>
+                            
+                            {mealData && (
+                              <>
+                                {mealData.description && (
+                                  <p className="text-sm text-muted-foreground leading-relaxed">
+                                    {mealData.description}
+                                  </p>
+                                )}
+                                
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 pt-3 border-t border-border">
+                                  <div className="text-center bg-card/50 rounded-lg p-3">
+                                    <div className="text-xs text-muted-foreground mb-1">Kalórie</div>
+                                    <div className="font-bold text-primary text-lg">{mealData.calories || 0}</div>
+                                    <div className="text-xs text-muted-foreground">kcal</div>
+                                  </div>
+                                  <div className="text-center bg-card/50 rounded-lg p-3">
+                                    <div className="text-xs text-muted-foreground mb-1">Bielkoviny</div>
+                                    <div className="font-bold text-primary text-lg">{mealData.proteins || 0}</div>
+                                    <div className="text-xs text-muted-foreground">g</div>
+                                  </div>
+                                  <div className="text-center bg-card/50 rounded-lg p-3">
+                                    <div className="text-xs text-muted-foreground mb-1">Sacharidy</div>
+                                    <div className="font-bold text-primary text-lg">{mealData.carbs || 0}</div>
+                                    <div className="text-xs text-muted-foreground">g</div>
+                                  </div>
+                                  <div className="text-center bg-card/50 rounded-lg p-3">
+                                    <div className="text-xs text-muted-foreground mb-1">Tuky</div>
+                                    <div className="font-bold text-primary text-lg">{mealData.fats || 0}</div>
+                                    <div className="text-xs text-muted-foreground">g</div>
                                   </div>
                                 </div>
-                              )}
-                            </>
-                          )}
-                        </div>
-                      ))}
+                                
+                                {mealData.allergens && mealData.allergens.length > 0 && (
+                                  <div className="pt-3 border-t border-border">
+                                    <div className="text-xs font-semibold text-foreground mb-2">⚠️ Alergény:</div>
+                                    <div className="flex flex-wrap gap-2">
+                                      {mealData.allergens.map((allergen: string, aIdx: number) => (
+                                        <span key={aIdx} className="text-xs bg-destructive/20 text-destructive px-3 py-1.5 rounded-full font-medium">
+                                          {allergen}
+                                        </span>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+                              </>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
                   </DialogContent>
                 </Dialog>

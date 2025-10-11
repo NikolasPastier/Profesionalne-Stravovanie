@@ -21,9 +21,9 @@ interface MenuItem {
 
 interface DayMenu {
   day: string;
-  breakfast: string[];
-  lunch: string[];
-  snack: string[];
+  breakfast: { id: string; name: string }[];
+  lunch: { id: string; name: string }[];
+  snack: { id: string; name: string }[];
 }
 
 interface WeeklyMenu {
@@ -107,17 +107,17 @@ export const WeeklyMenuManagement = () => {
 
     setWeekMenu(prev => {
       const updated = [...prev];
-      if (!updated[dayIndex][category].includes(meal.name)) {
-        updated[dayIndex][category] = [...updated[dayIndex][category], meal.name];
+      if (!updated[dayIndex][category].find(m => m.id === mealId)) {
+        updated[dayIndex][category] = [...updated[dayIndex][category], { id: meal.id, name: meal.name }];
       }
       return updated;
     });
   };
 
-  const removeMealFromDay = (dayIndex: number, category: typeof CATEGORIES[number], mealName: string) => {
+  const removeMealFromDay = (dayIndex: number, category: typeof CATEGORIES[number], mealId: string) => {
     setWeekMenu(prev => {
       const updated = [...prev];
-      updated[dayIndex][category] = updated[dayIndex][category].filter(m => m !== mealName);
+      updated[dayIndex][category] = updated[dayIndex][category].filter(m => m.id !== mealId);
       return updated;
     });
   };
@@ -155,9 +155,9 @@ export const WeeklyMenuManagement = () => {
       const menuData = weekMenu.map(day => ({
         day: day.day,
         meals: [
-          ...day.breakfast.map(m => `🍳 ${m}`),
-          ...day.lunch.map(m => `🍽️ ${m}`),
-          ...day.snack.map(m => `🥤 ${m}`)
+          ...day.breakfast.map(m => ({ id: m.id, name: m.name, category: 'breakfast' })),
+          ...day.lunch.map(m => ({ id: m.id, name: m.name, category: 'lunch' })),
+          ...day.snack.map(m => ({ id: m.id, name: m.name, category: 'snack' }))
         ]
       }));
 
@@ -291,9 +291,9 @@ export const WeeklyMenuManagement = () => {
                               key={idx}
                               className="flex items-center justify-between bg-background p-2 rounded border border-border"
                             >
-                              <span className="text-sm text-foreground">{meal}</span>
+                              <span className="text-sm text-foreground">{meal.name}</span>
                               <Button
-                                onClick={() => removeMealFromDay(dayIndex, category, meal)}
+                                onClick={() => removeMealFromDay(dayIndex, category, meal.id)}
                                 variant="ghost"
                                 size="sm"
                                 className="h-6 w-6 p-0 text-destructive hover:text-destructive hover:bg-destructive/20"
@@ -312,7 +312,7 @@ export const WeeklyMenuManagement = () => {
                         </SelectTrigger>
                         <SelectContent className="bg-card border-border">
                           {menuItems
-                            .filter(item => !dayMenu[category].includes(item.name))
+                            .filter(item => !dayMenu[category].find(m => m.id === item.id))
                             .map((item) => (
                               <SelectItem
                                 key={item.id}
