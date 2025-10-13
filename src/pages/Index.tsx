@@ -90,7 +90,7 @@ const Index = () => {
         </div>
         <div className="absolute inset-0 bg-gradient-gold-subtle opacity-30"></div>
         <div className="container mx-auto text-center relative z-10 animate-fade-in">
-          <h1 className="font-display text-5xl md:text-7xl font-bold mb-6 text-gradient-gold">Profesionálne Krabičkové Stravovanie</h1>
+          <h1 className="font-display text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-bold mb-6 text-gradient-gold">Profesionálne Krabičkové Stravovanie</h1>
           <p className="text-2xl md:text-3xl mb-4 text-primary">
             Jedz zdravo. Sleduj progres. Dosiahni svoj cieľ.
           </p>
