@@ -610,7 +610,7 @@ const Dashboard = () => {
     setEditFormData({
       age: profile.age?.toString() || "",
       height: profile.height?.toString() || "",
-      weight: profile.weight?.toString() || "",
+      weight: getCurrentWeight().toString() || "",
       goal: profile.goal || "",
       activity: profile.activity || "",
       allergies: profile.allergies?.join(", ") || "",
@@ -1160,45 +1160,6 @@ const Dashboard = () => {
             </TabsContent>
           </Tabs>
 
-          {/* Personal Info Card */}
-          <Card className="mt-6">
-            <CardHeader>
-              <CardTitle>Osobné údaje</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Vek:</span>
-                <span className="font-semibold">{profile.age} rokov</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Výška:</span>
-                <span className="font-semibold">{profile.height} cm</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Váha:</span>
-                <span className="font-semibold">
-                  {getCurrentWeight()} kg
-                  {progressData.length > 0 && (
-                    <span className="text-xs text-muted-foreground ml-2">
-                      (aktualizované {new Date(progressData[progressData.length - 1].date).toLocaleDateString("sk-SK")})
-                    </span>
-                  )}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Alergie:</span>
-                <span className="font-semibold">
-                  {profile.allergies?.join(", ") || "Žiadne"}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Preferencie:</span>
-                <span className="font-semibold">
-                  {profile.preferences?.join(", ") || "Žiadne"}
-                </span>
-              </div>
-            </CardContent>
-          </Card>
 
           {/* Order History */}
           <Card className="mt-6">
@@ -1405,7 +1366,14 @@ const Dashboard = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="edit-weight">Váha (kg) *</Label>
+                  <Label htmlFor="edit-weight">
+                    Aktuálna váha (kg) *
+                    {progressData.length > 0 && (
+                      <span className="text-xs text-muted-foreground ml-2 font-normal">
+                        (aktualizované {new Date(progressData[progressData.length - 1].date).toLocaleDateString("sk-SK")})
+                      </span>
+                    )}
+                  </Label>
                   <Input
                     id="edit-weight"
                     type="number"
@@ -1416,6 +1384,9 @@ const Dashboard = () => {
                     min="30"
                     max="300"
                   />
+                  <p className="text-xs text-muted-foreground">
+                    Zmena váhy ovplyvní vaše odporúčané veľkosti menu
+                  </p>
                 </div>
               </div>
 
