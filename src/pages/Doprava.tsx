@@ -2,8 +2,12 @@ import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Truck, Clock, MapPin, Euro } from "lucide-react";
+import { useScrollAnimation } from "@/hooks/use-scroll-animation";
 
 const Doprava = () => {
+  const cardsRef = useScrollAnimation();
+  const infoRef = useScrollAnimation();
+  
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
@@ -18,7 +22,7 @@ const Doprava = () => {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-8 max-w-6xl mx-auto mb-16">
+        <div ref={cardsRef.ref} className={`grid md:grid-cols-2 gap-8 max-w-6xl mx-auto mb-16 transition-all duration-700 ${cardsRef.isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
           <Card className="card-premium">
             <CardHeader>
               <div className="flex items-center gap-3 mb-4">
@@ -113,7 +117,7 @@ const Doprava = () => {
           </Card>
         </div>
 
-        <Card className="card-premium max-w-4xl mx-auto">
+        <Card ref={infoRef.ref} className={`card-premium max-w-4xl mx-auto transition-all duration-700 ${infoRef.isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
           <CardHeader>
             <CardTitle className="text-2xl text-gradient-gold text-center">
               Dôležité informácie

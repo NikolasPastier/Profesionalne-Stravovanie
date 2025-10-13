@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { Star, UtensilsCrossed, Beef, Clock } from "lucide-react";
 import { useState, useEffect } from "react";
+import { useScrollAnimation } from "@/hooks/use-scroll-animation";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
 import client1 from "@/assets/client-1.png";
@@ -41,6 +42,11 @@ const testimonials = [{
 const Index = () => {
   const navigate = useNavigate();
   const [currentFact, setCurrentFact] = useState(0);
+  const statsRef = useScrollAnimation();
+  const whyMealPrepRef = useScrollAnimation();
+  const clientResultsRef = useScrollAnimation();
+  const factsRef = useScrollAnimation();
+  const recommendationsRef = useScrollAnimation();
   const autoplayPlugin = Autoplay({
     delay: 4000,
     stopOnInteraction: true
@@ -69,7 +75,7 @@ const Index = () => {
           <Button onClick={() => navigate("/menu")} className="bg-primary text-primary-foreground hover:glow-gold-strong text-lg px-8 py-6" size="lg">Pozri si aktuálne týždenné menu →</Button>
           
           {/* Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-16 max-w-4xl mx-auto">
+          <div ref={statsRef.ref} className={`grid grid-cols-2 md:grid-cols-4 gap-6 mt-16 max-w-4xl mx-auto transition-all duration-700 ${statsRef.isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
             <div className="card-premium p-6 hover:scale-110 transition-transform duration-300 cursor-pointer">
               <Star className="h-8 w-8 text-primary mx-auto mb-2" />
               <p className="font-bold text-xl text-primary">500+</p>
@@ -96,7 +102,7 @@ const Index = () => {
 
       {/* Why Meal Prep */}
       <section className="py-20 px-4 bg-card">
-        <div className="container mx-auto">
+        <div ref={whyMealPrepRef.ref} className={`container mx-auto transition-all duration-700 ${whyMealPrepRef.isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
           <h2 className="font-display text-4xl md:text-5xl font-bold text-center mb-16 text-gradient-gold">
             💡 Prečo krabičkovať?
           </h2>
@@ -139,7 +145,7 @@ const Index = () => {
 
       {/* Client Results Section */}
       <section className="py-20 px-4">
-        <div className="container mx-auto">
+        <div ref={clientResultsRef.ref} className={`container mx-auto transition-all duration-700 ${clientResultsRef.isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
           <h2 className="font-display text-4xl md:text-5xl font-bold text-center mb-16 text-gradient-gold">
             💪 Výsledky našich klientov
           </h2>
@@ -170,7 +176,7 @@ const Index = () => {
 
       {/* Facts Carousel */}
       <section className="py-20 px-4 bg-card">
-        <div className="container mx-auto max-w-4xl">
+        <div ref={factsRef.ref} className={`container mx-auto max-w-4xl transition-all duration-700 ${factsRef.isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
           <h2 className="font-display text-4xl md:text-5xl font-bold text-center mb-16 text-gradient-gold">
             🧠 Fakty o stravovaní
           </h2>
@@ -184,7 +190,7 @@ const Index = () => {
 
       {/* Recommendations */}
       <section className="py-20 px-4 bg-card">
-        <div className="container mx-auto max-w-4xl">
+        <div ref={recommendationsRef.ref} className={`container mx-auto max-w-4xl transition-all duration-700 ${recommendationsRef.isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
           <h2 className="font-display text-4xl md:text-5xl font-bold text-center mb-16 text-gradient-gold">
             Odporúčame pre maximálne výsledky
           </h2>

@@ -3,7 +3,12 @@ import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Instagram } from "lucide-react";
+import { useScrollAnimation } from "@/hooks/use-scroll-animation";
 const ONas = () => {
+  const profileRef = useScrollAnimation();
+  const statsRef = useScrollAnimation();
+  const philosophyRef = useScrollAnimation();
+  
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
@@ -15,7 +20,7 @@ const ONas = () => {
             <p className="text-xl text-muted-foreground">Tvoje telo. Tvoje ciele. Naša zodpovednosť.</p>
           </div>
 
-          <Card className="card-premium mb-12">
+          <Card ref={profileRef.ref} className={`card-premium mb-12 transition-all duration-700 ${profileRef.isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
             <CardContent className="p-8 md:p-12">
               <div className="space-y-6">
                 <h2 className="font-display text-3xl font-bold text-gradient-gold">Patrik Rigodanzo</h2>
@@ -44,7 +49,7 @@ const ONas = () => {
             </CardContent>
           </Card>
 
-          <div className="grid md:grid-cols-3 gap-6 mb-12">
+          <div ref={statsRef.ref} className={`grid md:grid-cols-3 gap-6 mb-12 transition-all duration-700 ${statsRef.isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
             <Card className="card-premium text-center p-8">
               <div className="text-4xl mb-4">💪</div>
               <h3 className="font-bold text-xl mb-2 text-primary">10+ Rokov</h3>
@@ -62,7 +67,7 @@ const ONas = () => {
             </Card>
           </div>
 
-          <Card className="card-premium">
+          <Card ref={philosophyRef.ref} className={`card-premium transition-all duration-700 ${philosophyRef.isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
             <CardContent className="p-8 md:p-12">
               <h2 className="font-display text-3xl font-bold mb-6 text-gradient-gold text-center">Naša filozofia</h2>
               <div className="space-y-4 text-foreground">

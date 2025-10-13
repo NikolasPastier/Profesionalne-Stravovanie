@@ -4,9 +4,12 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { Check } from "lucide-react";
+import { useScrollAnimation } from "@/hooks/use-scroll-animation";
 
 const Cennik = () => {
   const navigate = useNavigate();
+  const pricingRef = useScrollAnimation();
+  const weeklyRef = useScrollAnimation();
 
   const pricingTiers = [
     {
@@ -86,7 +89,7 @@ const Cennik = () => {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 mb-16">
+        <div ref={pricingRef.ref} className={`grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 mb-16 transition-all duration-700 ${pricingRef.isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
           {pricingTiers.map((tier, idx) => (
             <Card 
               key={idx} 
@@ -133,7 +136,7 @@ const Cennik = () => {
           ))}
         </div>
 
-        <Card className="card-premium max-w-4xl mx-auto">
+        <Card ref={weeklyRef.ref} className={`card-premium max-w-4xl mx-auto transition-all duration-700 ${weeklyRef.isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
           <CardHeader>
             <CardTitle className="text-3xl font-display text-gradient-gold text-center">
               Týždenné balíky
