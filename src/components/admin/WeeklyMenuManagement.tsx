@@ -384,8 +384,8 @@ export const WeeklyMenuManagement = () => {
                       <div key={idx} className="border border-border rounded-lg p-4 bg-card/50">
                         <h4 className="font-bold mb-2 text-primary">{day.day}</h4>
                         <div className="space-y-1 text-sm">
-                          {day.meals && day.meals.map((meal: string, mealIdx: number) => (
-                            <p key={mealIdx} className="text-muted-foreground">{meal}</p>
+                          {day.meals && day.meals.map((meal: any, mealIdx: number) => (
+                            <p key={mealIdx} className="text-muted-foreground">{meal.name}</p>
                           ))}
                         </div>
                       </div>
