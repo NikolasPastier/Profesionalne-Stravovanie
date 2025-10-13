@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -29,6 +30,12 @@ const Cart = () => {
   const [note, setNote] = useState("");
   const [deliveryType, setDeliveryType] = useState("weekly");
   const [loading, setLoading] = useState(false);
+  const [showLoginDialog, setShowLoginDialog] = useState(false);
+  const [showSetPasswordDialog, setShowSetPasswordDialog] = useState(false);
+  const [loginPassword, setLoginPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [tempOrderData, setTempOrderData] = useState<any>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -59,6 +66,148 @@ const Cart = () => {
     });
   }, []);
 
+  const createOrder = async (userId: string) => {
+    try {
+      if (!cartItems || cartItems.length === 0) {
+        toast.error("Košík je prázdny");
+        return false;
+      }
+
+      const orderData = tempOrderData || { name, email, phone, address, note, deliveryType };
+
+      // Create orders for each cart item
+      for (const item of cartItems) {
+        const orderDetails = item.type === 'week' ? {
+          user_id: userId,
+          menu_id: item.menuId,
+          items: item.menu.items,
+          menu_size: item.size,
+          calories: parseInt(item.size.match(/\d+/)?.[0] || "2000"),
+          total_price: 45.95,
+          delivery_type: orderData.deliveryType,
+          address: orderData.address,
+          phone: orderData.phone,
+          note: orderData.note,
+          payment_type: "cash",
+          status: "pending"
+        } : {
+          user_id: userId,
+          menu_id: item.menuId,
+          items: [{ day: item.day, meals: item.meals }],
+          menu_size: item.size,
+          calories: parseInt(item.size.match(/\d+/)?.[0] || "2000"),
+          total_price: 6.99,
+          delivery_type: orderData.deliveryType,
+          address: orderData.address,
+          phone: orderData.phone,
+          note: orderData.note,
+          payment_type: "cash",
+          status: "pending"
+        };
+
+        const { data: order, error: orderError } = await supabase
+          .from("orders")
+          .insert(orderDetails)
+          .select()
+          .single();
+
+        if (orderError) throw orderError;
+
+        // Create admin notification
+        try {
+          await supabase
+            .from("admin_notifications")
+            .insert({
+              order_id: order.id,
+              seen: false
+            });
+        } catch (err) {
+          console.error("Notification error:", err);
+        }
+      }
+
+      // Update user profile
+      await supabase
+        .from("user_profiles")
+        .upsert({
+          user_id: userId,
+          name: orderData.name,
+          email: orderData.email,
+          phone: orderData.phone,
+          address: orderData.address
+        });
+
+      localStorage.removeItem("cart");
+      window.dispatchEvent(new Event("cartUpdated"));
+      toast.success("Objednávka úspešne vytvorená!");
+      return true;
+    } catch (error: any) {
+      toast.error("Chyba pri vytváraní objednávky: " + error.message);
+      return false;
+    }
+  };
+
+  const handleLogin = async () => {
+    if (!loginPassword) {
+      toast.error("Zadajte heslo");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: tempOrderData.email,
+        password: loginPassword,
+      });
+
+      if (error) throw error;
+
+      const success = await createOrder(data.user.id);
+      if (success) {
+        setShowLoginDialog(false);
+        navigate("/orders");
+      }
+    } catch (error: any) {
+      toast.error("Prihlásenie zlyhalo: " + error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSetPassword = async () => {
+    if (!newPassword || newPassword.length < 6) {
+      toast.error("Heslo musí mať aspoň 6 znakov");
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      toast.error("Heslá sa nezhodujú");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword
+      });
+
+      if (error) throw error;
+
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Nepodarilo sa získať session");
+
+      const success = await createOrder(session.user.id);
+      if (success) {
+        setShowSetPasswordDialog(false);
+        navigate("/orders");
+      }
+    } catch (error: any) {
+      toast.error("Chyba pri nastavení hesla: " + error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSubmitOrder = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -80,92 +229,59 @@ const Cart = () => {
         return;
       }
 
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        toast.error("Prosím prihláste sa");
-        navigate("/auth");
-        return;
-      }
-
       if (!cartItems || cartItems.length === 0) {
         toast.error("Košík je prázdny");
+        setLoading(false);
         return;
       }
 
-      // Create orders for each cart item
-      for (const item of cartItems) {
-        const orderData = item.type === 'week' ? {
-          user_id: session.user.id,
-          menu_id: item.menuId,
-          items: item.menu.items,
-          menu_size: item.size,
-          calories: parseInt(item.size.match(/\d+/)?.[0] || "2000"),
-          total_price: 45.95,
-          delivery_type: deliveryType,
-          address,
-          phone,
-          note,
-          payment_type: "cash",
-          status: "pending"
-        } : {
-          user_id: session.user.id,
-          menu_id: item.menuId,
-          items: [{ day: item.day, meals: item.meals }],
-          menu_size: item.size,
-          calories: parseInt(item.size.match(/\d+/)?.[0] || "2000"),
-          total_price: 6.99,
-          delivery_type: deliveryType,
-          address,
-          phone,
-          note,
-          payment_type: "cash",
-          status: "pending"
-        };
-
-        const { data: order, error: orderError } = await supabase
-          .from("orders")
-          .insert(orderData)
-          .select()
-          .single();
-
-        if (orderError) {
-          toast.error("Chyba pri vytváraní objednávky");
-          return;
+      // Check if user is already logged in
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (session) {
+        // User is logged in, create order directly
+        const success = await createOrder(session.user.id);
+        if (success) {
+          navigate("/orders");
         }
-
-        // Create admin notification with error handling
-        try {
-          const { error: notifError } = await supabase
-            .from("admin_notifications")
-            .insert({
-              order_id: order.id,
-              seen: false
-            });
-          
-          if (notifError) {
-            console.error("Failed to create admin notification:", notifError);
-          }
-        } catch (err) {
-          console.error("Unexpected error creating notification:", err);
-        }
+        return;
       }
 
-      // Update user profile
-      await supabase
-        .from("user_profiles")
-        .upsert({
-          user_id: session.user.id,
-          name,
+      // Check if email exists
+      const { data: emailExists, error: checkError } = await supabase.rpc('check_email_exists', { 
+        email_input: email 
+      });
+
+      if (checkError) {
+        toast.error("Chyba pri kontrole emailu");
+        return;
+      }
+
+      if (emailExists) {
+        // Email exists - show login dialog
+        setTempOrderData({ name, email, phone, address, note, deliveryType });
+        setShowLoginDialog(true);
+      } else {
+        // Email doesn't exist - create new account
+        const tempPassword = Math.random().toString(36).slice(-12) + "Aa1!";
+        
+        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
           email,
-          phone,
-          address
+          password: tempPassword,
+          options: {
+            emailRedirectTo: `${window.location.origin}/orders`,
+            data: { temp_password: true }
+          }
         });
 
-      localStorage.removeItem("cart");
-      window.dispatchEvent(new Event("cartUpdated"));
-      toast.success("Objednávka úspešne odoslaná!");
-      navigate("/orders");
+        if (signUpError) throw signUpError;
+
+        if (signUpData.user) {
+          setTempOrderData({ name, email, phone, address, note, deliveryType });
+          setShowSetPasswordDialog(true);
+          toast.success("Účet vytvorený! Nastavte si heslo.");
+        }
+      }
     } catch (error: any) {
       toast.error(error.message);
     } finally {
@@ -369,6 +485,82 @@ const Cart = () => {
       </div>
 
       <Footer />
+
+      {/* Login Dialog */}
+      <Dialog open={showLoginDialog} onOpenChange={setShowLoginDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Prihlásenie</DialogTitle>
+            <DialogDescription>
+              Účet s emailom {tempOrderData?.email} už existuje. Prihláste sa pre dokončenie objednávky.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="loginPassword">Heslo</Label>
+              <Input
+                id="loginPassword"
+                type="password"
+                value={loginPassword}
+                onChange={(e) => setLoginPassword(e.target.value)}
+                placeholder="Zadajte heslo"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              onClick={handleLogin}
+              disabled={loading}
+              className="bg-primary hover:glow-gold-strong"
+            >
+              {loading ? "Prihlasovanie..." : "Prihlásiť sa a dokončiť objednávku"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Set Password Dialog */}
+      <Dialog open={showSetPasswordDialog} onOpenChange={setShowSetPasswordDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Nastavte si heslo</DialogTitle>
+            <DialogDescription>
+              Váš účet bol vytvorený. Pre dokončenie objednávky si nastavte heslo.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="newPassword">Nové heslo</Label>
+              <Input
+                id="newPassword"
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="Minimálne 6 znakov"
+              />
+            </div>
+            <div>
+              <Label htmlFor="confirmPassword">Potvrďte heslo</Label>
+              <Input
+                id="confirmPassword"
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Zopakujte heslo"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              onClick={handleSetPassword}
+              disabled={loading}
+              className="bg-primary hover:glow-gold-strong"
+            >
+              {loading ? "Nastavovanie..." : "Nastaviť heslo a dokončiť objednávku"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

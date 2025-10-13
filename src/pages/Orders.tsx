@@ -5,8 +5,10 @@ import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
-import { Package, Calendar, MapPin } from "lucide-react";
+import { Package, Calendar, MapPin, AlertCircle } from "lucide-react";
 
 interface Order {
   id: string;
@@ -24,6 +26,7 @@ const Orders = () => {
   const { toast } = useToast();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const [profileComplete, setProfileComplete] = useState(true);
 
   useEffect(() => {
     checkUserAndLoadOrders();
@@ -49,6 +52,23 @@ const Orders = () => {
       if (error) throw error;
 
       setOrders(data as Order[]);
+
+      // Check if profile is complete
+      const { data: profile } = await supabase
+        .from("user_profiles")
+        .select("name, age, height, weight, goal, activity")
+        .eq("user_id", user.id)
+        .single();
+
+      const isComplete = profile && 
+        profile.name && 
+        profile.age && 
+        profile.height && 
+        profile.weight && 
+        profile.goal && 
+        profile.activity;
+
+      setProfileComplete(!!isComplete);
     } catch (error: any) {
       toast({
         title: "Chyba",
@@ -107,6 +127,24 @@ const Orders = () => {
           <h1 className="text-4xl font-display text-primary mb-8">
             Moje objednávky
           </h1>
+
+          {!profileComplete && (
+            <Alert className="mb-6 border-primary/50 bg-primary/5">
+              <AlertCircle className="h-4 w-4 text-primary" />
+              <AlertDescription className="flex items-center justify-between">
+                <span className="text-foreground">
+                  Dokončite svoj profil pre lepší personalizovaný zážitok!
+                </span>
+                <Button 
+                  onClick={() => navigate('/onboarding')} 
+                  className="bg-primary hover:glow-gold-strong ml-4"
+                  size="sm"
+                >
+                  Dokončiť profil
+                </Button>
+              </AlertDescription>
+            </Alert>
+          )}
 
           {orders.length === 0 ? (
             <Card className="border-primary/20">
