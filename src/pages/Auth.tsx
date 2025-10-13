@@ -18,6 +18,8 @@ const Auth = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [passwordError, setPasswordError] = useState("");
+  const [confirmPasswordError, setConfirmPasswordError] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -55,14 +57,41 @@ const Auth = () => {
     return () => subscription.unsubscribe();
   }, [navigate]);
 
+  const validatePassword = (pwd: string): string => {
+    if (pwd.length < 8) {
+      return "Heslo musí mať minimálne 8 znakov";
+    }
+    if (!/[A-Z]/.test(pwd)) {
+      return "Heslo musí obsahovať aspoň jedno veľké písmeno";
+    }
+    if (!/[a-z]/.test(pwd)) {
+      return "Heslo musí obsahovať aspoň jedno malé písmeno";
+    }
+    if (!/[0-9]/.test(pwd)) {
+      return "Heslo musí obsahovať aspoň jedno číslo";
+    }
+    return "";
+  };
+
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (password !== confirmPassword) {
-      toast.error("Heslá sa nezhodujú");
+    // Clear previous errors
+    setPasswordError("");
+    setConfirmPasswordError("");
+    
+    // Validate password
+    const pwdError = validatePassword(password);
+    if (pwdError) {
+      setPasswordError(pwdError);
       return;
     }
     
+    if (password !== confirmPassword) {
+      setConfirmPasswordError("Heslá sa nezhodujú");
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -75,6 +104,14 @@ const Auth = () => {
       });
 
       if (error) {
+        // Handle specific weak password errors from Supabase
+        if (error.message.toLowerCase().includes("password") && 
+            (error.message.toLowerCase().includes("weak") || 
+             error.message.toLowerCase().includes("common") ||
+             error.message.toLowerCase().includes("easy to guess"))) {
+          setPasswordError("Heslo je príliš slabé. Použite kombináciu veľkých a malých písmen, čísiel a špeciálnych znakov.");
+          return;
+        }
         console.error("Sign up error:", error);
         toast.error("Nepodarilo sa vytvoriť účet. Skúste to prosím znova.");
       } else if (data.user) {
@@ -272,11 +309,13 @@ const Auth = () => {
                           id="signup-password"
                           type={showPassword ? "text" : "password"}
                           value={password}
-                          onChange={(e) => setPassword(e.target.value)}
+                          onChange={(e) => {
+                            setPassword(e.target.value);
+                            setPasswordError("");
+                          }}
                           required
                           placeholder="••••••••"
-                          minLength={6}
-                          className="pr-10"
+                          className={`pr-10 ${passwordError ? "border-destructive" : ""}`}
                         />
                         <button
                           type="button"
@@ -286,6 +325,16 @@ const Auth = () => {
                           {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                         </button>
                       </div>
+                      {passwordError && (
+                        <p className="text-sm text-destructive mt-1">
+                          {passwordError}
+                        </p>
+                      )}
+                      {!passwordError && (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Min. 8 znakov, veľké a malé písmená, čísla
+                        </p>
+                      )}
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="signup-confirm-password">Potvrdenie hesla</Label>
@@ -294,11 +343,13 @@ const Auth = () => {
                           id="signup-confirm-password"
                           type={showConfirmPassword ? "text" : "password"}
                           value={confirmPassword}
-                          onChange={(e) => setConfirmPassword(e.target.value)}
+                          onChange={(e) => {
+                            setConfirmPassword(e.target.value);
+                            setConfirmPasswordError("");
+                          }}
                           required
                           placeholder="••••••••"
-                          minLength={6}
-                          className="pr-10"
+                          className={`pr-10 ${confirmPasswordError ? "border-destructive" : ""}`}
                         />
                         <button
                           type="button"
@@ -308,6 +359,11 @@ const Auth = () => {
                           {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                         </button>
                       </div>
+                      {confirmPasswordError && (
+                        <p className="text-sm text-destructive mt-1">
+                          {confirmPasswordError}
+                        </p>
+                      )}
                     </div>
                     <Button
                       type="submit"
