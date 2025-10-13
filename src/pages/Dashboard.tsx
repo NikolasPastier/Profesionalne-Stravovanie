@@ -330,13 +330,21 @@ const Dashboard = () => {
 
       // Upload photo if selected
       if (photoFile) {
-        const fileExt = photoFile.name.split(".").pop();
-        const fileName = `${user.id}/${Date.now()}.${fileExt}`;
-        const {
-          error: uploadError
-        } = await supabase.storage.from("progress-photos").upload(fileName, photoFile);
-        if (uploadError) throw uploadError;
-        photoUrl = fileName;
+        const formData = new FormData();
+        formData.append('file', photoFile);
+
+        const { data: uploadData, error: uploadError } = await supabase.functions.invoke(
+          'upload-progress-photo',
+          {
+            body: formData,
+          }
+        );
+
+        if (uploadError || !uploadData?.success) {
+          throw new Error(uploadData?.error || 'Nepodarilo sa nahrať fotografiu');
+        }
+
+        photoUrl = uploadData.fileName;
       }
       const {
         error
@@ -366,7 +374,7 @@ const Dashboard = () => {
     } catch (error: any) {
       toast({
         title: "Chyba",
-        description: "Chyba pri pridávaní váhy: " + error.message,
+        description: error.message || "Nepodarilo sa pridať váhu. Skúste to prosím znova.",
         variant: "destructive"
       });
     }

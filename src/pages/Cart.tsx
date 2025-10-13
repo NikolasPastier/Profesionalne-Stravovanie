@@ -142,7 +142,8 @@ const Cart = () => {
       toast.success("Objednávka úspešne vytvorená!");
       return true;
     } catch (error: any) {
-      toast.error("Chyba pri vytváraní objednávky: " + error.message);
+      console.error("Order creation error:", error);
+      toast.error("Nepodarilo sa vytvoriť objednávku. Skúste to prosím znova.");
       return false;
     }
   };

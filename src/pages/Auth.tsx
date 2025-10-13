@@ -39,13 +39,15 @@ const Auth = () => {
       });
 
       if (error) {
-        toast.error(error.message);
+        console.error("Sign up error:", error);
+        toast.error("Nepodarilo sa vytvoriť účet. Skúste to prosím znova.");
       } else if (data.user) {
         toast.success("Účet vytvorený! Môžete sa prihlásiť.");
         navigate("/onboarding");
       }
     } catch (error: any) {
-      toast.error(error.message);
+      console.error("Sign up error:", error);
+      toast.error("Nepodarilo sa vytvoriť účet. Skúste to prosím znova.");
     } finally {
       setLoading(false);
     }
@@ -62,10 +64,12 @@ const Auth = () => {
       });
 
       if (error) {
-        toast.error(error.message);
+        console.error("Google sign in error:", error);
+        toast.error("Nepodarilo sa prihlásiť cez Google. Skúste to prosím znova.");
       }
     } catch (error: any) {
-      toast.error(error.message);
+      console.error("Google sign in error:", error);
+      toast.error("Nepodarilo sa prihlásiť cez Google. Skúste to prosím znova.");
     } finally {
       setLoading(false);
     }
@@ -82,7 +86,8 @@ const Auth = () => {
       });
 
       if (error) {
-        toast.error(error.message);
+        console.error("Sign in error:", error);
+        toast.error("Nepodarilo sa prihlásiť. Skontrolujte svoje prihlasovacie údaje.");
       } else if (data.user) {
         toast.success("Úspešne prihlásený!");
         
@@ -100,7 +105,8 @@ const Auth = () => {
         }
       }
     } catch (error: any) {
-      toast.error(error.message);
+      console.error("Sign in error:", error);
+      toast.error("Nepodarilo sa prihlásiť. Skúste to prosím znova.");
     } finally {
       setLoading(false);
     }
