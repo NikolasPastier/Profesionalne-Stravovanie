@@ -357,15 +357,23 @@ const Cart = () => {
                     </Button>
                   </div>
                   {item.type === 'day' && (
-                    <div className="mt-2 text-sm text-muted-foreground">
+                    <div className="mt-3 space-y-2">
                       {item.meals?.map((meal: any, idx: number) => {
                         const mealName = typeof meal === 'string' ? meal.replace(/^[🍳🍽️🥤]\s*/, '') : meal.name;
-                        return <div key={idx}>• {mealName}</div>;
+                        const categoryLabel = meal.category === 'breakfast' ? 'Raňajky' : meal.category === 'lunch' ? 'Obed' : meal.category === 'dinner' ? 'Večera' : '';
+                        return (
+                          <div key={idx} className="bg-card/30 rounded p-2 border border-border/50">
+                            <div className="text-xs font-semibold text-accent/80 mb-1">{categoryLabel}</div>
+                            <div className="text-sm text-foreground">{mealName}</div>
+                          </div>
+                        );
                       })}
                     </div>
                   )}
                   <div className="flex justify-between items-center mt-4">
-                    <span className="font-bold text-primary">Veľkosť: {item.size}</span>
+                    <span className="font-bold text-primary">
+                      Veľkosť: {item.size} ({parseInt(item.size.match(/\d+/)?.[0] || "2000")} kcal)
+                    </span>
                     <span className="font-bold text-xl text-primary">
                       €{item.type === 'week' ? '45.95' : '6.99'}
                     </span>
