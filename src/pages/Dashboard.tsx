@@ -20,10 +20,8 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { ProgressGallery } from "@/components/dashboard/ProgressGallery";
-import { AchievementBadge } from "@/components/dashboard/AchievementBadge";
 import { MotivationalQuote } from "@/components/dashboard/MotivationalQuote";
 import { AIMotivator } from "@/components/dashboard/AIMotivator";
-import { checkAndAwardAchievements } from "@/utils/achievementChecker";
 interface UserProfile {
   name: string;
   age: number;
@@ -81,7 +79,6 @@ const Dashboard = () => {
   const [aiAdvice, setAiAdvice] = useState("");
   const [loadingAI, setLoadingAI] = useState(false);
   const [userOrders, setUserOrders] = useState<Order[]>([]);
-  const [achievements, setAchievements] = useState<any[]>([]);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [userId, setUserId] = useState<string>("");
   
@@ -153,10 +150,9 @@ const Dashboard = () => {
         setProfile(data as UserProfile);
         setUserId(user.id);
 
-        // Load progress data, orders, and achievements
+        // Load progress data and orders
         await loadProgressData(user.id);
         await loadUserOrders(user.id);
-        await loadAchievements(user.id);
       }
     } catch (error: any) {
       toast({
@@ -325,20 +321,6 @@ const Dashboard = () => {
       console.error("Error loading user orders:", error);
     }
   };
-  const loadAchievements = async (userId: string) => {
-    try {
-      const {
-        data,
-        error
-      } = await supabase.from("achievements").select("*").eq("user_id", userId).order("earned_at", {
-        ascending: false
-      });
-      if (error) throw error;
-      setAchievements(data || []);
-    } catch (error: any) {
-      console.error("Error loading achievements:", error);
-    }
-  };
   const handleAddWeight = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newWeight || !profile) return;
@@ -388,15 +370,6 @@ const Dashboard = () => {
       if (profileError) {
         console.error("Chyba pri aktualizácii profilu:", profileError);
         // Nehaváriť, len logovať - váha v progress je už uložená
-      }
-
-      // Check for new achievements
-      const updatedProgress = await supabase.from("progress").select("*").eq("user_id", user.id).order("date", {
-        ascending: true
-      });
-      if (updatedProgress.data) {
-        await checkAndAwardAchievements(user.id, updatedProgress.data, profile);
-        await loadAchievements(user.id);
       }
 
       await loadProgressData(user.id);
@@ -1120,9 +1093,6 @@ const Dashboard = () => {
 
               {/* Progress Photo Gallery */}
               <ProgressGallery userId={userId} />
-
-              {/* Achievements */}
-              <AchievementBadge achievements={achievements} />
             </TabsContent>
 
             <TabsContent value="ai-assistant" className="space-y-6">
