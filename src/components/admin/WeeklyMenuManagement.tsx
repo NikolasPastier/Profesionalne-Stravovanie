@@ -23,7 +23,7 @@ interface DayMenu {
   day: string;
   breakfast: { id: string; name: string }[];
   lunch: { id: string; name: string }[];
-  snack: { id: string; name: string }[];
+  dinner: { id: string; name: string }[];
 }
 
 interface WeeklyMenu {
@@ -35,11 +35,11 @@ interface WeeklyMenu {
 }
 
 const DAYS = ["Pondelok", "Utorok", "Streda", "Štvrtok", "Piatok", "Sobota", "Nedeľa"];
-const CATEGORIES = ["breakfast", "lunch", "snack"] as const;
+const CATEGORIES = ["breakfast", "lunch", "dinner"] as const;
 const CATEGORY_LABELS = {
   breakfast: "Raňajky",
   lunch: "Obed",
-  snack: "Snack"
+  dinner: "Večera"
 };
 
 export const WeeklyMenuManagement = () => {
@@ -52,7 +52,7 @@ export const WeeklyMenuManagement = () => {
       day,
       breakfast: [],
       lunch: [],
-      snack: []
+      dinner: []
     }))
   );
 
@@ -129,7 +129,7 @@ export const WeeklyMenuManagement = () => {
         day: updated[dayIndex].day,
         breakfast: [],
         lunch: [],
-        snack: []
+        dinner: []
       };
       return updated;
     });
@@ -143,7 +143,7 @@ export const WeeklyMenuManagement = () => {
     }
 
     const hasAnyMeals = weekMenu.some(
-      day => day.breakfast.length > 0 || day.lunch.length > 0 || day.snack.length > 0
+      day => day.breakfast.length > 0 || day.lunch.length > 0 || day.dinner.length > 0
     );
 
     if (!hasAnyMeals) {
@@ -157,7 +157,7 @@ export const WeeklyMenuManagement = () => {
         meals: [
           ...day.breakfast.map(m => ({ id: m.id, name: m.name, category: 'breakfast' })),
           ...day.lunch.map(m => ({ id: m.id, name: m.name, category: 'lunch' })),
-          ...day.snack.map(m => ({ id: m.id, name: m.name, category: 'snack' }))
+          ...day.dinner.map(m => ({ id: m.id, name: m.name, category: 'dinner' }))
         ]
       }));
 
@@ -178,7 +178,7 @@ export const WeeklyMenuManagement = () => {
         day,
         breakfast: [],
         lunch: [],
-        snack: []
+        dinner: []
       })));
       setAutoDateRange();
       await loadMenuHistory();

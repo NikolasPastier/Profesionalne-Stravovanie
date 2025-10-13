@@ -56,7 +56,7 @@ const Menu = () => {
   const categoryFromString = (label: string) => {
     if (label?.startsWith('🍳')) return { emoji: '🍳', label: 'Raňajky' };
     if (label?.startsWith('🍽️')) return { emoji: '🍽️', label: 'Obed' };
-    if (label?.startsWith('🥤')) return { emoji: '🥤', label: 'Snack' };
+    if (label?.startsWith('🥤')) return { emoji: '🥤', label: 'Večera' };
     return { emoji: '🍽️', label: 'Jedlo' };
   };
 
@@ -268,7 +268,7 @@ const Menu = () => {
                         const cleanName = typeof meal === 'string' ? cleanMealString(meal) : (meal.name || '');
                         const mealData = typeof meal === 'object' && meal.id ? mealDetails[meal.id] : (mealDetailsByName[cleanName] || null);
                         const mealName = typeof meal === 'string' ? cleanName : (mealData?.name || meal.name || `Jedlo ${idx + 1}`);
-                        const { emoji: categoryEmoji, label: categoryLabel } = typeof meal === 'string' ? categoryFromString(meal) : (meal.category === 'breakfast' ? { emoji: '🍳', label: 'Raňajky' } : meal.category === 'lunch' ? { emoji: '🍽️', label: 'Obed' } : { emoji: '🥤', label: 'Snack' });
+                        const { emoji: categoryEmoji, label: categoryLabel } = typeof meal === 'string' ? categoryFromString(meal) : (meal.category === 'breakfast' ? { emoji: '🍳', label: 'Raňajky' } : meal.category === 'lunch' ? { emoji: '🍽️', label: 'Obed' } : { emoji: '🥤', label: 'Večera' });
 
                         return (
                           <div key={idx} className="card-premium p-4 space-y-3">
