@@ -22,6 +22,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { ProgressGallery } from "@/components/dashboard/ProgressGallery";
 import { MotivationalQuote } from "@/components/dashboard/MotivationalQuote";
 import { AIMotivator } from "@/components/dashboard/AIMotivator";
+import { CalorieTracker } from "@/components/dashboard/CalorieTracker";
 interface UserProfile {
   name: string;
   age: number;
@@ -34,6 +35,8 @@ interface UserProfile {
   dislikes?: string[];
   favorite_foods?: string[];
   health_issues?: string;
+  gender?: 'male' | 'female';
+  goal_weight?: number;
 }
 interface Order {
   id: string;
@@ -1087,6 +1090,19 @@ const Dashboard = () => {
                   </CardContent>
                 </Card>
               </div>
+
+              {/* Calorie Tracker */}
+              {profile?.gender && (
+                <CalorieTracker 
+                  weight={profile.weight}
+                  height={profile.height}
+                  age={profile.age}
+                  gender={profile.gender}
+                  activity={profile.activity}
+                  goal={profile.goal}
+                  goalWeight={profile.goal_weight}
+                />
+              )}
 
               {/* Motivational Quote */}
               <MotivationalQuote />

@@ -221,7 +221,9 @@ export type Database = {
           dislikes: string[] | null
           email: string | null
           favorite_foods: string[] | null
+          gender: string | null
           goal: string | null
+          goal_weight: number | null
           health_issues: string | null
           height: number | null
           id: string
@@ -243,7 +245,9 @@ export type Database = {
           dislikes?: string[] | null
           email?: string | null
           favorite_foods?: string[] | null
+          gender?: string | null
           goal?: string | null
+          goal_weight?: number | null
           health_issues?: string | null
           height?: number | null
           id?: string
@@ -265,7 +269,9 @@ export type Database = {
           dislikes?: string[] | null
           email?: string | null
           favorite_foods?: string[] | null
+          gender?: string | null
           goal?: string | null
+          goal_weight?: number | null
           health_issues?: string | null
           height?: number | null
           id?: string

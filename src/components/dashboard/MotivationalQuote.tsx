@@ -34,5 +34,19 @@ export function MotivationalQuote() {
     const quoteIndex = dayOfYear % quotes.length;
     setQuote(quotes[quoteIndex]);
   }, []);
-  return;
+  return (
+    <Card className="bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
+      <CardContent className="pt-6">
+        <div className="flex items-start gap-3">
+          <Sparkles className="h-6 w-6 text-primary flex-shrink-0 mt-1" />
+          <div>
+            <p className="text-lg font-medium text-foreground mb-2 italic">
+              "{quote.text}"
+            </p>
+            <p className="text-sm text-muted-foreground">— {quote.author}</p>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
 }

@@ -34,7 +34,9 @@ const Onboarding = () => {
     age: "",
     height: "",
     weight: "",
+    gender: "",
     goal: "",
+    goal_weight: "",
     activity: "",
     allergies: "",
     preferences: "",
@@ -92,7 +94,9 @@ const Onboarding = () => {
         age: parseInt(formData.age),
         height: parseInt(formData.height),
         weight: parseFloat(formData.weight),
+        gender: formData.gender || null,
         goal: formData.goal,
+        goal_weight: formData.goal_weight ? parseFloat(formData.goal_weight) : null,
         activity: formData.activity,
         allergies: formData.allergies.split(",").map((a) => a.trim()),
         preferences: formData.preferences.split(",").map((p) => p.trim()),
@@ -143,6 +147,22 @@ const Onboarding = () => {
                   onChange={(e) => handleInputChange("name", e.target.value)}
                   className="border-primary/20"
                 />
+              </div>
+
+              <div>
+                <Label htmlFor="gender">Pohlavie</Label>
+                <Select
+                  value={formData.gender}
+                  onValueChange={(value) => handleInputChange("gender", value)}
+                >
+                  <SelectTrigger className="border-primary/20">
+                    <SelectValue placeholder="Vyberte pohlavie" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="male">Muž</SelectItem>
+                    <SelectItem value="female">Žena</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="grid grid-cols-3 gap-4">
@@ -234,6 +254,19 @@ const Onboarding = () => {
                     <SelectItem value="zdravie">Zlepšiť zdravie</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="goal_weight">Cieľová váha (kg) - voliteľné</Label>
+                <Input
+                  id="goal_weight"
+                  type="number"
+                  step="0.1"
+                  value={formData.goal_weight}
+                  onChange={(e) => handleInputChange("goal_weight", e.target.value)}
+                  placeholder="Napr. 70"
+                  className="border-primary/20"
+                />
               </div>
 
               <div>
