@@ -280,12 +280,14 @@ const Dashboard = () => {
   };
   const getRecommendedMenuSize = () => {
     if (!profile) return "M";
+    
+    // Použiť aktuálnu váhu z progressu namiesto statickej váhy z profilu
+    const currentWeight = getCurrentWeight();
     const {
-      weight,
       goal,
       activity
     } = profile;
-    let baseCalories = weight * 30;
+    let baseCalories = currentWeight * 30;
     if (activity === "velmi") baseCalories *= 1.3;else if (activity === "aktivny") baseCalories *= 1.2;else if (activity === "mierny") baseCalories *= 1.1;
     if (goal === "hubnutie") baseCalories *= 0.85;else if (goal === "nabrat") baseCalories *= 1.15;
     if (baseCalories < 1500) return "S";
@@ -376,6 +378,17 @@ const Dashboard = () => {
       });
       if (error) throw error;
 
+      // Aktualizovať váhu aj v user_profiles
+      const { error: profileError } = await supabase
+        .from("user_profiles")
+        .update({ weight: parseFloat(newWeight) })
+        .eq("user_id", user.id);
+
+      if (profileError) {
+        console.error("Chyba pri aktualizácii profilu:", profileError);
+        // Nehaváriť, len logovať - váha v progress je už uložená
+      }
+
       // Check for new achievements
       const updatedProgress = await supabase.from("progress").select("*").eq("user_id", user.id).order("date", {
         ascending: true
@@ -384,13 +397,17 @@ const Dashboard = () => {
         await checkAndAwardAchievements(user.id, updatedProgress.data, profile);
         await loadAchievements(user.id);
       }
+
+      await loadProgressData(user.id);
+      await checkUserAndLoadProfile();
+      
+      const newRecommendation = getRecommendedMenuSize();
       toast({
         title: "Úspech",
-        description: "Váha bola úspešne pridaná!"
+        description: `Váha bola úspešne pridaná! Vaše odporúčanie na menu: ${newRecommendation}`
       });
       setNewWeight("");
       setPhotoFile(null);
-      await loadProgressData(user.id);
     } catch (error: any) {
       toast({
         title: "Chyba",
@@ -1159,7 +1176,14 @@ const Dashboard = () => {
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Váha:</span>
-                <span className="font-semibold">{profile.weight} kg</span>
+                <span className="font-semibold">
+                  {getCurrentWeight()} kg
+                  {progressData.length > 0 && (
+                    <span className="text-xs text-muted-foreground ml-2">
+                      (aktualizované {new Date(progressData[progressData.length - 1].date).toLocaleDateString("sk-SK")})
+                    </span>
+                  )}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Alergie:</span>
