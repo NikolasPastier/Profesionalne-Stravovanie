@@ -971,7 +971,26 @@ const Dashboard = () => {
 
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 mt-8">
-            <Card>
+            {/* Recommended Menu - 1st on mobile, 3rd on desktop */}
+            <Card className="md:order-3">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  Odporúčané menu
+                </CardTitle>
+                <UtensilsCrossed className="h-5 w-5 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold text-primary">
+                  {getRecommendedMenuSize()}
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Pre váš cieľ: {profile.goal}
+                </p>
+              </CardContent>
+            </Card>
+
+            {/* Current Weight - 2nd on mobile, 1st on desktop */}
+            <Card className="md:order-1">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
                   Aktuálna váha
@@ -985,7 +1004,8 @@ const Dashboard = () => {
               </CardContent>
             </Card>
 
-            <Card>
+            {/* Goal Weight - 3rd on mobile, 2nd on desktop */}
+            <Card className="md:order-2">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
                   Cieľová váha
@@ -999,7 +1019,8 @@ const Dashboard = () => {
               </CardContent>
             </Card>
 
-            <Card>
+            {/* Remaining Weight - 4th on both mobile and desktop */}
+            <Card className="md:order-4 md:col-start-3">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
                   Zostáva
@@ -1102,31 +1123,6 @@ const Dashboard = () => {
 
               {/* Achievements */}
               <AchievementBadge achievements={achievements} />
-
-              {/* Menu Recommendation */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Odporúčaná veľkosť menu</CardTitle>
-                  <CardDescription>
-                    Na základe vášho profilu a cieľov
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="text-4xl font-display text-primary mb-2">
-                        {getRecommendedMenuSize()}
-                      </div>
-                      <p className="text-muted-foreground">
-                        Optimálna veľkosť pre váš cieľ: {profile.goal}
-                      </p>
-                    </div>
-                    <Button onClick={() => navigate("/menu")} className="bg-primary hover:bg-primary/90">
-                      Zobraziť menu
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
             </TabsContent>
 
             <TabsContent value="ai-assistant" className="space-y-6">
