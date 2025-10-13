@@ -10,8 +10,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { User, Target, Activity, TrendingUp, UtensilsCrossed, Package, Scale, TrendingDown, Calendar, Sparkles, Mail, Lock, Trash2, Camera, Trophy } from "lucide-react";
 import { MenuManagement } from "@/components/admin/MenuManagement";
@@ -33,9 +31,6 @@ interface UserProfile {
   activity: string;
   allergies: string[];
   preferences: string[];
-  dislikes?: string[];
-  favorite_foods?: string[];
-  health_issues?: string;
 }
 interface Order {
   id: string;
@@ -84,7 +79,7 @@ const Dashboard = () => {
   const [achievements, setAchievements] = useState<any[]>([]);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [userId, setUserId] = useState<string>("");
-  
+
   // Order details modal state
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
@@ -96,21 +91,6 @@ const Dashboard = () => {
   const [newEmail, setNewEmail] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-
-  // Edit profile states
-  const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
-  const [editFormData, setEditFormData] = useState({
-    age: "",
-    height: "",
-    weight: "",
-    goal: "",
-    activity: "",
-    allergies: "",
-    preferences: "",
-    dislikes: "",
-    favorite_foods: "",
-    health_issues: ""
-  });
   useEffect(() => {
     checkUserAndLoadProfile();
   }, []);
@@ -181,7 +161,7 @@ const Dashboard = () => {
       const ordersWithProfiles = await Promise.all((data || []).map(async order => {
         const {
           data: profile
-        } = await supabase.from("user_profiles").select("name, email").eq("user_id", order.user_id).maybeSingle();
+        } = await supabase.from("user_profiles").select("name, email").eq("user_id", order.user_id).single();
         return {
           ...order,
           user_profiles: profile || {
@@ -280,14 +260,12 @@ const Dashboard = () => {
   };
   const getRecommendedMenuSize = () => {
     if (!profile) return "M";
-    
-    // Použiť aktuálnu váhu z progressu namiesto statickej váhy z profilu
-    const currentWeight = getCurrentWeight();
     const {
+      weight,
       goal,
       activity
     } = profile;
-    let baseCalories = currentWeight * 30;
+    let baseCalories = weight * 30;
     if (activity === "velmi") baseCalories *= 1.3;else if (activity === "aktivny") baseCalories *= 1.2;else if (activity === "mierny") baseCalories *= 1.1;
     if (goal === "hubnutie") baseCalories *= 0.85;else if (goal === "nabrat") baseCalories *= 1.15;
     if (baseCalories < 1500) return "S";
@@ -354,18 +332,15 @@ const Dashboard = () => {
       if (photoFile) {
         const formData = new FormData();
         formData.append('file', photoFile);
-
-        const { data: uploadData, error: uploadError } = await supabase.functions.invoke(
-          'upload-progress-photo',
-          {
-            body: formData,
-          }
-        );
-
+        const {
+          data: uploadData,
+          error: uploadError
+        } = await supabase.functions.invoke('upload-progress-photo', {
+          body: formData
+        });
         if (uploadError || !uploadData?.success) {
           throw new Error(uploadData?.error || 'Nepodarilo sa nahrať fotografiu');
         }
-
         photoUrl = uploadData.fileName;
       }
       const {
@@ -378,17 +353,6 @@ const Dashboard = () => {
       });
       if (error) throw error;
 
-      // Aktualizovať váhu aj v user_profiles
-      const { error: profileError } = await supabase
-        .from("user_profiles")
-        .update({ weight: parseFloat(newWeight) })
-        .eq("user_id", user.id);
-
-      if (profileError) {
-        console.error("Chyba pri aktualizácii profilu:", profileError);
-        // Nehaváriť, len logovať - váha v progress je už uložená
-      }
-
       // Check for new achievements
       const updatedProgress = await supabase.from("progress").select("*").eq("user_id", user.id).order("date", {
         ascending: true
@@ -397,17 +361,13 @@ const Dashboard = () => {
         await checkAndAwardAchievements(user.id, updatedProgress.data, profile);
         await loadAchievements(user.id);
       }
-
-      await loadProgressData(user.id);
-      await checkUserAndLoadProfile();
-      
-      const newRecommendation = getRecommendedMenuSize();
       toast({
         title: "Úspech",
-        description: `Váha bola úspešne pridaná! Vaše odporúčanie na menu: ${newRecommendation}`
+        description: "Váha bola úspešne pridaná!"
       });
       setNewWeight("");
       setPhotoFile(null);
+      await loadProgressData(user.id);
     } catch (error: any) {
       toast({
         title: "Chyba",
@@ -577,119 +537,19 @@ const Dashboard = () => {
       });
     }
   };
-
   const handleDeleteOrder = async (orderId: string, e: React.MouseEvent) => {
     e.stopPropagation();
     if (!confirm("Naozaj chcete odstrániť túto objednávku?")) return;
-    
     try {
-      const { error } = await supabase
-        .from("orders")
-        .delete()
-        .eq("id", orderId);
-      
+      const {
+        error
+      } = await supabase.from("orders").delete().eq("id", orderId);
       if (error) throw error;
-      
       toast({
         title: "Úspech",
         description: "Objednávka bola odstránená"
       });
-      
       loadOrders();
-    } catch (error: any) {
-      toast({
-        title: "Chyba",
-        description: error.message,
-        variant: "destructive"
-      });
-    }
-  };
-
-  const handleOpenEditProfile = () => {
-    if (!profile) return;
-    setEditFormData({
-      age: profile.age?.toString() || "",
-      height: profile.height?.toString() || "",
-      weight: profile.weight?.toString() || "",
-      goal: profile.goal || "",
-      activity: profile.activity || "",
-      allergies: profile.allergies?.join(", ") || "",
-      preferences: profile.preferences?.join(", ") || "",
-      dislikes: (profile as any).dislikes?.join(", ") || "",
-      favorite_foods: (profile as any).favorite_foods?.join(", ") || "",
-      health_issues: (profile as any).health_issues || ""
-    });
-    setIsEditProfileOpen(true);
-  };
-
-  const handleSaveProfile = async () => {
-    try {
-      // Validation
-      const age = parseInt(editFormData.age);
-      const height = parseInt(editFormData.height);
-      const weight = parseFloat(editFormData.weight);
-
-      if (age < 13 || age > 120) {
-        toast({
-          title: "Chyba",
-          description: "Vek musí byť medzi 13 a 120 rokov",
-          variant: "destructive"
-        });
-        return;
-      }
-
-      if (height < 100 || height > 250) {
-        toast({
-          title: "Chyba",
-          description: "Výška musí byť medzi 100 a 250 cm",
-          variant: "destructive"
-        });
-        return;
-      }
-
-      if (weight < 30 || weight > 300) {
-        toast({
-          title: "Chyba",
-          description: "Váha musí byť medzi 30 a 300 kg",
-          variant: "destructive"
-        });
-        return;
-      }
-
-      if (!editFormData.goal || !editFormData.activity) {
-        toast({
-          title: "Chyba",
-          description: "Vyplňte všetky povinné polia",
-          variant: "destructive"
-        });
-        return;
-      }
-
-      const { error } = await supabase
-        .from("user_profiles")
-        .update({
-          age,
-          height,
-          weight,
-          goal: editFormData.goal,
-          activity: editFormData.activity,
-          allergies: editFormData.allergies.split(",").map(a => a.trim()).filter(Boolean),
-          preferences: editFormData.preferences.split(",").map(p => p.trim()).filter(Boolean),
-          dislikes: editFormData.dislikes.split(",").map(d => d.trim()).filter(Boolean),
-          favorite_foods: editFormData.favorite_foods.split(",").map(f => f.trim()).filter(Boolean),
-          health_issues: editFormData.health_issues
-        })
-        .eq("user_id", userId);
-
-      if (error) throw error;
-
-      toast({
-        title: "Úspech",
-        description: "Profil bol úspešne aktualizovaný"
-      });
-
-      setIsEditProfileOpen(false);
-      await checkUserAndLoadProfile();
     } catch (error: any) {
       toast({
         title: "Chyba",
@@ -776,14 +636,10 @@ const Dashboard = () => {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {orders.map(order => <TableRow 
-                            key={order.id}
-                            className="cursor-pointer hover:bg-muted/50"
-                            onClick={() => {
-                              setSelectedOrder(order);
-                              setIsOrderModalOpen(true);
-                            }}
-                          >
+                        {orders.map(order => <TableRow key={order.id} className="cursor-pointer hover:bg-muted/50" onClick={() => {
+                        setSelectedOrder(order);
+                        setIsOrderModalOpen(true);
+                      }}>
                             <TableCell>
                               {new Date(order.created_at).toLocaleDateString("sk-SK")}
                             </TableCell>
@@ -798,7 +654,7 @@ const Dashboard = () => {
                                 {getStatusLabel(order.status)}
                               </Badge>
                             </TableCell>
-                            <TableCell onClick={(e) => e.stopPropagation()} className="bg-muted">
+                            <TableCell onClick={e => e.stopPropagation()} className="bg-muted">
                               <div className="flex items-center gap-2">
                                 <select value={order.status} onChange={e => updateOrderStatus(order.id, e.target.value)} className="border rounded px-2 py-1 text-sm bg-background">
                                   <option value="pending">Čaká sa</option>
@@ -808,11 +664,7 @@ const Dashboard = () => {
                                   <option value="delivered">Doručené</option>
                                   <option value="cancelled">Zrušené</option>
                                 </select>
-                                <Button
-                                  variant="destructive"
-                                  size="sm"
-                                  onClick={(e) => handleDeleteOrder(order.id, e)}
-                                >
+                                <Button variant="destructive" size="sm" onClick={e => handleDeleteOrder(order.id, e)}>
                                   <Trash2 className="h-4 w-4" />
                                 </Button>
                               </div>
@@ -845,8 +697,7 @@ const Dashboard = () => {
               </DialogDescription>
             </DialogHeader>
 
-            {selectedOrder && (
-              <div className="space-y-6">
+            {selectedOrder && <div className="space-y-6">
                 {/* Customer Info */}
                 <div className="space-y-4">
                   <h3 className="font-semibold text-lg border-b pb-2">Informácie o zákazníkovi</h3>
@@ -890,14 +741,12 @@ const Dashboard = () => {
                         {getStatusLabel(selectedOrder.status)}
                       </Badge>
                     </div>
-                    {selectedOrder.delivery_date && (
-                      <div>
+                    {selectedOrder.delivery_date && <div>
                         <p className="text-sm text-muted-foreground">Dátum doručenia</p>
                         <p className="font-medium">
                           {new Date(selectedOrder.delivery_date).toLocaleDateString("sk-SK")}
                         </p>
-                      </div>
-                    )}
+                      </div>}
                     <div>
                       <p className="text-sm text-muted-foreground">Celková cena</p>
                       <p className="font-medium text-lg">{selectedOrder.total_price}€</p>
@@ -909,34 +758,23 @@ const Dashboard = () => {
                 <div className="space-y-4">
                   <h3 className="font-semibold text-lg border-b pb-2">Obsah objednávky</h3>
                   <div className="space-y-3">
-                    {selectedOrder.items && Array.isArray(selectedOrder.items) && selectedOrder.items.map((day: any, idx: number) => (
-                      <div key={idx} className="border rounded-lg p-4 bg-muted/30">
+                    {selectedOrder.items && Array.isArray(selectedOrder.items) && selectedOrder.items.map((day: any, idx: number) => <div key={idx} className="border rounded-lg p-4 bg-muted/30">
                         <h4 className="font-semibold mb-2 text-primary">{day.day}</h4>
                         <div className="space-y-1">
-                          {day.meals && day.meals.length > 0 ? (
-                            day.meals.map((meal: any, mealIdx: number) => (
-                              <p key={mealIdx} className="text-sm">
+                          {day.meals && day.meals.length > 0 ? day.meals.map((meal: any, mealIdx: number) => <p key={mealIdx} className="text-sm">
                                 • {typeof meal === 'string' ? meal : meal.name}
-                              </p>
-                            ))
-                          ) : (
-                            <p className="text-sm text-muted-foreground italic">Žiadne jedlá</p>
-                          )}
+                              </p>) : <p className="text-sm text-muted-foreground italic">Žiadne jedlá</p>}
                         </div>
-                      </div>
-                    ))}
+                      </div>)}
                   </div>
                 </div>
 
                 {/* Note */}
-                {selectedOrder.note && (
-                  <div className="space-y-2">
+                {selectedOrder.note && <div className="space-y-2">
                     <h3 className="font-semibold text-lg border-b pb-2">Poznámka</h3>
                     <p className="text-sm bg-muted/30 p-3 rounded-lg">{selectedOrder.note}</p>
-                  </div>
-                )}
-              </div>
-            )}
+                  </div>}
+              </div>}
 
             <DialogFooter>
               <Button variant="outline" onClick={() => setIsOrderModalOpen(false)}>
@@ -1176,14 +1014,7 @@ const Dashboard = () => {
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Váha:</span>
-                <span className="font-semibold">
-                  {getCurrentWeight()} kg
-                  {progressData.length > 0 && (
-                    <span className="text-xs text-muted-foreground ml-2">
-                      (aktualizované {new Date(progressData[progressData.length - 1].date).toLocaleDateString("sk-SK")})
-                    </span>
-                  )}
-                </span>
+                <span className="font-semibold">{profile.weight} kg</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Alergie:</span>
@@ -1197,6 +1028,9 @@ const Dashboard = () => {
                   {profile.preferences?.join(", ") || "Žiadne"}
                 </span>
               </div>
+              <Button onClick={() => navigate("/onboarding")} variant="outline" className="w-full mt-4">
+                Upraviť profil
+              </Button>
             </CardContent>
           </Card>
 
@@ -1270,10 +1104,6 @@ const Dashboard = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-              <Button onClick={handleOpenEditProfile} variant="outline" className="w-full justify-start">
-                <User className="h-4 w-4 mr-2" />
-                Upraviť profil
-              </Button>
               <Button onClick={() => setIsEmailDialogOpen(true)} variant="outline" className="w-full justify-start">
                 <Mail className="h-4 w-4 mr-2" />
                 Zmeniť email
@@ -1301,10 +1131,7 @@ const Dashboard = () => {
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="new-email">Nový email</Label>
-              <Input id="new-email" type="email" value={newEmail} onChange={e => setNewEmail(e.target.value)} placeholder="novy@email.sk" />
-            </div>
+            
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsEmailDialogOpen(false)}>
@@ -1361,173 +1188,6 @@ const Dashboard = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
-      {/* Edit Profile Dialog */}
-      <Dialog open={isEditProfileOpen} onOpenChange={setIsEditProfileOpen}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Upraviť fitness profil</DialogTitle>
-            <DialogDescription>
-              Aktualizujte svoje fitness údaje a stravovacie preferencie
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-6">
-            {/* Základné fitness údaje */}
-            <div className="space-y-4">
-              <h3 className="font-semibold text-lg border-b pb-2">Základné fitness údaje</h3>
-              
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="edit-age">Vek *</Label>
-                  <Input
-                    id="edit-age"
-                    type="number"
-                    value={editFormData.age}
-                    onChange={(e) => setEditFormData({ ...editFormData, age: e.target.value })}
-                    placeholder="napr. 25"
-                    min="13"
-                    max="120"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="edit-height">Výška (cm) *</Label>
-                  <Input
-                    id="edit-height"
-                    type="number"
-                    value={editFormData.height}
-                    onChange={(e) => setEditFormData({ ...editFormData, height: e.target.value })}
-                    placeholder="napr. 175"
-                    min="100"
-                    max="250"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="edit-weight">Váha (kg) *</Label>
-                  <Input
-                    id="edit-weight"
-                    type="number"
-                    step="0.1"
-                    value={editFormData.weight}
-                    onChange={(e) => setEditFormData({ ...editFormData, weight: e.target.value })}
-                    placeholder="napr. 70"
-                    min="30"
-                    max="300"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="edit-goal">Cieľ *</Label>
-                  <Select
-                    value={editFormData.goal}
-                    onValueChange={(value) => setEditFormData({ ...editFormData, goal: value })}
-                  >
-                    <SelectTrigger id="edit-goal">
-                      <SelectValue placeholder="Vyberte cieľ" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="hubnutie">Chudnutie</SelectItem>
-                      <SelectItem value="udrzanie">Udržanie váhy</SelectItem>
-                      <SelectItem value="nabrat">Nabratie svalovej hmoty</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="edit-activity">Úroveň aktivity *</Label>
-                  <Select
-                    value={editFormData.activity}
-                    onValueChange={(value) => setEditFormData({ ...editFormData, activity: value })}
-                  >
-                    <SelectTrigger id="edit-activity">
-                      <SelectValue placeholder="Vyberte úroveň" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="sedavy">Sedavý (žiadne cvičenie)</SelectItem>
-                      <SelectItem value="mierny">Mierne aktívny (1-3x týždenne)</SelectItem>
-                      <SelectItem value="aktivny">Aktívny (3-5x týždenne)</SelectItem>
-                      <SelectItem value="velmi">Veľmi aktívny (6-7x týždenne)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </div>
-
-            {/* Stravovacie preferencie */}
-            <div className="space-y-4">
-              <h3 className="font-semibold text-lg border-b pb-2">Stravovacie preferencie</h3>
-              
-              <div className="space-y-2">
-                <Label htmlFor="edit-allergies">Alergie</Label>
-                <Input
-                  id="edit-allergies"
-                  value={editFormData.allergies}
-                  onChange={(e) => setEditFormData({ ...editFormData, allergies: e.target.value })}
-                  placeholder="napr. laktóza, gluten, orechy (oddelené čiarkou)"
-                />
-                <p className="text-xs text-muted-foreground">Oddeľte čiarkou</p>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="edit-preferences">Stravovacie preferencie</Label>
-                <Input
-                  id="edit-preferences"
-                  value={editFormData.preferences}
-                  onChange={(e) => setEditFormData({ ...editFormData, preferences: e.target.value })}
-                  placeholder="napr. vegetarián, vegan, bez cukru (oddelené čiarkou)"
-                />
-                <p className="text-xs text-muted-foreground">Oddeľte čiarkou</p>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="edit-dislikes">Neobľúbené jedlá</Label>
-                <Input
-                  id="edit-dislikes"
-                  value={editFormData.dislikes}
-                  onChange={(e) => setEditFormData({ ...editFormData, dislikes: e.target.value })}
-                  placeholder="napr. brokolica, špenát (oddelené čiarkou)"
-                />
-                <p className="text-xs text-muted-foreground">Oddeľte čiarkou</p>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="edit-favorite-foods">Obľúbené jedlá</Label>
-                <Input
-                  id="edit-favorite-foods"
-                  value={editFormData.favorite_foods}
-                  onChange={(e) => setEditFormData({ ...editFormData, favorite_foods: e.target.value })}
-                  placeholder="napr. kuracie mäso, ryža, cesnak (oddelené čiarkou)"
-                />
-                <p className="text-xs text-muted-foreground">Oddeľte čiarkou</p>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="edit-health-issues">Zdravotné problémy (voliteľné)</Label>
-                <Textarea
-                  id="edit-health-issues"
-                  value={editFormData.health_issues}
-                  onChange={(e) => setEditFormData({ ...editFormData, health_issues: e.target.value })}
-                  placeholder="Popíšte akékoľvek zdravotné problémy, ktoré by sme mali brať do úvahy..."
-                  rows={3}
-                />
-              </div>
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditProfileOpen(false)}>
-              Zrušiť
-            </Button>
-            <Button onClick={handleSaveProfile}>
-              Uložiť zmeny
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       <Footer />
     </div>;
