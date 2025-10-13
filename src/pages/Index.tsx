@@ -144,7 +144,7 @@ const Index = () => {
                 title: "Bez starostí o nákup a skladovanie",
                 desc: "Čerstvé jedlá priamo k tvojim dverám."
               }].map((item, idx) => <CarouselItem key={idx} className="basis-full">
-                    <div className="card-premium p-6 md:p-12 min-h-[250px] md:min-h-[300px] flex flex-col items-center justify-center transition-all duration-300 hover:scale-105">
+                    <div className="card-premium p-6 md:p-12 min-h-[250px] md:min-h-[300px] flex flex-col items-center justify-center transition-all duration-300 hover:scale-105 hover:glow-gold-strong hover:border-accent">
                       <h3 className="font-display text-xl md:text-3xl lg:text-4xl font-bold mb-3 md:mb-6 text-primary text-center">
                         {item.title}
                       </h3>
