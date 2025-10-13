@@ -1,1 +1,4 @@
 project_id = "vmddyjosfwvsdtofnrjf"
+
+[functions.health-assistant]
+verify_jwt = true
