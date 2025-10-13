@@ -444,24 +444,6 @@ const Cart = () => {
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <Label>Typ objednávky</Label>
-                  <RadioGroup value={deliveryType} onValueChange={setDeliveryType}>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="weekly" id="weekly" />
-                      <Label htmlFor="weekly" className="cursor-pointer">
-                        Týždenné menu (pondelok–piatok)
-                      </Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="daily" id="daily" />
-                      <Label htmlFor="daily" className="cursor-pointer">
-                        Denné menu
-                      </Label>
-                    </div>
-                  </RadioGroup>
-                </div>
-
                 <div className="border-t border-primary/20 pt-4 mt-6">
                   <div className="flex justify-between items-center mb-4">
                     <span className="text-lg font-bold">Celková suma:</span>
