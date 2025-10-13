@@ -13,6 +13,14 @@ import client3 from "@/assets/client-3.png";
 import client4 from "@/assets/client-4.png";
 import client5 from "@/assets/client-5.png";
 import client6 from "@/assets/client-6.png";
+import food1 from "@/assets/food-1.jpeg";
+import food2 from "@/assets/food-2.jpeg";
+import food3 from "@/assets/food-3.jpeg";
+import food4 from "@/assets/food-4.jpeg";
+import food5 from "@/assets/food-5.jpeg";
+import food6 from "@/assets/food-6.jpeg";
+import food7 from "@/assets/food-7.jpeg";
+import food8 from "@/assets/food-8.jpeg";
 const facts = ["Makroživiny sa vždy rátajú v surovom stave.", "100 g surového kuracieho mäsa = 40–60 g vareného, preto kalórie často nesedia.", "Varená ryža v tabuľkách je nepresná – množstvo vody mení výsledok.", "315 g surového kuracieho mäsa = 72,8 g bielkovín + 5 g tuku + 5 ml oleja (1100 kcal).", "Chudnutie = kalorický deficit. Žiadny spomalený metabolizmus.", "Príjem cukru z kávy, nápojov či drobných snackov ruší tvoj deficit.", "Váha kolíše kvôli vode, soli či menštruácii – sleduj telo, nie váhu.", "Aktívny športovec potrebuje 1,6–2 g bielkovín/kg hmotnosti.", "Denne pi 30–50 ml vody/kg – napr. 80 kg = 2,4–4 litre.", "Najčastejšia chyba - malé prehrešky a nedôslednosť rušia tvoje výsledky."];
 const testimonials = [{
   image: client1,
@@ -66,6 +74,20 @@ const Index = () => {
       
       {/* Hero Section */}
       <section className="pt-32 pb-20 px-4 relative overflow-hidden">
+        {/* Scrolling Background Images */}
+        <div className="absolute inset-0 overflow-hidden opacity-20">
+          <div className="flex gap-8 animate-scroll-left">
+            {[food1, food2, food3, food4, food5, food6, food7, food8, food1, food2, food3, food4].map((img, idx) => (
+              <div key={idx} className="flex-shrink-0 w-64 h-80">
+                <img 
+                  src={img} 
+                  alt="Meal prep" 
+                  className="w-full h-full object-cover rounded-lg"
+                />
+              </div>
+            ))}
+          </div>
+        </div>
         <div className="absolute inset-0 bg-gradient-gold-subtle opacity-30"></div>
         <div className="container mx-auto text-center relative z-10 animate-fade-in">
           <h1 className="font-display text-5xl md:text-7xl font-bold mb-6 text-gradient-gold">Profesionálne Krabičkové Stravovanie</h1>

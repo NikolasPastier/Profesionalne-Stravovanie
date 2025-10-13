@@ -230,4 +230,18 @@
   .parallax {
     will-change: transform;
   }
+
+  /* Infinite scroll animation */
+  @keyframes scrollLeft {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-50%);
+    }
+  }
+
+  .animate-scroll-left {
+    animation: scrollLeft 40s linear infinite;
+  }
 }
