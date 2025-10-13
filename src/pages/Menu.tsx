@@ -409,16 +409,20 @@ const Menu = () => {
                           }}
                         >
                           <h4 className="font-semibold text-sm text-primary mb-2">{day.day}</h4>
-                          <div className="space-y-1">
-                            {day.meals && day.meals.slice(0, 2).map((meal: any, mealIdx: number) => {
-                              const mealName = typeof meal === 'string' ? meal.replace(/^[🍳🍽️🥤]\s*/, '') : meal.name;
+                          <div className="space-y-2">
+                            {day.meals && day.meals.slice(0, 3).map((meal: any, mealIdx: number) => {
+                              const mealName = typeof meal === 'string' ? cleanMealString(meal) : meal.name;
+                              const categoryLabel = meal.category === 'breakfast' ? 'Raňajky' : meal.category === 'lunch' ? 'Obed' : meal.category === 'dinner' ? 'Večera' : 'Jedlo';
                               return (
-                                <p key={mealIdx} className="text-xs text-muted-foreground">• {mealName}</p>
+                                <div key={mealIdx} className="bg-card/30 rounded-md p-2 border border-border/50">
+                                  <div className="text-xs font-semibold text-accent/80 mb-0.5">{categoryLabel}</div>
+                                  <p className="text-xs text-foreground">{mealName}</p>
+                                </div>
                               );
                             })}
-                            {day.meals && day.meals.length > 2 && (
+                            {day.meals && day.meals.length > 3 && (
                               <p className="text-xs text-muted-foreground italic">
-                                +{day.meals.length - 2} ďalších jedál
+                                +{day.meals.length - 3} ďalších jedál
                               </p>
                             )}
                           </div>

@@ -412,10 +412,16 @@ export const WeeklyMenuManagement = () => {
                     {menu.items && Array.isArray(menu.items) && menu.items.map((day: any, idx: number) => (
                       <div key={idx} className="border border-border rounded-lg p-4 bg-card/50">
                         <h4 className="font-bold mb-2 text-primary">{day.day}</h4>
-                        <div className="space-y-1 text-sm">
-                          {day.meals && day.meals.map((meal: any, mealIdx: number) => (
-                            <p key={mealIdx} className="text-muted-foreground">{meal.name}</p>
-                          ))}
+                        <div className="space-y-2 text-sm">
+                          {day.meals && day.meals.map((meal: any, mealIdx: number) => {
+                            const categoryLabel = meal.category === 'breakfast' ? 'Raňajky' : meal.category === 'lunch' ? 'Obed' : meal.category === 'dinner' ? 'Večera' : 'Jedlo';
+                            return (
+                              <div key={mealIdx} className="bg-card/30 rounded-md p-2 border border-border/50">
+                                <div className="text-xs font-semibold text-accent/80 mb-1">{categoryLabel}</div>
+                                <p className="text-foreground font-medium">{meal.name}</p>
+                              </div>
+                            );
+                          })}
                         </div>
                       </div>
                     ))}
