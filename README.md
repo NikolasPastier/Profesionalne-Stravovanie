@@ -1,73 +1,154 @@
-# Welcome to your Lovable project
+VIP PROFESIONÁLNE KRABIČKOVÉ STRAVOVANIE
+Jedz zdravo. Sleduj progres. Dosiahni svoj cieľ.
 
-## Project info
+Luxusná webová aplikácia pre profesionálne krabičkové stravovanie, kombinujúca personalizovanú výživu, online objednávky a prehľad o progrese používateľa.
+Celý projekt je vytvorený v prémiovom black & gold dizajne.
 
-**URL**: https://lovable.dev/projects/a0c47c4d-d0b1-4954-9a8a-17baaa9ea608
+⸻
 
-## How can I edit this code?
+PROJEKTOVÁ VÍZIA
 
-There are several ways of editing your application.
+VIP Profesionálne Krabičkové Stravovanie je moderná webová platforma určená pre klientov, ktorí chcú:
+• mať zdravé, presne vyrátané jedlá bez starostí,
+• sledovať svoj fyzický progres a odporúčania,
+• objednávať jednoducho a elegantne,
+• zažiť luxusný digitálny zážitok s dôrazom na estetiku.
 
-**Use Lovable**
+⸻
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/a0c47c4d-d0b1-4954-9a8a-17baaa9ea608) and start prompting.
+HLAVNÉ FUNKCIE 1. Landing Page
+Prémiový čierno-zlatý dizajn s animáciami, sloganom a sekciami ako „Prečo krabičkovať?“, „Premeny“ a „Fakty o stravovaní“. 2. Menu systém
+Dynamické načítanie aktuálneho týždenného menu zo Supabase.
+Používateľ môže pridať jedlá do košíka podľa veľkosti menu (S–XXL). 3. Košík / Checkout
+Používateľ vyberá jedlá, doplní kontaktné údaje, adresa a telefón sa automaticky ukladajú do profilu.
+Platba prebieha v hotovosti pri doručení. 4. Používateľský účet
+Úvodný dotazník (onboarding) pre uloženie údajov ako vek, výška, cieľ, aktivita a alergie. 5. Dashboard
+Prehľad cieľov, váhy, graf progresu a odporúčaná veľkosť denného menu. 6. Admin Dashboard
+Správa objednávok, zostavenie týždenného menu, úprava a mazanie jedál, automatické notifikácie o nových objednávkach. 7. AI Integrácia (v príprave)
+Automatické generovanie 7-dňového menu podľa cieľa, alergií a rozpočtu používateľa. 8. Informačné podstránky
+Cenník, Doprava, O nás – jednotný čierno-zlatý dizajn, textový obsah podľa sekcií.
 
-Changes made via Lovable will be committed automatically to this repo.
+⸻
 
-**Use your preferred IDE**
+DATABÁZOVÁ ŠTRUKTÚRA (SUPABASE)
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+users
+id, email, password, created_at
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+user_profiles
+id, user_id, name, age, height, weight, goal, activity, allergies, preferences, phone, address, updated_at
 
-Follow these steps:
+menu_items
+id, name, description, price, proteins, carbs, fats, allergens, image_url, created_at
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+weekly_menus
+id, start_date, end_date, items (jsonb), created_at
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+orders
+id, user_id, menu_id, items (jsonb), menu_size, total_price, delivery_type, delivery_date, address, phone, note, status, created_at
 
-# Step 3: Install the necessary dependencies.
-npm i
+progress
+id, user_id, date, weight, photo_url
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+admin_notifications
+id, order_id, seen, created_at
+
+⸻
+
+ROUTING (Next.js App Router)
+
+Cesta / Funkcia
+/ - Landing Page
+/menu - Aktuálne týždenné menu + história
+/cart - Košík a checkout
+/onboarding - Dotazník pri prvom prihlásení
+/dashboard - Prehľad používateľa a progres
+/settings - Úprava profilu
+/admin - Prehľad objednávok pre admina
+/admin/menu-builder - Týždenné menu builder
+/cennik - Stránka s cenníkom
+/doprava - Informácie o donáške
+/onas - O mne, profil trénera
+
+⸻
+
+TECH STACK
+
+Frontend: Next.js, TypeScript, TailwindCSS
+Backend / Database: Supabase, PostgreSQL
+AI Integrácia: OpenAI GPT-4 Turbo (api/ai-mealplan, api/ai-chat)
+UI knižnice: shadcn/ui, Lucide Icons, Recharts (grafy)
+
+⸻
+
+DIZAJN A UX
+
+Farby:
+• Pozadie: #000000
+• Text: #FFFFFF
+• Akcent: #FFD700
+
+Fonty:
+Playfair Display (nadpisy), Inter (texty)
+
+Efekty:
+Fade-in animácie, parallax efekty, hover glow
+
+Responzivita:
+Optimalizované pre desktop aj mobil
+
+Celkový štýl:
+VIP Black & Gold – minimalistický, luxusný, profesionálny
+
+⸻
+
+POUŽÍVATEĽSKÝ FLOW 1. Používateľ sa prihlási alebo vyplní úvodný dotazník. 2. Na stránke Menu si vyberie jedlá a zvolí veľkosť denného menu (S–XXL). 3. V Košíku doplní kontaktné údaje (email, adresa, telefón). 4. Objednávka sa uloží do tabuľky orders a admin dostane notifikáciu. 5. Používateľ vidí potvrdenie a môže sledovať svoj progres v dashboarde. 6. Admin má prehľad o všetkých objednávkach a menu cez svoj dashboard.
+
+⸻
+
+SETUP A SPUSTENIE PROJEKTU 1. Klonovanie projektu
+git clone https://github.com/yourusername/vip-krabickove-stravovanie.git
+cd vip-krabickove-stravovanie 2. Inštalácia závislostí
+npm install 3. Konfigurácia prostredia (.env.local)
+NEXT_PUBLIC_SUPABASE_URL=your_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_key
+SUPABASE_SERVICE_KEY=your_service_key
+OPENAI_API_KEY=your_openai_key 4. Spustenie projektu
 npm run dev
-```
+Projekt beží na http://localhost:3000
 
-**Edit a file directly in GitHub**
+⸻
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+DEPLOYMENT
 
-**Use GitHub Codespaces**
+Frontend: Lovable
+Backend a databáza: Supabase
+Emailové notifikácie: Resend API
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+⸻
 
-## What technologies are used for this project?
+ROADMAP
 
-This project is built with:
+✓ Landing Page a CTA
+✓ Dynamické týždenné menu
+✓ Košík a objednávkový systém
+✓ Admin dashboard
+✓ Onboarding a používateľský profil
+• AI Mealplan generátor (pripravuje sa)
+• Mobilná verzia (Expo + NativeWind)
+• Push notifikácie pre nové menu
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+⸻
 
-## How can I deploy this project?
+AUTOR
 
-Simply open [Lovable](https://lovable.dev/projects/a0c47c4d-d0b1-4954-9a8a-17baaa9ea608) and click on Share -> Publish.
+Patrik Rigodanzo
+Tréner, rekordman a zakladateľ VIP Profesionálne Krabičkové Stravovanie
+Instagram: @patrik.rigodanzo
 
-## Can I connect a custom domain to my Lovable project?
+⸻
 
-Yes, you can!
+CREDITS
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+Developed by Nikolas Pastier
+© 2025 VIP Profesionálne Krabičkové Stravovanie – Všetky práva vyhradené
