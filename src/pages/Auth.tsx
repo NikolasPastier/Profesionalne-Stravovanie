@@ -21,12 +21,37 @@ const Auth = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Check if user is already logged in
+    // Set up auth state listener FIRST
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (event === 'SIGNED_IN' && session) {
+          toast.success("Úspešne prihlásený!");
+          
+          // Check if user has completed onboarding
+          const { data: profile } = await supabase
+            .from("user_profiles")
+            .select("*")
+            .eq("user_id", session.user.id)
+            .single();
+
+          if (!profile) {
+            navigate("/onboarding");
+          } else {
+            navigate("/dashboard");
+          }
+        }
+      }
+    );
+
+    // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
         navigate("/dashboard");
       }
     });
+
+    // Cleanup
+    return () => subscription.unsubscribe();
   }, [navigate]);
 
   const handleSignUp = async (e: React.FormEvent) => {
@@ -65,11 +90,10 @@ const Auth = () => {
 
   const handleGoogleSignIn = async () => {
     try {
-      setLoading(true);
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/dashboard`
+          redirectTo: `${window.location.origin}/auth`
         }
       });
 
@@ -77,11 +101,10 @@ const Auth = () => {
         console.error("Google sign in error:", error);
         toast.error("Nepodarilo sa prihlásiť cez Google. Skúste to prosím znova.");
       }
+      // onAuthStateChange listener will handle the redirect after successful sign in
     } catch (error: any) {
       console.error("Google sign in error:", error);
       toast.error("Nepodarilo sa prihlásiť cez Google. Skúste to prosím znova.");
-    } finally {
-      setLoading(false);
     }
   };
 
