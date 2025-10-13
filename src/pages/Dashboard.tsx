@@ -659,9 +659,9 @@ const Dashboard = () => {
                                 {getStatusLabel(order.status)}
                               </Badge>
                             </TableCell>
-                            <TableCell onClick={(e) => e.stopPropagation()}>
+                            <TableCell onClick={(e) => e.stopPropagation()} className="bg-muted">
                               <div className="flex items-center gap-2">
-                                <select value={order.status} onChange={e => updateOrderStatus(order.id, e.target.value)} className="border rounded px-2 py-1 text-sm">
+                                <select value={order.status} onChange={e => updateOrderStatus(order.id, e.target.value)} className="border rounded px-2 py-1 text-sm bg-background">
                                   <option value="pending">Čaká sa</option>
                                   <option value="confirmed">Potvrdené</option>
                                   <option value="in_progress">Pripravuje sa</option>
