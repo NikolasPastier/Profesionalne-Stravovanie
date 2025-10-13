@@ -1197,9 +1197,6 @@ const Dashboard = () => {
                   {profile.preferences?.join(", ") || "Žiadne"}
                 </span>
               </div>
-              <Button onClick={handleOpenEditProfile} variant="outline" className="w-full mt-4">
-                Upraviť profil
-              </Button>
             </CardContent>
           </Card>
 
@@ -1273,6 +1270,10 @@ const Dashboard = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
+              <Button onClick={handleOpenEditProfile} variant="outline" className="w-full justify-start">
+                <User className="h-4 w-4 mr-2" />
+                Upraviť profil
+              </Button>
               <Button onClick={() => setIsEmailDialogOpen(true)} variant="outline" className="w-full justify-start">
                 <Mail className="h-4 w-4 mr-2" />
                 Zmeniť email
