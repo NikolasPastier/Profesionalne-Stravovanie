@@ -34,7 +34,5 @@ export function MotivationalQuote() {
     const quoteIndex = dayOfYear % quotes.length;
     setQuote(quotes[quoteIndex]);
   }, []);
-  return <Card className="bg-gradient-to-br from-primary/10 via-primary/5 to-background border-primary/20">
-      
-    </Card>;
+  return;
 }
