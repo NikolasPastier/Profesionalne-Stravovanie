@@ -201,14 +201,17 @@ const Menu = () => {
                     <h3 className="font-display text-xl font-bold mb-3 text-accent border-b border-accent pb-2">
                       {day.day}
                     </h3>
-                    <div className="space-y-2">
+                    <div className="space-y-3">
                       {day.meals && day.meals.map((meal: any, mealIdx: number) => {
-                        const mealName = typeof meal === 'string' ? meal : meal.name;
-                        const categoryEmoji = meal.category === 'breakfast' ? '🍳' : meal.category === 'lunch' ? '🍽️' : '🥤';
+                        const mealName = typeof meal === 'string' ? cleanMealString(meal) : meal.name;
+                        const categoryLabel = meal.category === 'breakfast' ? 'Raňajky' : meal.category === 'lunch' ? 'Obed' : meal.category === 'dinner' ? 'Večera' : 'Jedlo';
                         return (
-                          <p key={mealIdx} className="text-foreground text-sm">
-                            {typeof meal === 'string' ? meal : `${categoryEmoji} ${mealName}`}
-                          </p>
+                          <div key={mealIdx} className="bg-card/30 rounded-md p-3 border border-border/50">
+                            <div className="text-xs font-semibold text-accent/80 mb-1">{categoryLabel}</div>
+                            <p className="text-foreground text-sm font-medium leading-relaxed">
+                              {mealName}
+                            </p>
+                          </div>
                         );
                       })}
                     </div>
@@ -274,13 +277,12 @@ const Menu = () => {
                           <div key={idx} className="card-premium p-4 space-y-3">
                             <div className="flex items-start justify-between">
                               <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-1">
-                                  <span className="text-2xl">{categoryEmoji}</span>
-                                  <span className="text-xs bg-accent/20 text-accent px-2 py-1 rounded font-semibold">
+                                <div className="mb-2">
+                                  <span className="text-xs bg-accent/20 text-accent px-3 py-1.5 rounded-full font-semibold">
                                     {categoryLabel}
                                   </span>
                                 </div>
-                                <h4 className="font-bold text-lg text-primary">
+                                <h4 className="font-bold text-lg text-primary leading-relaxed">
                                   {mealName}
                                 </h4>
                               </div>
