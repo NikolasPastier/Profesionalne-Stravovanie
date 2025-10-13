@@ -12,6 +12,7 @@ interface ProgressPhoto {
   date: string;
   weight: number | null;
   photo_url: string;
+  signed_url?: string;
 }
 
 export function ProgressGallery({ userId }: { userId: string }) {
@@ -34,7 +35,24 @@ export function ProgressGallery({ userId }: { userId: string }) {
         .order("date", { ascending: false });
 
       if (error) throw error;
-      setPhotos(data || []);
+
+      // Create signed URLs for each photo
+      const photosWithSignedUrls = await Promise.all(
+        (data || []).map(async (photo) => {
+          const { data: signedData, error: signedError } = await supabase.storage
+            .from("progress-photos")
+            .createSignedUrl(photo.photo_url, 3600); // 1 hour expiration
+
+          if (signedError) {
+            console.error("Error creating signed URL:", signedError);
+            return { ...photo, signed_url: "" };
+          }
+
+          return { ...photo, signed_url: signedData.signedUrl };
+        })
+      );
+
+      setPhotos(photosWithSignedUrls);
     } catch (error) {
       console.error("Error loading photos:", error);
       toast({
@@ -47,10 +65,6 @@ export function ProgressGallery({ userId }: { userId: string }) {
     }
   };
 
-  const getPhotoUrl = (path: string) => {
-    const { data } = supabase.storage.from("progress-photos").getPublicUrl(path);
-    return data.publicUrl;
-  };
 
   const deletePhoto = async (photo: ProgressPhoto) => {
     try {
@@ -129,7 +143,7 @@ export function ProgressGallery({ userId }: { userId: string }) {
                 onClick={() => setSelectedPhoto(photo)}
               >
                 <img
-                  src={getPhotoUrl(photo.photo_url)}
+                  src={photo.signed_url || ""}
                   alt={`Progress ${format(new Date(photo.date), "dd.MM.yyyy")}`}
                   className="w-full h-48 object-cover"
                 />
@@ -154,7 +168,7 @@ export function ProgressGallery({ userId }: { userId: string }) {
                 <div>
                   <p className="text-sm text-muted-foreground mb-2">Prvá fotka</p>
                   <img
-                    src={getPhotoUrl(photos[photos.length - 1].photo_url)}
+                    src={photos[photos.length - 1].signed_url || ""}
                     alt="Before"
                     className="w-full h-64 object-cover rounded-lg"
                   />
@@ -166,7 +180,7 @@ export function ProgressGallery({ userId }: { userId: string }) {
                 <div>
                   <p className="text-sm text-muted-foreground mb-2">Najnovšia fotka</p>
                   <img
-                    src={getPhotoUrl(photos[0].photo_url)}
+                    src={photos[0].signed_url || ""}
                     alt="After"
                     className="w-full h-64 object-cover rounded-lg"
                   />
@@ -189,7 +203,7 @@ export function ProgressGallery({ userId }: { userId: string }) {
           {selectedPhoto && (
             <div className="space-y-4">
               <img
-                src={getPhotoUrl(selectedPhoto.photo_url)}
+                src={selectedPhoto.signed_url || ""}
                 alt="Progress detail"
                 className="w-full rounded-lg"
               />
