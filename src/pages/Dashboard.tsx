@@ -970,9 +970,9 @@ const Dashboard = () => {
           </div>
 
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 mt-8">
-            {/* Recommended Menu - 1st on mobile, 3rd on desktop */}
-            <Card className="md:order-3">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8 mt-8">
+            {/* Recommended Menu */}
+            <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
                   Odporúčané menu
@@ -980,7 +980,7 @@ const Dashboard = () => {
                 <UtensilsCrossed className="h-5 w-5 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold text-primary">
+                <div className="text-2xl font-bold text-primary">
                   {getRecommendedMenuSize()}
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
@@ -989,8 +989,8 @@ const Dashboard = () => {
               </CardContent>
             </Card>
 
-            {/* Current Weight - 2nd on mobile, 1st on desktop */}
-            <Card className="md:order-1">
+            {/* Current Weight */}
+            <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
                   Aktuálna váha
@@ -998,14 +998,14 @@ const Dashboard = () => {
                 <Scale className="h-5 w-5 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold">
+                <div className="text-2xl font-bold">
                   {getCurrentWeight().toFixed(1)} kg
                 </div>
               </CardContent>
             </Card>
 
-            {/* Goal Weight - 3rd on mobile, 2nd on desktop */}
-            <Card className="md:order-2">
+            {/* Goal Weight */}
+            <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
                   Cieľová váha
@@ -1013,14 +1013,14 @@ const Dashboard = () => {
                 <TrendingDown className="h-5 w-5 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold">
+                <div className="text-2xl font-bold">
                   {getGoalWeight().toFixed(1)} kg
                 </div>
               </CardContent>
             </Card>
 
-            {/* Remaining Weight - 4th on both mobile and desktop */}
-            <Card className="md:order-4 md:col-start-3">
+            {/* Remaining Weight */}
+            <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
                   Zostáva
@@ -1028,7 +1028,7 @@ const Dashboard = () => {
                 <Calendar className="h-5 w-5 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold text-orange-500">
+                <div className="text-2xl font-bold text-orange-500">
                   {getRemainingWeight().toFixed(1)} kg
                 </div>
               </CardContent>
