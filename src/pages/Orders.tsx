@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { Package, Calendar, MapPin, AlertCircle } from "lucide-react";
 
@@ -19,6 +20,9 @@ interface Order {
   delivery_date: string;
   status: string;
   address: string;
+  phone: string;
+  items: any;
+  note?: string;
 }
 
 const Orders = () => {
@@ -27,6 +31,8 @@ const Orders = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [profileComplete, setProfileComplete] = useState(true);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
 
   useEffect(() => {
     checkUserAndLoadOrders();
@@ -164,7 +170,14 @@ const Orders = () => {
           ) : (
             <div className="space-y-6">
               {orders.map((order) => (
-                <Card key={order.id} className="border-primary/20">
+                <Card 
+                  key={order.id} 
+                  className="border-primary/20 cursor-pointer hover:border-primary/40 transition-all"
+                  onClick={() => {
+                    setSelectedOrder(order);
+                    setIsOrderModalOpen(true);
+                  }}
+                >
                   <CardHeader>
                     <div className="flex justify-between items-start">
                       <CardTitle className="text-primary">
@@ -246,6 +259,108 @@ const Orders = () => {
           )}
         </div>
       </main>
+
+      {/* Order Details Modal */}
+      <Dialog open={isOrderModalOpen} onOpenChange={setIsOrderModalOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-2xl text-primary">Detail objednávky</DialogTitle>
+            <DialogDescription>
+              Objednávka #{selectedOrder?.id.slice(0, 8)}
+            </DialogDescription>
+          </DialogHeader>
+
+          {selectedOrder && (
+            <div className="space-y-6">
+              {/* Order Details */}
+              <div className="space-y-4">
+                <h3 className="font-semibold text-lg border-b border-primary/20 pb-2">Detaily objednávky</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Telefón</p>
+                    <p className="font-medium">{selectedOrder.phone}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Dátum objednávky</p>
+                    <p className="font-medium">
+                      {new Date(selectedOrder.created_at).toLocaleString("sk-SK")}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Adresa doručenia</p>
+                    <p className="font-medium">{selectedOrder.address}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Typ doručenia</p>
+                    <p className="font-medium">
+                      {selectedOrder.delivery_type === "weekly" ? "Týždenné" : "Denné"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Stav</p>
+                    <Badge className={getStatusColor(selectedOrder.status)}>
+                      {getStatusText(selectedOrder.status)}
+                    </Badge>
+                  </div>
+                  {selectedOrder.delivery_date && (
+                    <div>
+                      <p className="text-sm text-muted-foreground">Dátum doručenia</p>
+                      <p className="font-medium">
+                        {new Date(selectedOrder.delivery_date).toLocaleDateString("sk-SK")}
+                      </p>
+                    </div>
+                  )}
+                  <div>
+                    <p className="text-sm text-muted-foreground">Celková cena</p>
+                    <p className="font-medium text-lg text-primary">{selectedOrder.total_price.toFixed(2)}€</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Veľkosť menu</p>
+                    <p className="font-medium">{selectedOrder.menu_size}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Order Items */}
+              <div className="space-y-4">
+                <h3 className="font-semibold text-lg border-b border-primary/20 pb-2">Obsah objednávky</h3>
+                <div className="space-y-3">
+                  {selectedOrder.items && Array.isArray(selectedOrder.items) && selectedOrder.items.map((day: any, idx: number) => (
+                    <div key={idx} className="border border-primary/10 rounded-lg p-4 bg-muted/30">
+                      <h4 className="font-semibold mb-2 text-primary">{day.day}</h4>
+                      <div className="space-y-1">
+                        {day.meals && day.meals.length > 0 ? (
+                          day.meals.map((meal: any, mealIdx: number) => (
+                            <p key={mealIdx} className="text-sm">
+                              • {typeof meal === 'string' ? meal : meal.name}
+                            </p>
+                          ))
+                        ) : (
+                          <p className="text-sm text-muted-foreground italic">Žiadne jedlá</p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Note */}
+              {selectedOrder.note && (
+                <div className="space-y-2">
+                  <h3 className="font-semibold text-lg border-b border-primary/20 pb-2">Poznámka</h3>
+                  <p className="text-sm bg-muted/30 p-3 rounded-lg">{selectedOrder.note}</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsOrderModalOpen(false)}>
+              Zavrieť
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Footer />
     </div>
