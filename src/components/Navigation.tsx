@@ -83,7 +83,7 @@ export const Navigation = () => {
         </Link>
 
         {/* Desktop Navigation */}
-        <div className="hidden md:flex items-center gap-6">
+        <div className="hidden lg:flex items-center gap-6">
           <NavLinks />
           
           <Button 
@@ -116,7 +116,7 @@ export const Navigation = () => {
 
         {/* Mobile Navigation */}
         <Sheet>
-          <SheetTrigger asChild className="md:hidden">
+          <SheetTrigger asChild className="lg:hidden">
             <Button variant="ghost" size="icon">
               <MenuIcon className="h-6 w-6" />
             </Button>
