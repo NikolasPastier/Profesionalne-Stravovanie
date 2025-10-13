@@ -532,6 +532,33 @@ const Dashboard = () => {
       });
     }
   };
+
+  const handleDeleteOrder = async (orderId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!confirm("Naozaj chcete odstrániť túto objednávku?")) return;
+    
+    try {
+      const { error } = await supabase
+        .from("orders")
+        .delete()
+        .eq("id", orderId);
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Úspech",
+        description: "Objednávka bola odstránená"
+      });
+      
+      loadOrders();
+    } catch (error: any) {
+      toast({
+        title: "Chyba",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  };
   if (loading) {
     return <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-primary text-xl">Načítavam...</div>
@@ -633,14 +660,23 @@ const Dashboard = () => {
                               </Badge>
                             </TableCell>
                             <TableCell onClick={(e) => e.stopPropagation()}>
-                              <select value={order.status} onChange={e => updateOrderStatus(order.id, e.target.value)} className="border rounded px-2 py-1 text-sm">
-                                <option value="pending">Čaká sa</option>
-                                <option value="confirmed">Potvrdené</option>
-                                <option value="in_progress">Pripravuje sa</option>
-                                <option value="ready">Pripravené</option>
-                                <option value="delivered">Doručené</option>
-                                <option value="cancelled">Zrušené</option>
-                              </select>
+                              <div className="flex items-center gap-2">
+                                <select value={order.status} onChange={e => updateOrderStatus(order.id, e.target.value)} className="border rounded px-2 py-1 text-sm">
+                                  <option value="pending">Čaká sa</option>
+                                  <option value="confirmed">Potvrdené</option>
+                                  <option value="in_progress">Pripravuje sa</option>
+                                  <option value="ready">Pripravené</option>
+                                  <option value="delivered">Doručené</option>
+                                  <option value="cancelled">Zrušené</option>
+                                </select>
+                                <Button
+                                  variant="destructive"
+                                  size="sm"
+                                  onClick={(e) => handleDeleteOrder(order.id, e)}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
                             </TableCell>
                           </TableRow>)}
                       </TableBody>
