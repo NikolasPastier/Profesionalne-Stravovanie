@@ -101,7 +101,7 @@ export const Navigation = () => {
           </Button>
 
           {user ? <div className="flex items-center gap-3">
-              <Button variant="outline" size="sm" onClick={() => navigate("/dashboard")} className="gap-2">
+              <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")} className="gap-2">
                 <User className="h-4 w-4" />
                 Profil
               </Button>
@@ -140,7 +140,7 @@ export const Navigation = () => {
               </Button>
 
               {user ? <>
-                  <Button variant="outline" onClick={() => navigate("/dashboard")} className="gap-2 justify-start">
+                  <Button variant="ghost" onClick={() => navigate("/dashboard")} className="gap-2 justify-start">
                     <User className="h-4 w-4" />
                     Profil
                   </Button>
