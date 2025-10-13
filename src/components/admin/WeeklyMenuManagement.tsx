@@ -191,12 +191,41 @@ export const WeeklyMenuManagement = () => {
     if (!confirm("Naozaj chcete vymazať toto menu?")) return;
 
     try {
-      const { error } = await supabase
+      // Skontrolovať, či existujú objednávky s týmto menu
+      const { data: ordersWithMenu, error: checkError } = await supabase
+        .from("orders")
+        .select("id")
+        .eq("menu_id", menuId)
+        .limit(1);
+
+      if (checkError) throw checkError;
+
+      // Ak existujú objednávky, informujeme užívateľa a ponúkneme možnosti
+      if (ordersWithMenu && ordersWithMenu.length > 0) {
+        const confirmDetach = confirm(
+          "Toto menu je použité v existujúcich objednávkach. " +
+          "Kliknutím na OK sa objednávky odpoja od menu a menu bude vymazané. " +
+          "Objednávky ostanú zachované so svojimi položkami."
+        );
+        
+        if (!confirmDetach) return;
+
+        // Odpojíme objednávky (nastavíme menu_id na NULL)
+        const { error: updateError } = await supabase
+          .from("orders")
+          .update({ menu_id: null })
+          .eq("menu_id", menuId);
+
+        if (updateError) throw updateError;
+      }
+
+      // Teraz môžeme bezpečne vymazať menu
+      const { error: deleteError } = await supabase
         .from("weekly_menus")
         .delete()
         .eq("id", menuId);
 
-      if (error) throw error;
+      if (deleteError) throw deleteError;
 
       toast.success("Menu vymazané");
       await loadMenuHistory();
