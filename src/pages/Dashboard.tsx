@@ -13,7 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { User, Target, Activity, TrendingUp, UtensilsCrossed, Package, Scale, TrendingDown, Calendar, Sparkles, Mail, Lock, Trash2, Camera, Trophy } from "lucide-react";
+import { User, Target, Activity, TrendingUp, UtensilsCrossed, Package, Scale, TrendingDown, Calendar, Sparkles, Mail, Lock, Trash2, Camera, Trophy, MapPin } from "lucide-react";
 import { MenuManagement } from "@/components/admin/MenuManagement";
 import { WeeklyMenuManagement } from "@/components/admin/WeeklyMenuManagement";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
@@ -88,6 +88,7 @@ const Dashboard = () => {
   // Order details modal state
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
+  const [isAllOrdersModalOpen, setIsAllOrdersModalOpen] = useState(false);
 
   // Account management states
   const [isEmailDialogOpen, setIsEmailDialogOpen] = useState(false);
@@ -1161,67 +1162,6 @@ const Dashboard = () => {
           </Tabs>
 
 
-          {/* Order History */}
-          <Card className="mt-6">
-            <CardHeader>
-              <CardTitle>História objednávok</CardTitle>
-              <CardDescription>
-                Prehľad vašich posledných objednávok
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {userOrders.length > 0 ? <div className="space-y-4">
-                  {userOrders.slice(0, 5).map(order => <div key={order.id} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                          <p className="font-medium">
-                            Objednávka #{order.id.slice(0, 8)}
-                          </p>
-                          <Badge className={getStatusColor(order.status)}>
-                            {getStatusLabel(order.status)}
-                          </Badge>
-                        </div>
-                        <p className="text-sm text-muted-foreground">
-                          {new Date(order.created_at).toLocaleDateString("sk-SK", {
-                      day: "numeric",
-                      month: "long",
-                      year: "numeric"
-                    })}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          Doručenie: {order.delivery_type}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-lg font-bold">{order.total_price}€</p>
-                      </div>
-                    </div>)}
-                  {userOrders.length > 5 && <Button onClick={() => navigate("/orders")} variant="outline" className="w-full">
-                      Zobraziť všetky objednávky
-                    </Button>}
-                </div> : <div className="text-center py-8 text-muted-foreground">
-                  Zatiaľ nemáte žiadne objednávky
-                </div>}
-            </CardContent>
-          </Card>
-
-          <Card className="mt-6">
-            <CardHeader>
-              <CardTitle>Rýchle akcie</CardTitle>
-            </CardHeader>
-            <CardContent className="flex flex-wrap gap-4">
-              <Button onClick={() => navigate("/orders")} className="bg-primary hover:bg-primary/90">
-                Moje objednávky
-              </Button>
-              <Button onClick={() => navigate("/cart")} variant="outline">
-                Košík
-              </Button>
-              <Button onClick={() => navigate("/cenník")} variant="outline">
-                Cenník
-              </Button>
-            </CardContent>
-          </Card>
-
           {/* Account Settings */}
           <Card className="mt-6">
             <CardHeader>
@@ -1234,6 +1174,10 @@ const Dashboard = () => {
               <Button onClick={handleOpenEditProfile} variant="outline" className="w-full justify-start">
                 <User className="h-4 w-4 mr-2" />
                 Upraviť profil
+              </Button>
+              <Button onClick={() => setIsAllOrdersModalOpen(true)} variant="outline" className="w-full justify-start">
+                <Package className="h-4 w-4 mr-2" />
+                Moje objednávky
               </Button>
               <Button onClick={() => setIsEmailDialogOpen(true)} variant="outline" className="w-full justify-start">
                 <Mail className="h-4 w-4 mr-2" />
@@ -1495,6 +1439,204 @@ const Dashboard = () => {
             </Button>
             <Button onClick={handleSaveProfile}>
               Uložiť zmeny
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* All Orders Modal */}
+      <Dialog open={isAllOrdersModalOpen} onOpenChange={setIsAllOrdersModalOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-2xl text-primary">Moje objednávky</DialogTitle>
+            <DialogDescription>
+              Prehľad všetkých vašich objednávok
+            </DialogDescription>
+          </DialogHeader>
+
+          {userOrders.length === 0 ? (
+            <div className="text-center py-8">
+              <Package className="h-16 w-16 text-primary/50 mx-auto mb-4" />
+              <p className="text-xl text-muted-foreground mb-4">
+                Zatiaľ nemáte žiadne objednávky
+              </p>
+              <Button onClick={() => {
+                setIsAllOrdersModalOpen(false);
+                navigate("/menu");
+              }}>
+                Prejsť do menu
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {userOrders.map((order) => (
+                <Card 
+                  key={order.id} 
+                  className="border-primary/20 cursor-pointer hover:border-primary/40 transition-all"
+                  onClick={() => {
+                    setSelectedOrder(order);
+                    setIsOrderModalOpen(true);
+                  }}
+                >
+                  <CardHeader>
+                    <div className="flex justify-between items-start flex-wrap gap-2">
+                      <CardTitle className="text-primary">
+                        Objednávka #{order.id.slice(0, 8)}
+                      </CardTitle>
+                      <Badge className={getStatusColor(order.status)}>
+                        {getStatusLabel(order.status)}
+                      </Badge>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <Package className="h-4 w-4 text-primary" />
+                          <span className="text-sm text-muted-foreground">Typ doručenia:</span>
+                          <span className="font-semibold">
+                            {order.delivery_type === "weekly" ? "Týždenné" : "Denné"}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Calendar className="h-4 w-4 text-primary" />
+                          <span className="text-sm text-muted-foreground">Dátum objednávky:</span>
+                          <span className="font-semibold">
+                            {new Date(order.created_at).toLocaleDateString("sk-SK")}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <MapPin className="h-4 w-4 text-primary" />
+                          <span className="text-sm text-muted-foreground">Adresa:</span>
+                          <span className="font-semibold">{order.address}</span>
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        {order.delivery_date && (
+                          <div className="flex justify-between">
+                            <span className="text-sm text-muted-foreground">Dátum doručenia:</span>
+                            <span className="font-semibold">
+                              {new Date(order.delivery_date).toLocaleDateString("sk-SK")}
+                            </span>
+                          </div>
+                        )}
+                        <div className="flex justify-between">
+                          <span className="text-sm text-muted-foreground">Celková cena:</span>
+                          <span className="font-bold text-primary text-lg">
+                            {order.total_price.toFixed(2)} €
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Order Details Modal */}
+      <Dialog open={isOrderModalOpen} onOpenChange={setIsOrderModalOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-2xl text-primary">Detail objednávky</DialogTitle>
+            <DialogDescription>
+              Objednávka #{selectedOrder?.id.slice(0, 8)}
+            </DialogDescription>
+          </DialogHeader>
+
+          {selectedOrder && (
+            <div className="space-y-6">
+              {/* Order Details */}
+              <div className="space-y-4">
+                <h3 className="font-semibold text-lg border-b border-primary/20 pb-2">
+                  Detaily objednávky
+                </h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Telefón</p>
+                    <p className="font-medium">{selectedOrder.phone}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Dátum objednávky</p>
+                    <p className="font-medium">
+                      {new Date(selectedOrder.created_at).toLocaleString("sk-SK")}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Adresa doručenia</p>
+                    <p className="font-medium">{selectedOrder.address}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Typ doručenia</p>
+                    <p className="font-medium">
+                      {selectedOrder.delivery_type === "weekly" ? "Týždenné" : "Denné"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Stav</p>
+                    <Badge className={getStatusColor(selectedOrder.status)}>
+                      {getStatusLabel(selectedOrder.status)}
+                    </Badge>
+                  </div>
+                  {selectedOrder.delivery_date && (
+                    <div>
+                      <p className="text-sm text-muted-foreground">Dátum doručenia</p>
+                      <p className="font-medium">
+                        {new Date(selectedOrder.delivery_date).toLocaleDateString("sk-SK")}
+                      </p>
+                    </div>
+                  )}
+                  <div>
+                    <p className="text-sm text-muted-foreground">Celková cena</p>
+                    <p className="font-medium text-lg text-primary">
+                      {selectedOrder.total_price.toFixed(2)}€
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Order Items */}
+              <div className="space-y-4">
+                <h3 className="font-semibold text-lg border-b border-primary/20 pb-2">
+                  Obsah objednávky
+                </h3>
+                <div className="space-y-3">
+                  {selectedOrder.items && Array.isArray(selectedOrder.items) && 
+                    selectedOrder.items.map((day: any, idx: number) => (
+                      <div key={idx} className="border border-primary/10 rounded-lg p-4 bg-muted/30">
+                        <h4 className="font-semibold mb-2 text-primary">{day.day}</h4>
+                        <div className="space-y-1">
+                          {day.meals && day.meals.length > 0 ? (
+                            day.meals.map((meal: any, mealIdx: number) => (
+                              <p key={mealIdx} className="text-sm">
+                                • {typeof meal === 'string' ? meal : meal.name}
+                              </p>
+                            ))
+                          ) : (
+                            <p className="text-sm text-muted-foreground italic">Žiadne jedlá</p>
+                          )}
+                        </div>
+                      </div>
+                    ))
+                  }
+                </div>
+              </div>
+
+              {/* Note */}
+              {selectedOrder.note && (
+                <div className="space-y-2">
+                  <h3 className="font-semibold text-lg border-b border-primary/20 pb-2">Poznámka</h3>
+                  <p className="text-sm bg-muted/30 p-3 rounded-lg">{selectedOrder.note}</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsOrderModalOpen(false)}>
+              Zavrieť
             </Button>
           </DialogFooter>
         </DialogContent>

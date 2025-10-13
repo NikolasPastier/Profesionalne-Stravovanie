@@ -13,7 +13,6 @@ import Doprava from "./pages/Doprava";
 import ONas from "./pages/ONas";
 import Onboarding from "./pages/Onboarding";
 import Dashboard from "./pages/Dashboard";
-import Orders from "./pages/Orders";
 
 import NotFound from "./pages/NotFound";
 
@@ -36,7 +35,6 @@ const App = () => (
           <Route path="/onas" element={<ONas />} />
           <Route path="/onboarding" element={<Onboarding />} />
           <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/orders" element={<Orders />} />
           
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
