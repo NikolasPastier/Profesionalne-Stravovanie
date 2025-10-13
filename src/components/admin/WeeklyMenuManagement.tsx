@@ -34,7 +34,7 @@ interface WeeklyMenu {
   created_at: string;
 }
 
-const DAYS = ["Pondelok", "Utorok", "Streda", "Štvrtok", "Piatok", "Sobota", "Nedeľa"];
+const DAYS = ["Pondelok", "Utorok", "Streda", "Štvrtok", "Piatok"];
 const CATEGORIES = ["breakfast", "lunch", "dinner"] as const;
 const CATEGORY_LABELS = {
   breakfast: "Raňajky",
