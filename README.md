@@ -16,17 +16,26 @@ VIP Profesionálne Krabičkové Stravovanie je moderná webová platforma určen
 
 ⸻
 
-HLAVNÉ FUNKCIE 1. Landing Page
-Prémiový čierno-zlatý dizajn s animáciami, sloganom a sekciami ako „Prečo krabičkovať?“, „Premeny“ a „Fakty o stravovaní“. 2. Menu systém
-Dynamické načítanie aktuálneho týždenného menu zo Supabase.
-Používateľ môže pridať jedlá do košíka podľa veľkosti menu (S–XXL). 3. Košík / Checkout
-Používateľ vyberá jedlá, doplní kontaktné údaje, adresa a telefón sa automaticky ukladajú do profilu.
-Platba prebieha v hotovosti pri doručení. 4. Používateľský účet
-Úvodný dotazník (onboarding) pre uloženie údajov ako vek, výška, cieľ, aktivita a alergie. 5. Dashboard
-Prehľad cieľov, váhy, graf progresu a odporúčaná veľkosť denného menu. 6. Admin Dashboard
-Správa objednávok, zostavenie týždenného menu, úprava a mazanie jedál, automatické notifikácie o nových objednávkach. 7. AI Integrácia (v príprave)
-Automatické generovanie 7-dňového menu podľa cieľa, alergií a rozpočtu používateľa. 8. Informačné podstránky
-Cenník, Doprava, O nás – jednotný čierno-zlatý dizajn, textový obsah podľa sekcií.
+HLAVNÉ FUNKCIE
+
+1. Landing Page
+   Prémiový čierno-zlatý dizajn s animáciami, sloganom a sekciami ako „Prečo krabičkovať?“, „Premeny“ a „Fakty o stravovaní“.
+2. Menu systém
+   Dynamické načítanie aktuálneho týždenného menu zo Supabase.
+   Používateľ môže pridať jedlá do košíka podľa veľkosti menu (S–XXL).
+3. Košík / Checkout
+   Používateľ vyberá jedlá, doplní kontaktné údaje, adresa a telefón sa automaticky ukladajú do profilu.
+   Platba prebieha v hotovosti pri doručení.
+4. Používateľský účet
+   Úvodný dotazník (onboarding) pre uloženie údajov ako vek, výška, cieľ, aktivita a alergie.
+5. Dashboard
+   Prehľad cieľov, váhy, graf progresu a odporúčaná veľkosť denného menu.
+6. Admin Dashboard
+   Správa objednávok, zostavenie týždenného menu, úprava a mazanie jedál, automatické notifikácie o nových objednávkach. 7. AI Integrácia (v príprave)
+   Automatické generovanie
+   7-dňového menu podľa cieľa, alergií a rozpočtu používateľa.
+7. Informačné podstránky
+   Cenník, Doprava, O nás – jednotný čierno-zlatý dizajn, textový obsah podľa sekcií.
 
 ⸻
 
