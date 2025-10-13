@@ -22,26 +22,27 @@ const Auth = () => {
 
   useEffect(() => {
     // Set up auth state listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (event === 'SIGNED_IN' && session) {
-          toast.success("Úspešne prihlásený!");
-          
-          // Check if user has completed onboarding
-          const { data: profile } = await supabase
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' && session) {
+        toast.success("Úspešne prihlásený!");
+        
+        // Defer any Supabase calls to avoid deadlocks
+        setTimeout(() => {
+          supabase
             .from("user_profiles")
             .select("*")
             .eq("user_id", session.user.id)
-            .single();
-
-          if (!profile) {
-            navigate("/onboarding");
-          } else {
-            navigate("/dashboard");
-          }
-        }
+            .single()
+            .then(({ data: profile }) => {
+              if (!profile) {
+                navigate("/onboarding");
+              } else {
+                navigate("/dashboard");
+              }
+            });
+        }, 0);
       }
-    );
+    });
 
     // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -69,7 +70,7 @@ const Auth = () => {
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/dashboard`
+          emailRedirectTo: `${window.location.origin}/auth`
         }
       });
 
