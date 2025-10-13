@@ -77,21 +77,15 @@ const Index = () => {
         {/* Scrolling Background Images */}
         <div className="absolute inset-0 overflow-hidden opacity-20">
           <div className="flex gap-8 animate-scroll-left">
-            {[food1, food2, food3, food4, food5, food6, food7, food8, food1, food2, food3, food4].map((img, idx) => (
-              <div key={idx} className="flex-shrink-0 w-64 h-80">
-                <img 
-                  src={img} 
-                  alt="Meal prep" 
-                  className="w-full h-full object-cover rounded-lg"
-                />
-              </div>
-            ))}
+            {[food1, food2, food3, food4, food5, food6, food7, food8, food1, food2, food3, food4].map((img, idx) => <div key={idx} className="flex-shrink-0 w-64 h-80">
+                <img src={img} alt="Meal prep" className="w-full h-full object-cover rounded-lg" />
+              </div>)}
           </div>
         </div>
         <div className="absolute inset-0 bg-gradient-gold-subtle opacity-30"></div>
         <div className="container mx-auto text-center relative z-10 animate-fade-in">
-          <h1 className="font-display text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-bold mb-6 text-gradient-gold">Profesionálne Krabičkové Stravovanie</h1>
-          <p className="text-2xl md:text-3xl mb-4 text-primary">
+          <h1 className="font-display md:text-7xl font-bold mb-6 text-gradient-gold text-4xl">Profesionálne Krabičkové Stravovanie</h1>
+          <p className="md:text-3xl mb-4 text-primary text-xl">
             Jedz zdravo. Sleduj progres. Dosiahni svoj cieľ.
           </p>
           <Button onClick={() => navigate("/menu")} className="bg-primary text-primary-foreground hover:glow-gold-strong text-base md:text-lg px-4 md:px-8 py-4 md:py-6" size="lg">Pozri si aktuálne týždenné menu →</Button>
