@@ -447,7 +447,7 @@ const Cart = () => {
                 <div className="border-t border-primary/20 pt-4 mt-6">
                   <div className="flex justify-between items-center mb-4">
                     <span className="text-lg font-bold">Celková suma:</span>
-                    <span className="text-2xl font-bold text-primary">€45.95</span>
+                    <span className="text-2xl font-bold text-primary">€{totalPrice.toFixed(2)}</span>
                   </div>
                   <p className="text-sm text-muted-foreground mb-4">
                     💰 Platba: Hotovosť pri doručení prvej objednávky v celej sume
