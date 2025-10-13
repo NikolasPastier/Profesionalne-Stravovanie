@@ -43,6 +43,7 @@ interface Order {
   phone: string;
   address: string;
   items: any;
+  note?: string;
   user_profiles?: {
     name: string;
     email: string;
@@ -78,6 +79,10 @@ const Dashboard = () => {
   const [achievements, setAchievements] = useState<any[]>([]);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [userId, setUserId] = useState<string>("");
+  
+  // Order details modal state
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
 
   // Account management states
   const [isEmailDialogOpen, setIsEmailDialogOpen] = useState(false);
@@ -605,7 +610,14 @@ const Dashboard = () => {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {orders.map(order => <TableRow key={order.id}>
+                        {orders.map(order => <TableRow 
+                            key={order.id}
+                            className="cursor-pointer hover:bg-muted/50"
+                            onClick={() => {
+                              setSelectedOrder(order);
+                              setIsOrderModalOpen(true);
+                            }}
+                          >
                             <TableCell>
                               {new Date(order.created_at).toLocaleDateString("sk-SK")}
                             </TableCell>
@@ -620,7 +632,7 @@ const Dashboard = () => {
                                 {getStatusLabel(order.status)}
                               </Badge>
                             </TableCell>
-                            <TableCell>
+                            <TableCell onClick={(e) => e.stopPropagation()}>
                               <select value={order.status} onChange={e => updateOrderStatus(order.id, e.target.value)} className="border rounded px-2 py-1 text-sm">
                                 <option value="pending">Čaká sa</option>
                                 <option value="confirmed">Potvrdené</option>
@@ -647,6 +659,117 @@ const Dashboard = () => {
             </Tabs>
           </div>
         </main>
+
+        {/* Order Details Modal */}
+        <Dialog open={isOrderModalOpen} onOpenChange={setIsOrderModalOpen}>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="text-2xl">Detail objednávky</DialogTitle>
+              <DialogDescription>
+                Objednávka #{selectedOrder?.id.slice(0, 8)}
+              </DialogDescription>
+            </DialogHeader>
+
+            {selectedOrder && (
+              <div className="space-y-6">
+                {/* Customer Info */}
+                <div className="space-y-4">
+                  <h3 className="font-semibold text-lg border-b pb-2">Informácie o zákazníkovi</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Meno</p>
+                      <p className="font-medium">{selectedOrder.user_profiles?.name || "N/A"}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Email</p>
+                      <p className="font-medium">{selectedOrder.user_profiles?.email || "N/A"}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Telefón</p>
+                      <p className="font-medium">{selectedOrder.phone}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Dátum objednávky</p>
+                      <p className="font-medium">
+                        {new Date(selectedOrder.created_at).toLocaleString("sk-SK")}
+                      </p>
+                    </div>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Adresa doručenia</p>
+                    <p className="font-medium">{selectedOrder.address}</p>
+                  </div>
+                </div>
+
+                {/* Order Details */}
+                <div className="space-y-4">
+                  <h3 className="font-semibold text-lg border-b pb-2">Detaily objednávky</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Typ doručenia</p>
+                      <p className="font-medium">{selectedOrder.delivery_type}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Stav</p>
+                      <Badge className={getStatusColor(selectedOrder.status)}>
+                        {getStatusLabel(selectedOrder.status)}
+                      </Badge>
+                    </div>
+                    {selectedOrder.delivery_date && (
+                      <div>
+                        <p className="text-sm text-muted-foreground">Dátum doručenia</p>
+                        <p className="font-medium">
+                          {new Date(selectedOrder.delivery_date).toLocaleDateString("sk-SK")}
+                        </p>
+                      </div>
+                    )}
+                    <div>
+                      <p className="text-sm text-muted-foreground">Celková cena</p>
+                      <p className="font-medium text-lg">{selectedOrder.total_price}€</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Order Items */}
+                <div className="space-y-4">
+                  <h3 className="font-semibold text-lg border-b pb-2">Obsah objednávky</h3>
+                  <div className="space-y-3">
+                    {selectedOrder.items && Array.isArray(selectedOrder.items) && selectedOrder.items.map((day: any, idx: number) => (
+                      <div key={idx} className="border rounded-lg p-4 bg-muted/30">
+                        <h4 className="font-semibold mb-2 text-primary">{day.day}</h4>
+                        <div className="space-y-1">
+                          {day.meals && day.meals.length > 0 ? (
+                            day.meals.map((meal: any, mealIdx: number) => (
+                              <p key={mealIdx} className="text-sm">
+                                • {typeof meal === 'string' ? meal : meal.name}
+                              </p>
+                            ))
+                          ) : (
+                            <p className="text-sm text-muted-foreground italic">Žiadne jedlá</p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Note */}
+                {selectedOrder.note && (
+                  <div className="space-y-2">
+                    <h3 className="font-semibold text-lg border-b pb-2">Poznámka</h3>
+                    <p className="text-sm bg-muted/30 p-3 rounded-lg">{selectedOrder.note}</p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsOrderModalOpen(false)}>
+                Zavrieť
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         <Footer />
       </div>;
