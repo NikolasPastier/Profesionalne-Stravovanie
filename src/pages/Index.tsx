@@ -72,7 +72,7 @@ const Index = () => {
           <p className="text-2xl md:text-3xl mb-4 text-primary">
             Jedz zdravo. Sleduj progres. Dosiahni svoj cieľ.
           </p>
-          <Button onClick={() => navigate("/menu")} className="bg-primary text-primary-foreground hover:glow-gold-strong text-lg px-8 py-6" size="lg">Pozri si aktuálne týždenné menu →</Button>
+          <Button onClick={() => navigate("/menu")} className="bg-primary text-primary-foreground hover:glow-gold-strong text-base md:text-lg px-4 md:px-8 py-4 md:py-6" size="lg">Pozri si aktuálne týždenné menu →</Button>
           
           {/* Stats */}
           <div ref={statsRef.ref} className={`grid grid-cols-2 md:grid-cols-4 gap-6 mt-16 max-w-4xl mx-auto transition-all duration-700 ${statsRef.isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
