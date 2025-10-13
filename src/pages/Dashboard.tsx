@@ -161,7 +161,7 @@ const Dashboard = () => {
       const ordersWithProfiles = await Promise.all((data || []).map(async order => {
         const {
           data: profile
-        } = await supabase.from("user_profiles").select("name, email").eq("user_id", order.user_id).single();
+        } = await supabase.from("user_profiles").select("name, email").eq("user_id", order.user_id).maybeSingle();
         return {
           ...order,
           user_profiles: profile || {
