@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
+import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { UtensilsCrossed, Scale, TrendingDown, Calendar, Camera, Flame, Target, TrendingUp, Clock, Activity, Weight, Trash2 } from "lucide-react";
@@ -339,346 +340,293 @@ export function DashboardOverview({ profile, userId, progressData, onWeightAdded
   };
 
   return (
-    <div className="space-y-6">
-      {/* Stats Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Odporúčané menu
-            </CardTitle>
-            <UtensilsCrossed className="h-5 w-5 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-primary">
-              {getRecommendedMenuSize()}
+    <>
+      <Card className="w-full">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Scale className="h-6 w-6" />
+            Dashboard Prehľad
+          </CardTitle>
+          <CardDescription>
+            Kompletný prehľad vášho pokroku a cieľov
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Compact Stats Grid */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 p-4 bg-muted/50 rounded-lg">
+            <div className="text-center space-y-1">
+              <UtensilsCrossed className="h-4 w-4 mx-auto text-muted-foreground" />
+              <div className="text-2xl font-bold text-primary">{getRecommendedMenuSize()}</div>
+              <div className="text-xs text-muted-foreground">Odporúčané menu</div>
             </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Pre váš cieľ: {profile.goal}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Aktuálna váha
-            </CardTitle>
-            <Scale className="h-5 w-5 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {getCurrentWeight().toFixed(1)} kg
+            <div className="text-center space-y-1">
+              <Scale className="h-4 w-4 mx-auto text-muted-foreground" />
+              <div className="text-2xl font-bold">{getCurrentWeight().toFixed(1)} kg</div>
+              <div className="text-xs text-muted-foreground">Aktuálna váha</div>
             </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Cieľová váha
-            </CardTitle>
-            <TrendingDown className="h-5 w-5 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {getGoalWeight().toFixed(1)} kg
+            <div className="text-center space-y-1">
+              <TrendingDown className="h-4 w-4 mx-auto text-muted-foreground" />
+              <div className="text-2xl font-bold">{getGoalWeight().toFixed(1)} kg</div>
+              <div className="text-xs text-muted-foreground">Cieľová váha</div>
             </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Zostáva
-            </CardTitle>
-            <Calendar className="h-5 w-5 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-orange-500">
-              {getRemainingWeight().toFixed(1)} kg
+            <div className="text-center space-y-1">
+              <Calendar className="h-4 w-4 mx-auto text-muted-foreground" />
+              <div className="text-2xl font-bold text-orange-500">{getRemainingWeight().toFixed(1)} kg</div>
+              <div className="text-xs text-muted-foreground">Zostáva</div>
             </div>
-          </CardContent>
-        </Card>
-      </div>
+          </div>
 
-      {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Progress Chart */}
-        <Card className="lg:col-span-2">
-          <CardHeader>
-            <CardTitle>Graf pokroku</CardTitle>
-            <CardDescription>
-              Váš pokrok za posledných 6 týždňov
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {getChartData().length > 0 ? (
-              <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={getChartData()}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="date" />
-                  <YAxis domain={['auto', 'auto']} />
-                  <Tooltip />
-                  <Line 
-                    type="monotone" 
-                    dataKey="weight" 
-                    stroke="hsl(var(--primary))" 
-                    strokeWidth={2} 
-                    dot={{ fill: 'hsl(var(--primary))', r: 4 }} 
+          <Separator />
+
+          {/* Graph + Add Weight Form */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Progress Chart */}
+            <div className="lg:col-span-2">
+              <h3 className="font-semibold text-lg mb-4">Graf pokroku</h3>
+              {getChartData().length > 0 ? (
+                <ResponsiveContainer width="100%" height={300}>
+                  <LineChart data={getChartData()}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="date" />
+                    <YAxis domain={['auto', 'auto']} />
+                    <Tooltip />
+                    <Line 
+                      type="monotone" 
+                      dataKey="weight" 
+                      stroke="hsl(var(--primary))" 
+                      strokeWidth={2} 
+                      dot={{ fill: 'hsl(var(--primary))', r: 4 }} 
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-[300px] flex items-center justify-center text-muted-foreground border border-dashed rounded-lg">
+                  Zatiaľ nemáte žiadne záznamy. Pridajte svoju prvú váhu.
+                </div>
+              )}
+            </div>
+
+            {/* Add Weight Form */}
+            <div>
+              <h3 className="font-semibold text-lg mb-4">Pridať váhu</h3>
+              <form onSubmit={handleAddWeight} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="weight">Váha (kg)</Label>
+                  <Input
+                    id="weight"
+                    type="number"
+                    step="0.1"
+                    value={newWeight}
+                    onChange={(e) => setNewWeight(e.target.value)}
+                    placeholder="Napr. 75.5"
+                    required
                   />
-                </LineChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-                Zatiaľ nemáte žiadne záznamy. Pridajte svoju prvú váhu.
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="photo">Progress fotka (voliteľné)</Label>
+                  <Input
+                    id="photo"
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => setPhotoFile(e.target.files?.[0] || null)}
+                  />
+                  {photoFile && (
+                    <p className="text-sm text-muted-foreground">
+                      <Camera className="inline h-3 w-3 mr-1" />
+                      {photoFile.name}
+                    </p>
+                  )}
+                </div>
+                <Button type="submit" className="w-full">
+                  Uložiť váhu
+                </Button>
+              </form>
 
-        {/* Add Weight Form */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Pridať váhu</CardTitle>
-            <CardDescription>
-              Zaznamenajte svoju týždennú váhu a fotku
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleAddWeight} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="weight">Váha (kg)</Label>
-                <Input
-                  id="weight"
-                  type="number"
-                  step="0.1"
-                  value={newWeight}
-                  onChange={(e) => setNewWeight(e.target.value)}
-                  placeholder="Napr. 75.5"
-                  required
-                />
+              <div className="mt-6 space-y-2">
+                <h4 className="font-medium text-sm">Tipy na úspech:</h4>
+                <ul className="space-y-1 text-xs text-muted-foreground">
+                  <li>• Vážte sa ráno na prázdny žalúdok</li>
+                  <li>• Buďte konzistentní s meraním</li>
+                  <li>• Sledujte dlhodobý trend</li>
+                  <li>• Pridajte fotku pre lepšiu motiváciu</li>
+                </ul>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="photo">Progress fotka (voliteľné)</Label>
-                <Input
-                  id="photo"
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => setPhotoFile(e.target.files?.[0] || null)}
-                />
-                {photoFile && (
-                  <p className="text-sm text-muted-foreground">
-                    <Camera className="inline h-3 w-3 mr-1" />
-                    {photoFile.name}
-                  </p>
+            </div>
+          </div>
+
+          {/* Calorie Plan - Horizontal Layout */}
+          {profile?.gender && bmr > 0 && (
+            <>
+              <Separator />
+              <div>
+                <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
+                  <Flame className="h-5 w-5 text-primary" />
+                  Kalorický plán
+                </h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                  <div className="text-center p-3 bg-muted/50 rounded-lg">
+                    <Activity className="h-4 w-4 mx-auto text-muted-foreground mb-1" />
+                    <div className="text-sm text-muted-foreground">BMR</div>
+                    <div className="text-xl font-bold">{Math.round(bmr)}</div>
+                    <div className="text-xs text-muted-foreground">kcal/deň</div>
+                  </div>
+                  <div className="text-center p-3 bg-muted/50 rounded-lg">
+                    <Flame className="h-4 w-4 mx-auto text-muted-foreground mb-1" />
+                    <div className="text-sm text-muted-foreground">TDEE</div>
+                    <div className="text-xl font-bold">{tdee}</div>
+                    <div className="text-xs text-muted-foreground">kcal/deň</div>
+                  </div>
+                  <div className="text-center p-3 bg-primary/10 rounded-lg border border-primary/20">
+                    <Target className="h-4 w-4 mx-auto text-primary mb-1" />
+                    <div className="text-sm text-primary">Cieľ</div>
+                    <div className="text-xl font-bold text-primary">{targetCalories}</div>
+                    <div className="text-xs text-muted-foreground">kcal/deň</div>
+                  </div>
+                  <div className={`text-center p-3 rounded-lg border ${getDeficitColor(dailyDeficit)} bg-muted/30`}>
+                    <div className="h-4 w-4 mx-auto mb-1">{getDeficitIcon(dailyDeficit)}</div>
+                    <div className="text-sm">{getDeficitLabel(dailyDeficit)}</div>
+                    <div className="text-xl font-bold">
+                      {dailyDeficit > 0 ? '-' : dailyDeficit < 0 ? '+' : ''}
+                      {Math.abs(dailyDeficit)}
+                    </div>
+                    <div className="text-xs">kcal/deň</div>
+                  </div>
+                </div>
+
+                {/* Time to Goal + Progress */}
+                {timeToGoal && profile?.goal_weight && (
+                  <div className="bg-primary/5 border border-primary/20 rounded-lg p-4 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Clock className="h-4 w-4" />
+                        <span>Odhadovaný čas dosiahnutia cieľa</span>
+                      </div>
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-2xl font-bold text-primary">{timeToGoal.months}</span>
+                        <span className="text-sm text-muted-foreground">
+                          {timeToGoal.months === 1 ? 'mesiac' : timeToGoal.months < 5 ? 'mesiace' : 'mesiacov'}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Progres k cieľu</span>
+                        <span className="font-medium">{progress}%</span>
+                      </div>
+                      <Progress value={progress} className="h-2" />
+                      <div className="flex justify-between text-xs text-muted-foreground">
+                        <span>{profile.weight} kg</span>
+                        <span className="font-medium text-primary">{profile.goal_weight} kg</span>
+                      </div>
+                    </div>
+
+                    <p className="text-sm text-center">
+                      {progress < 10 && "🚀 Začíname! Každý krok sa počíta"}
+                      {progress >= 10 && progress < 30 && "💪 Výborne! Držíte správny smer"}
+                      {progress >= 30 && progress < 60 && "🎯 Skvelý progres! Pokračujte ďalej"}
+                      {progress >= 60 && progress < 90 && "🔥 Fantastické! Blížite sa k cieľu"}
+                      {progress >= 90 && "🏆 Už takmer tam! Finálne úsilie"}
+                    </p>
+                  </div>
                 )}
               </div>
-              <Button type="submit" className="w-full">
-                Uložiť váhu
-              </Button>
-            </form>
+            </>
+          )}
 
-            <div className="mt-6 space-y-3">
-              <h4 className="font-medium">Tipy na úspech:</h4>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li>• Vážte sa ráno na prázdny žalúdok</li>
-                <li>• Buďte konzistentní s meraním</li>
-                <li>• Sledujte dlhodobý trend</li>
-                <li>• Pridajte fotku pre lepšiu motiváciu</li>
-              </ul>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Calorie Tracker Section */}
-      {profile?.gender && bmr > 0 && (
-        <Card className="border-primary/20">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-primary">
-              <Flame className="h-5 w-5" />
-              Kalorický Plán & Cieľ
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {/* BMR & TDEE */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1">
-                <div className="flex items-center gap-2 text-muted-foreground text-sm">
-                  <Activity className="h-4 w-4" />
-                  <span>BMR</span>
-                </div>
-                <p className="text-2xl font-bold">{Math.round(bmr)}</p>
-                <p className="text-xs text-muted-foreground">kcal/deň</p>
-              </div>
-              
-              <div className="space-y-1">
-                <div className="flex items-center gap-2 text-muted-foreground text-sm">
-                  <Flame className="h-4 w-4" />
-                  <span>TDEE</span>
-                </div>
-                <p className="text-2xl font-bold">{tdee}</p>
-                <p className="text-xs text-muted-foreground">kcal/deň</p>
-              </div>
-            </div>
-
-            {/* Target Calories */}
-            <div className="space-y-1 pt-2 border-t border-border">
-              <div className="flex items-center gap-2 text-muted-foreground text-sm">
-                <Target className="h-4 w-4" />
-                <span>Cieľový príjem</span>
-              </div>
-              <p className="text-3xl font-bold text-primary">{targetCalories}</p>
-              <p className="text-xs text-muted-foreground">kcal/deň</p>
-            </div>
-
-            {/* Deficit/Surplus */}
-            <div className={`space-y-1 pt-2 border-t border-border ${getDeficitColor(dailyDeficit)}`}>
-              <div className="flex items-center gap-2 text-sm">
-                {getDeficitIcon(dailyDeficit)}
-                <span>{getDeficitLabel(dailyDeficit)}</span>
-              </div>
-              <p className="text-2xl font-bold">
-                {dailyDeficit > 0 ? '-' : dailyDeficit < 0 ? '+' : ''}
-                {Math.abs(dailyDeficit)}
-              </p>
-              <p className="text-xs">kcal/deň</p>
-            </div>
-
-            {/* Time to Goal */}
-            {timeToGoal && profile?.goal_weight && (
-              <div className="space-y-3 pt-2 border-t border-border">
-                <div className="flex items-center gap-2 text-muted-foreground text-sm">
-                  <Clock className="h-4 w-4" />
-                  <span>Odhadovaný čas dosiahnutia cieľa</span>
-                </div>
-                <div className="flex items-baseline gap-2">
-                  <span className="text-2xl font-bold text-primary">
-                    {timeToGoal.months}
-                  </span>
-                  <span className="text-sm text-muted-foreground">
-                    {timeToGoal.months === 1 ? 'mesiac' : timeToGoal.months < 5 ? 'mesiace' : 'mesiacov'}
-                  </span>
-                  <span className="text-muted-foreground">({timeToGoal.weeks} týždňov)</span>
-                </div>
-
-                {/* Progress Bar */}
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Progres k cieľu</span>
-                    <span className="font-medium">{progress}%</span>
-                  </div>
-                  <Progress value={progress} className="h-2" />
-                  <div className="flex justify-between text-xs text-muted-foreground">
-                    <span>{profile.weight} kg</span>
-                    <span className="font-medium text-primary">{profile.goal_weight} kg</span>
-                  </div>
-                </div>
-
-                {/* Trend Message */}
-                <div className="bg-primary/5 border border-primary/20 rounded-lg p-3">
-                  <p className="text-sm text-center">
-                    {progress < 10 && "🚀 Začíname! Každý krok sa počíta"}
-                    {progress >= 10 && progress < 30 && "💪 Výborne! Držíte správny smer"}
-                    {progress >= 30 && progress < 60 && "🎯 Skvelý progres! Pokračujte ďalej"}
-                    {progress >= 60 && progress < 90 && "🔥 Fantastické! Blížite sa k cieľu"}
-                    {progress >= 90 && "🏆 Už takmer tam! Finálne úsilie"}
-                  </p>
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Progress Photo Gallery */}
-      {isLoadingPhotos ? (
-        <Card>
-          <CardHeader>
-            <CardTitle>Fotogaléria pokroku</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-center py-8 text-muted-foreground">Načítavam...</div>
-          </CardContent>
-        </Card>
-      ) : photos.length === 0 ? (
-        <Card>
-          <CardHeader>
-            <CardTitle>Fotogaléria pokroku</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-center py-8 text-muted-foreground">
-              Zatiaľ nemáte žiadne fotky. Pridajte prvú fotku pri zaznamenaní váhy!
-            </div>
-          </CardContent>
-        </Card>
-      ) : (
-        <Card>
-          <CardHeader>
-            <CardTitle>Fotogaléria pokroku ({photos.length})</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {photos.map((photo) => (
-                <div
-                  key={photo.id}
-                  className="relative group cursor-pointer rounded-lg overflow-hidden border hover:border-primary transition-colors"
-                  onClick={() => setSelectedPhoto(photo)}
-                >
-                  <img
-                    src={photo.signed_url || ""}
-                    alt={`Progress ${format(new Date(photo.date), "dd.MM.yyyy")}`}
-                    className="w-full h-48 object-cover"
-                  />
-                  <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white p-2">
-                    <Calendar className="h-4 w-4 mb-1" />
-                    <div className="text-sm font-medium">{format(new Date(photo.date), "dd.MM.yyyy")}</div>
-                    {photo.weight && (
-                      <div className="flex items-center gap-1 text-sm mt-1">
-                        <Weight className="h-3 w-3" />
-                        {photo.weight} kg
+          {/* Photo Gallery - Compact */}
+          {!isLoadingPhotos && photos.length > 0 && (
+            <>
+              <Separator />
+              <div>
+                <h3 className="font-semibold text-lg mb-4">Fotogaléria pokroku ({photos.length})</h3>
+                <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
+                  {photos.slice(0, 6).map((photo) => (
+                    <div
+                      key={photo.id}
+                      className="relative group cursor-pointer rounded-lg overflow-hidden border hover:border-primary transition-colors aspect-square"
+                      onClick={() => setSelectedPhoto(photo)}
+                    >
+                      <img
+                        src={photo.signed_url || ""}
+                        alt={`Progress ${format(new Date(photo.date), "dd.MM.yyyy")}`}
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white p-1">
+                        <div className="text-xs font-medium">{format(new Date(photo.date), "dd.MM")}</div>
+                        {photo.weight && (
+                          <div className="flex items-center gap-1 text-xs mt-1">
+                            <Weight className="h-3 w-3" />
+                            {photo.weight}kg
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </div>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
 
-            {photos.length >= 2 && (
-              <div className="mt-6 p-4 bg-muted rounded-lg">
-                <h3 className="font-semibold mb-2">Porovnanie Before/After</h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-sm text-muted-foreground mb-2">Prvá fotka</p>
-                    <img
-                      src={photos[photos.length - 1].signed_url || ""}
-                      alt="Before"
-                      className="w-full h-64 object-cover rounded-lg"
-                    />
-                    <p className="text-sm mt-2">
-                      {format(new Date(photos[photos.length - 1].date), "dd.MM.yyyy")}
-                      {photos[photos.length - 1].weight && ` - ${photos[photos.length - 1].weight} kg`}
-                    </p>
+                {photos.length > 6 && (
+                  <p className="text-sm text-muted-foreground text-center mt-3">
+                    +{photos.length - 6} ďalších fotiek (kliknite na fotku pre detail)
+                  </p>
+                )}
+
+                {photos.length >= 2 && (
+                  <div className="mt-6 p-4 bg-muted/50 rounded-lg">
+                    <h4 className="font-semibold mb-3 text-sm">Porovnanie Before/After</h4>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-xs text-muted-foreground mb-2">Prvá fotka</p>
+                        <img
+                          src={photos[photos.length - 1].signed_url || ""}
+                          alt="Before"
+                          className="w-full h-48 object-cover rounded-lg cursor-pointer"
+                          onClick={() => setSelectedPhoto(photos[photos.length - 1])}
+                        />
+                        <p className="text-xs mt-2">
+                          {format(new Date(photos[photos.length - 1].date), "dd.MM.yyyy")}
+                          {photos[photos.length - 1].weight && ` - ${photos[photos.length - 1].weight} kg`}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground mb-2">Najnovšia fotka</p>
+                        <img
+                          src={photos[0].signed_url || ""}
+                          alt="After"
+                          className="w-full h-48 object-cover rounded-lg cursor-pointer"
+                          onClick={() => setSelectedPhoto(photos[0])}
+                        />
+                        <p className="text-xs mt-2">
+                          {format(new Date(photos[0].date), "dd.MM.yyyy")}
+                          {photos[0].weight && ` - ${photos[0].weight} kg`}
+                        </p>
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground mb-2">Najnovšia fotka</p>
-                    <img
-                      src={photos[0].signed_url || ""}
-                      alt="After"
-                      className="w-full h-64 object-cover rounded-lg"
-                    />
-                    <p className="text-sm mt-2">
-                      {format(new Date(photos[0].date), "dd.MM.yyyy")}
-                      {photos[0].weight && ` - ${photos[0].weight} kg`}
-                    </p>
-                  </div>
-                </div>
+                )}
               </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
+            </>
+          )}
+
+          {isLoadingPhotos && (
+            <>
+              <Separator />
+              <div className="text-center py-8 text-muted-foreground">
+                Načítavam fotogalériu...
+              </div>
+            </>
+          )}
+
+          {!isLoadingPhotos && photos.length === 0 && (
+            <>
+              <Separator />
+              <div className="text-center py-8 text-muted-foreground border border-dashed rounded-lg">
+                Zatiaľ nemáte žiadne fotky. Pridajte prvú fotku pri zaznamenaní váhy!
+              </div>
+            </>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Photo Detail Dialog */}
       <Dialog open={!!selectedPhoto} onOpenChange={(open) => !open && setSelectedPhoto(null)}>
@@ -719,6 +667,6 @@ export function DashboardOverview({ profile, userId, progressData, onWeightAdded
           )}
         </DialogContent>
       </Dialog>
-    </div>
+    </>
   );
 }
