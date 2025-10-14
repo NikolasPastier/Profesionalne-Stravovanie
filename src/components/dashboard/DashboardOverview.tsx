@@ -378,161 +378,159 @@ export function DashboardOverview({ profile, userId, progressData, onWeightAdded
 
           <Separator />
 
-          {/* Graph + Add Weight Form */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Progress Chart */}
-            <div className="lg:col-span-2">
-              <h3 className="font-semibold text-lg mb-4">Graf pokroku</h3>
-              {getChartData().length > 0 ? (
-                <ResponsiveContainer width="100%" height={300}>
-                  <LineChart data={getChartData()}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" />
-                    <YAxis domain={['auto', 'auto']} />
-                    <Tooltip />
-                    <Line 
-                      type="monotone" 
-                      dataKey="weight" 
-                      stroke="hsl(var(--primary))" 
-                      strokeWidth={2} 
-                      dot={{ fill: 'hsl(var(--primary))', r: 4 }} 
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              ) : (
-                <div className="h-[300px] flex items-center justify-center text-muted-foreground border border-dashed rounded-lg">
-                  Zatiaľ nemáte žiadne záznamy. Pridajte svoju prvú váhu.
+          {/* Calorie Plan - Horizontal Layout */}
+          {profile?.gender && bmr > 0 && (
+            <div>
+              <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
+                <Flame className="h-5 w-5 text-primary" />
+                Kalorický plán
+              </h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                <div className="text-center p-3 bg-muted/50 rounded-lg">
+                  <Activity className="h-4 w-4 mx-auto text-muted-foreground mb-1" />
+                  <div className="text-sm text-muted-foreground">BMR</div>
+                  <div className="text-xl font-bold">{Math.round(bmr)}</div>
+                  <div className="text-xs text-muted-foreground">kcal/deň</div>
+                </div>
+                <div className="text-center p-3 bg-muted/50 rounded-lg">
+                  <Flame className="h-4 w-4 mx-auto text-muted-foreground mb-1" />
+                  <div className="text-sm text-muted-foreground">TDEE</div>
+                  <div className="text-xl font-bold">{tdee}</div>
+                  <div className="text-xs text-muted-foreground">kcal/deň</div>
+                </div>
+                <div className="text-center p-3 bg-primary/10 rounded-lg border border-primary/20">
+                  <Target className="h-4 w-4 mx-auto text-primary mb-1" />
+                  <div className="text-sm text-primary">Cieľ</div>
+                  <div className="text-xl font-bold text-primary">{targetCalories}</div>
+                  <div className="text-xs text-muted-foreground">kcal/deň</div>
+                </div>
+                <div className={`text-center p-3 rounded-lg border ${getDeficitColor(dailyDeficit)} bg-muted/30`}>
+                  <div className="h-4 w-4 mx-auto mb-1">{getDeficitIcon(dailyDeficit)}</div>
+                  <div className="text-sm">{getDeficitLabel(dailyDeficit)}</div>
+                  <div className="text-xl font-bold">
+                    {dailyDeficit > 0 ? '-' : dailyDeficit < 0 ? '+' : ''}
+                    {Math.abs(dailyDeficit)}
+                  </div>
+                  <div className="text-xs">kcal/deň</div>
+                </div>
+              </div>
+
+              {/* Time to Goal + Progress */}
+              {timeToGoal && profile?.goal_weight && (
+                <div className="bg-primary/5 border border-primary/20 rounded-lg p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Clock className="h-4 w-4" />
+                      <span>Odhadovaný čas dosiahnutia cieľa</span>
+                    </div>
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-2xl font-bold text-primary">{timeToGoal.months}</span>
+                      <span className="text-sm text-muted-foreground">
+                        {timeToGoal.months === 1 ? 'mesiac' : timeToGoal.months < 5 ? 'mesiace' : 'mesiacov'}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Progres k cieľu</span>
+                      <span className="font-medium">{progress}%</span>
+                    </div>
+                    <Progress value={progress} className="h-2" />
+                    <div className="flex justify-between text-xs text-muted-foreground">
+                      <span>{profile.weight} kg</span>
+                      <span className="font-medium text-primary">{profile.goal_weight} kg</span>
+                    </div>
+                  </div>
+
+                  <p className="text-sm text-center">
+                    {progress < 10 && "🚀 Začíname! Každý krok sa počíta"}
+                    {progress >= 10 && progress < 30 && "💪 Výborne! Držíte správny smer"}
+                    {progress >= 30 && progress < 60 && "🎯 Skvelý progres! Pokračujte ďalej"}
+                    {progress >= 60 && progress < 90 && "🔥 Fantastické! Blížite sa k cieľu"}
+                    {progress >= 90 && "🏆 Už takmer tam! Finálne úsilie"}
+                  </p>
                 </div>
               )}
             </div>
+          )}
 
-            {/* Add Weight Form */}
-            <div>
-              <h3 className="font-semibold text-lg mb-4">Pridať váhu</h3>
-              <form onSubmit={handleAddWeight} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="weight">Váha (kg)</Label>
-                  <Input
-                    id="weight"
-                    type="number"
-                    step="0.1"
-                    value={newWeight}
-                    onChange={(e) => setNewWeight(e.target.value)}
-                    placeholder="Napr. 75.5"
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="photo">Progress fotka (voliteľné)</Label>
-                  <Input
-                    id="photo"
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => setPhotoFile(e.target.files?.[0] || null)}
-                  />
-                  {photoFile && (
-                    <p className="text-sm text-muted-foreground">
-                      <Camera className="inline h-3 w-3 mr-1" />
-                      {photoFile.name}
-                    </p>
-                  )}
-                </div>
-                <Button type="submit" className="w-full">
-                  Uložiť váhu
-                </Button>
-              </form>
+          <Separator />
 
-              <div className="mt-6 space-y-2">
-                <h4 className="font-medium text-sm">Tipy na úspech:</h4>
-                <ul className="space-y-1 text-xs text-muted-foreground">
-                  <li>• Vážte sa ráno na prázdny žalúdok</li>
-                  <li>• Buďte konzistentní s meraním</li>
-                  <li>• Sledujte dlhodobý trend</li>
-                  <li>• Pridajte fotku pre lepšiu motiváciu</li>
-                </ul>
+          {/* Progress Chart */}
+          <div>
+            <h3 className="font-semibold text-lg mb-4">Graf pokroku</h3>
+            {getChartData().length > 0 ? (
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={getChartData()}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="date" />
+                  <YAxis domain={['auto', 'auto']} />
+                  <Tooltip />
+                  <Line 
+                    type="monotone" 
+                    dataKey="weight" 
+                    stroke="hsl(var(--primary))" 
+                    strokeWidth={2} 
+                    dot={{ fill: 'hsl(var(--primary))', r: 4 }} 
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-[300px] flex items-center justify-center text-muted-foreground border border-dashed rounded-lg">
+                Zatiaľ nemáte žiadne záznamy. Pridajte svoju prvú váhu.
               </div>
-            </div>
+            )}
           </div>
 
-          {/* Calorie Plan - Horizontal Layout */}
-          {profile?.gender && bmr > 0 && (
-            <>
-              <Separator />
-              <div>
-                <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
-                  <Flame className="h-5 w-5 text-primary" />
-                  Kalorický plán
-                </h3>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                  <div className="text-center p-3 bg-muted/50 rounded-lg">
-                    <Activity className="h-4 w-4 mx-auto text-muted-foreground mb-1" />
-                    <div className="text-sm text-muted-foreground">BMR</div>
-                    <div className="text-xl font-bold">{Math.round(bmr)}</div>
-                    <div className="text-xs text-muted-foreground">kcal/deň</div>
-                  </div>
-                  <div className="text-center p-3 bg-muted/50 rounded-lg">
-                    <Flame className="h-4 w-4 mx-auto text-muted-foreground mb-1" />
-                    <div className="text-sm text-muted-foreground">TDEE</div>
-                    <div className="text-xl font-bold">{tdee}</div>
-                    <div className="text-xs text-muted-foreground">kcal/deň</div>
-                  </div>
-                  <div className="text-center p-3 bg-primary/10 rounded-lg border border-primary/20">
-                    <Target className="h-4 w-4 mx-auto text-primary mb-1" />
-                    <div className="text-sm text-primary">Cieľ</div>
-                    <div className="text-xl font-bold text-primary">{targetCalories}</div>
-                    <div className="text-xs text-muted-foreground">kcal/deň</div>
-                  </div>
-                  <div className={`text-center p-3 rounded-lg border ${getDeficitColor(dailyDeficit)} bg-muted/30`}>
-                    <div className="h-4 w-4 mx-auto mb-1">{getDeficitIcon(dailyDeficit)}</div>
-                    <div className="text-sm">{getDeficitLabel(dailyDeficit)}</div>
-                    <div className="text-xl font-bold">
-                      {dailyDeficit > 0 ? '-' : dailyDeficit < 0 ? '+' : ''}
-                      {Math.abs(dailyDeficit)}
-                    </div>
-                    <div className="text-xs">kcal/deň</div>
-                  </div>
-                </div>
+          <Separator />
 
-                {/* Time to Goal + Progress */}
-                {timeToGoal && profile?.goal_weight && (
-                  <div className="bg-primary/5 border border-primary/20 rounded-lg p-4 space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Clock className="h-4 w-4" />
-                        <span>Odhadovaný čas dosiahnutia cieľa</span>
-                      </div>
-                      <div className="flex items-baseline gap-2">
-                        <span className="text-2xl font-bold text-primary">{timeToGoal.months}</span>
-                        <span className="text-sm text-muted-foreground">
-                          {timeToGoal.months === 1 ? 'mesiac' : timeToGoal.months < 5 ? 'mesiace' : 'mesiacov'}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Progres k cieľu</span>
-                        <span className="font-medium">{progress}%</span>
-                      </div>
-                      <Progress value={progress} className="h-2" />
-                      <div className="flex justify-between text-xs text-muted-foreground">
-                        <span>{profile.weight} kg</span>
-                        <span className="font-medium text-primary">{profile.goal_weight} kg</span>
-                      </div>
-                    </div>
-
-                    <p className="text-sm text-center">
-                      {progress < 10 && "🚀 Začíname! Každý krok sa počíta"}
-                      {progress >= 10 && progress < 30 && "💪 Výborne! Držíte správny smer"}
-                      {progress >= 30 && progress < 60 && "🎯 Skvelý progres! Pokračujte ďalej"}
-                      {progress >= 60 && progress < 90 && "🔥 Fantastické! Blížite sa k cieľu"}
-                      {progress >= 90 && "🏆 Už takmer tam! Finálne úsilie"}
-                    </p>
-                  </div>
+          {/* Add Weight Form */}
+          <div>
+            <h3 className="font-semibold text-lg mb-4">Pridať váhu</h3>
+            <form onSubmit={handleAddWeight} className="space-y-4 max-w-md">
+              <div className="space-y-2">
+                <Label htmlFor="weight">Váha (kg)</Label>
+                <Input
+                  id="weight"
+                  type="number"
+                  step="0.1"
+                  value={newWeight}
+                  onChange={(e) => setNewWeight(e.target.value)}
+                  placeholder="Napr. 75.5"
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="photo">Progress fotka (voliteľné)</Label>
+                <Input
+                  id="photo"
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setPhotoFile(e.target.files?.[0] || null)}
+                />
+                {photoFile && (
+                  <p className="text-sm text-muted-foreground">
+                    <Camera className="inline h-3 w-3 mr-1" />
+                    {photoFile.name}
+                  </p>
                 )}
               </div>
-            </>
-          )}
+              <Button type="submit" className="w-full">
+                Uložiť váhu
+              </Button>
+            </form>
+
+            <div className="mt-6 space-y-2 max-w-md">
+              <h4 className="font-medium text-sm">Tipy na úspech:</h4>
+              <ul className="space-y-1 text-xs text-muted-foreground">
+                <li>• Vážte sa ráno na prázdny žalúdok</li>
+                <li>• Buďte konzistentní s meraním</li>
+                <li>• Sledujte dlhodobý trend</li>
+                <li>• Pridajte fotku pre lepšiu motiváciu</li>
+              </ul>
+            </div>
+          </div>
 
           {/* Photo Gallery - Compact */}
           {!isLoadingPhotos && photos.length > 0 && (
