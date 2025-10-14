@@ -8,8 +8,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { UtensilsCrossed, Scale, TrendingDown, Calendar, Camera } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { CalorieTracker } from "./CalorieTracker";
-import { MotivationalQuote } from "./MotivationalQuote";
-import { AIMotivator } from "./AIMotivator";
 import { ProgressGallery } from "./ProgressGallery";
 
 interface UserProfile {
@@ -326,12 +324,6 @@ export function DashboardOverview({ profile, userId, progressData, onWeightAdded
           goalWeight={profile.goal_weight}
         />
       )}
-
-      {/* AI & Motivation Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <AIMotivator userProfile={{ ...profile, user_id: userId }} progressData={progressData} />
-        <MotivationalQuote />
-      </div>
 
       {/* Progress Photo Gallery */}
       <ProgressGallery userId={userId} />
