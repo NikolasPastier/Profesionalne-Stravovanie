@@ -142,7 +142,9 @@ const Cart = () => {
       toast.success("Objednávka úspešne vytvorená!");
       return true;
     } catch (error: any) {
-      console.error("Order creation error:", error);
+      if (import.meta.env.DEV) {
+        console.error("Order creation error:", error);
+      }
       toast.error("Nepodarilo sa vytvoriť objednávku. Skúste to prosím znova.");
       return false;
     }
@@ -176,8 +178,21 @@ const Cart = () => {
   };
 
   const handleSetPassword = async () => {
-    if (!newPassword || newPassword.length < 6) {
-      toast.error("Heslo musí mať aspoň 6 znakov");
+    // Validate password strength
+    if (!newPassword || newPassword.length < 8) {
+      toast.error("Heslo musí mať minimálne 8 znakov");
+      return;
+    }
+    if (!/[A-Z]/.test(newPassword)) {
+      toast.error("Heslo musí obsahovať aspoň jedno veľké písmeno");
+      return;
+    }
+    if (!/[a-z]/.test(newPassword)) {
+      toast.error("Heslo musí obsahovať aspoň jedno malé písmeno");
+      return;
+    }
+    if (!/[0-9]/.test(newPassword)) {
+      toast.error("Heslo musí obsahovať aspoň jedno číslo");
       return;
     }
 
@@ -263,8 +278,10 @@ const Cart = () => {
         setTempOrderData({ name, email, phone, address, note, deliveryType });
         setShowLoginDialog(true);
       } else {
-        // Email doesn't exist - create new account
-        const tempPassword = Math.random().toString(36).slice(-12) + "Aa1!";
+        // Email doesn't exist - create new account with cryptographically secure password
+        const array = new Uint8Array(20);
+        crypto.getRandomValues(array);
+        const tempPassword = Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('') + 'Aa1!';
         
         const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
           email,

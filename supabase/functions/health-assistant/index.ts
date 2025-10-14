@@ -40,6 +40,14 @@ serve(async (req) => {
 
     const { userProfile, progressData, type = "advice" } = await req.json();
 
+    // Input validation
+    if (!userProfile || typeof userProfile !== 'object') {
+      return new Response(
+        JSON.stringify({ error: 'Invalid user profile data' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     // Verify user owns the profile data
     if (userProfile.user_id !== user.id) {
       return new Response(
@@ -47,15 +55,30 @@ serve(async (req) => {
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+
+    // Sanitize user inputs to prevent prompt injection
+    const sanitize = (value: any): string => {
+      if (value === null || value === undefined) return 'N/A';
+      return String(value).replace(/[\n\r]/g, ' ').slice(0, 100);
+    };
+
+    const sanitizedProfile = {
+      name: sanitize(userProfile.name),
+      goal: sanitize(userProfile.goal),
+      activity: sanitize(userProfile.activity),
+      age: typeof userProfile.age === 'number' ? Math.min(Math.max(userProfile.age, 13), 120) : 0,
+      height: typeof userProfile.height === 'number' ? Math.min(Math.max(userProfile.height, 100), 250) : 0,
+      weight: typeof userProfile.weight === 'number' ? Math.min(Math.max(userProfile.weight, 30), 300) : 0,
+    };
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 
     if (!LOVABLE_API_KEY) {
       throw new Error('LOVABLE_API_KEY is not configured');
     }
 
-    // Prepare context about user's progress
-    const latestWeight = progressData.length > 0 ? progressData[progressData.length - 1].weight : userProfile.weight;
-    const goalWeight = userProfile.goal === 'hubnutie' ? userProfile.weight * 0.9 : userProfile.weight * 1.1;
+    // Prepare context about user's progress (using sanitized values)
+    const latestWeight = progressData.length > 0 ? progressData[progressData.length - 1].weight : sanitizedProfile.weight;
+    const goalWeight = sanitizedProfile.goal === 'hubnutie' ? sanitizedProfile.weight * 0.9 : sanitizedProfile.weight * 1.1;
     const weightChange = progressData.length > 1 ? 
       progressData[progressData.length - 1].weight - progressData[0].weight : 0;
     
@@ -82,8 +105,8 @@ serve(async (req) => {
       systemPrompt = `Si profesionálny motivačný fitness tréner, ktorý povzbudzuje a motivuje ľudí na ich fitness ceste.
 
 Profil používateľa:
-- Meno: ${userProfile.name}
-- Cieľ: ${userProfile.goal}
+- Meno: ${sanitizedProfile.name}
+- Cieľ: ${sanitizedProfile.goal}
 - Aktuálna váha: ${latestWeight} kg
 - Cieľová váha: ~${goalWeight.toFixed(1)} kg
 - Trend: ${trend}
@@ -101,13 +124,13 @@ Odpovedaj v slovenčine, buď energický, pozitívny a motivujúci. Používaj e
       systemPrompt = `Si profesionálny fitness a výživový poradca. Analyzuj progres používateľa a poskytni stručné, motivujúce odporúčania.
 
 Profil používateľa:
-- Meno: ${userProfile.name}
-- Cieľ: ${userProfile.goal}
+- Meno: ${sanitizedProfile.name}
+- Cieľ: ${sanitizedProfile.goal}
 - Aktuálna váha: ${latestWeight} kg
 - Cieľová váha: ~${goalWeight.toFixed(1)} kg
-- Aktivita: ${userProfile.activity}
-- Vek: ${userProfile.age} rokov
-- Výška: ${userProfile.height} cm
+- Aktivita: ${sanitizedProfile.activity}
+- Vek: ${sanitizedProfile.age} rokov
+- Výška: ${sanitizedProfile.height} cm
 
 Zmena váhy: ${weightChange > 0 ? '+' : ''}${weightChange.toFixed(1)} kg
 
