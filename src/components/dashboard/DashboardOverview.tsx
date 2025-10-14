@@ -329,7 +329,7 @@ export function DashboardOverview({ profile, userId, progressData, onWeightAdded
 
       {/* AI & Motivation Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <AIMotivator userProfile={profile} progressData={progressData} />
+        <AIMotivator userProfile={{ ...profile, user_id: userId }} progressData={progressData} />
         <MotivationalQuote />
       </div>
 

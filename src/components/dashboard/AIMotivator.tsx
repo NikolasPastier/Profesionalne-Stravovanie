@@ -18,11 +18,21 @@ export function AIMotivator({ userProfile, progressData }: AIMotivatorProps) {
   const getMotivation = async () => {
     setIsLoading(true);
     try {
+      // Get current session for authentication
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        throw new Error("Nie ste prihlásený");
+      }
+
       const { data, error } = await supabase.functions.invoke("health-assistant", {
         body: {
           userProfile,
           progressData,
           type: "motivation",
+        },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
         },
       });
 
