@@ -120,6 +120,7 @@ const Dashboard = () => {
       }
 
       // Check if user is admin
+      // Note: isAdmin controls UI visibility only. Security is enforced by RLS policies.
       const {
         data: roleData
       } = await supabase.from("user_roles").select("role").eq("user_id", user.id).eq("role", "admin").single();
@@ -202,7 +203,9 @@ const Dashboard = () => {
       if (error) throw error;
       setNotifications(data || []);
     } catch (error: any) {
-      console.error("Error loading notifications:", error);
+      if (import.meta.env.DEV) {
+        console.error("Error loading notifications:", error);
+      }
     }
   };
   const updateOrderStatus = async (orderId: string, newStatus: string) => {
@@ -236,7 +239,9 @@ const Dashboard = () => {
       if (error) throw error;
       loadNotifications();
     } catch (error: any) {
-      console.error("Error marking notification as seen:", error);
+      if (import.meta.env.DEV) {
+        console.error("Error marking notification as seen:", error);
+      }
     }
   };
   const getStatusColor = (status: string) => {
@@ -281,7 +286,9 @@ const Dashboard = () => {
       if (error) throw error;
       setProgressData(data || []);
     } catch (error: any) {
-      console.error("Error loading progress:", error);
+      if (import.meta.env.DEV) {
+        console.error("Error loading progress:", error);
+      }
     }
   };
   const loadUserOrders = async (userId: string) => {
@@ -295,7 +302,9 @@ const Dashboard = () => {
       if (error) throw error;
       setUserOrders(data || []);
     } catch (error: any) {
-      console.error("Error loading user orders:", error);
+      if (import.meta.env.DEV) {
+        console.error("Error loading user orders:", error);
+      }
     }
   };
   const getGoalWeight = () => {

@@ -112,14 +112,18 @@ const Auth = () => {
           setPasswordError("Heslo je príliš slabé. Použite kombináciu veľkých a malých písmen, čísiel a špeciálnych znakov.");
           return;
         }
-        console.error("Sign up error:", error);
+        if (import.meta.env.DEV) {
+          console.error("Sign up error:", error);
+        }
         toast.error("Nepodarilo sa vytvoriť účet. Skúste to prosím znova.");
       } else if (data.user) {
         toast.success("Účet vytvorený! Môžete sa prihlásiť.");
         navigate("/onboarding");
       }
     } catch (error: any) {
-      console.error("Sign up error:", error);
+      if (import.meta.env.DEV) {
+        console.error("Sign up error:", error);
+      }
       toast.error("Nepodarilo sa vytvoriť účet. Skúste to prosím znova.");
     } finally {
       setLoading(false);
@@ -136,12 +140,16 @@ const Auth = () => {
       });
 
       if (error) {
-        console.error("Google sign in error:", error);
+        if (import.meta.env.DEV) {
+          console.error("Google sign in error:", error);
+        }
         toast.error("Nepodarilo sa prihlásiť cez Google. Skúste to prosím znova.");
       }
       // onAuthStateChange listener will handle the redirect after successful sign in
     } catch (error: any) {
-      console.error("Google sign in error:", error);
+      if (import.meta.env.DEV) {
+        console.error("Google sign in error:", error);
+      }
       toast.error("Nepodarilo sa prihlásiť cez Google. Skúste to prosím znova.");
     }
   };
@@ -157,7 +165,9 @@ const Auth = () => {
       });
 
       if (error) {
-        console.error("Sign in error:", error);
+        if (import.meta.env.DEV) {
+          console.error("Sign in error:", error);
+        }
         toast.error("Nepodarilo sa prihlásiť. Skontrolujte svoje prihlasovacie údaje.");
       } else if (data.user) {
         toast.success("Úspešne prihlásený!");
@@ -176,7 +186,9 @@ const Auth = () => {
         }
       }
     } catch (error: any) {
-      console.error("Sign in error:", error);
+      if (import.meta.env.DEV) {
+        console.error("Sign in error:", error);
+      }
       toast.error("Nepodarilo sa prihlásiť. Skúste to prosím znova.");
     } finally {
       setLoading(false);

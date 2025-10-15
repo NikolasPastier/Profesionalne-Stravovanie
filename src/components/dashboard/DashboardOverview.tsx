@@ -82,7 +82,9 @@ export function DashboardOverview({ profile, userId, progressData, onWeightAdded
             .createSignedUrl(photo.photo_url, 3600); // 1 hour expiration
 
           if (signedError) {
-            console.error("Error creating signed URL:", signedError);
+            if (import.meta.env.DEV) {
+              console.error("Error creating signed URL:", signedError);
+            }
             return { ...photo, signed_url: "" };
           }
 
@@ -92,7 +94,9 @@ export function DashboardOverview({ profile, userId, progressData, onWeightAdded
 
       setPhotos(photosWithSignedUrls);
     } catch (error) {
-      console.error("Error loading photos:", error);
+      if (import.meta.env.DEV) {
+        console.error("Error loading photos:", error);
+      }
       toast({
         title: "Chyba",
         description: "Nepodarilo sa načítať fotky",
@@ -128,7 +132,9 @@ export function DashboardOverview({ profile, userId, progressData, onWeightAdded
       setSelectedPhoto(null);
       loadPhotos();
     } catch (error) {
-      console.error("Error deleting photo:", error);
+      if (import.meta.env.DEV) {
+        console.error("Error deleting photo:", error);
+      }
       toast({
         title: "Chyba",
         description: "Nepodarilo sa vymazať fotku",
@@ -317,7 +323,9 @@ export function DashboardOverview({ profile, userId, progressData, onWeightAdded
         .eq("user_id", user.id);
 
       if (profileError) {
-        console.error("Chyba pri aktualizácii profilu:", profileError);
+        if (import.meta.env.DEV) {
+          console.error("Chyba pri aktualizácii profilu:", profileError);
+        }
       }
 
       onWeightAdded();

@@ -44,7 +44,9 @@ export function ProgressGallery({ userId }: { userId: string }) {
             .createSignedUrl(photo.photo_url, 3600); // 1 hour expiration
 
           if (signedError) {
-            console.error("Error creating signed URL:", signedError);
+            if (import.meta.env.DEV) {
+              console.error("Error creating signed URL:", signedError);
+            }
             return { ...photo, signed_url: "" };
           }
 
@@ -54,7 +56,9 @@ export function ProgressGallery({ userId }: { userId: string }) {
 
       setPhotos(photosWithSignedUrls);
     } catch (error) {
-      console.error("Error loading photos:", error);
+      if (import.meta.env.DEV) {
+        console.error("Error loading photos:", error);
+      }
       toast({
         title: "Chyba",
         description: "Nepodarilo sa načítať fotky",
@@ -91,7 +95,9 @@ export function ProgressGallery({ userId }: { userId: string }) {
       setSelectedPhoto(null);
       loadPhotos();
     } catch (error) {
-      console.error("Error deleting photo:", error);
+      if (import.meta.env.DEV) {
+        console.error("Error deleting photo:", error);
+      }
       toast({
         title: "Chyba",
         description: "Nepodarilo sa vymazať fotku",

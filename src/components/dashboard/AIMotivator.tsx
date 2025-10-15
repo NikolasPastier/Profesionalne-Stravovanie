@@ -39,7 +39,9 @@ export function AIMotivator({ userProfile, progressData }: AIMotivatorProps) {
       if (error) throw error;
       setMotivation(data.advice);
     } catch (error: any) {
-      console.error("Error getting motivation:", error);
+      if (import.meta.env.DEV) {
+        console.error("Error getting motivation:", error);
+      }
       toast({
         title: "Chyba",
         description: error.message || "Nepodarilo sa získať motiváciu",
