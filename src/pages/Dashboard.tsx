@@ -891,33 +891,19 @@ const Dashboard = () => {
 
       <main className="container mx-auto px-4 py-20">
         <div className="max-w-7xl mx-auto space-y-6">
-          {/* Header */}
-          <div>
-            <h1 className="text-4xl font-display text-foreground mb-2">
-              Vitajte späť, {profile.name}! 👋
-            </h1>
-            <p className="text-muted-foreground text-lg">
-              Sledujte svoj pokrok a dosahujte svoje ciele
-            </p>
-          </div>
-
-          {/* Main Layout - Dashboard Left, Notifications Right */}
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr_350px] gap-6">
-            {/* Left: Dashboard Overview */}
-            <div>
-              <DashboardOverview
-                profile={profile}
-                userId={userId}
-                progressData={progressData}
-                onWeightAdded={async () => {
-                  await loadProgressData(userId);
-                  await checkUserAndLoadProfile();
-                }}
-              />
+          {/* Header with Notifications */}
+          <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+            <div className="flex-1">
+              <h1 className="text-4xl font-display text-foreground mb-2">
+                Vitajte späť, {profile.name}! 👋
+              </h1>
+              <p className="text-muted-foreground text-lg">
+                Sledujte svoj pokrok a dosahujte svoje ciele
+              </p>
             </div>
-
-            {/* Right: Notifications */}
-            <div>
+            
+            {/* Notifications */}
+            <div className="w-full lg:w-80 shrink-0">
               <OrderNotifications 
                 userId={userId} 
                 onOrderClick={(order) => {
@@ -927,6 +913,17 @@ const Dashboard = () => {
               />
             </div>
           </div>
+
+          {/* Dashboard Overview */}
+          <DashboardOverview
+            profile={profile}
+            userId={userId}
+            progressData={progressData}
+            onWeightAdded={async () => {
+              await loadProgressData(userId);
+              await checkUserAndLoadProfile();
+            }}
+          />
 
           {/* Account Settings */}
           <Card>
