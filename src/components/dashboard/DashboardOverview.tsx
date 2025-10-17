@@ -240,6 +240,8 @@ export function DashboardOverview({ profile, userId, progressData, onWeightAdded
 
   const getGoalWeight = () => {
     if (!profile) return 0;
+    // Use goal_weight from database if available, otherwise calculate as fallback
+    if (profile.goal_weight) return profile.goal_weight;
     return profile.goal === "hubnutie" ? profile.weight * 0.9 : profile.weight * 1.1;
   };
 
