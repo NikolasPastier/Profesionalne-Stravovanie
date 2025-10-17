@@ -51,12 +51,13 @@ export function DashboardOverview({ profile, userId, progressData, onWeightAdded
 
   // CalorieTracker functions
   const calculateBMR = (): number => {
-    if (!profile?.gender || !profile?.weight || !profile?.height || !profile?.age) return 0;
+    const currentWeight = getCurrentWeight();
+    if (!profile?.gender || !currentWeight || !profile?.height || !profile?.age) return 0;
     
     if (profile.gender === 'male') {
-      return 10 * profile.weight + 6.25 * profile.height - 5 * profile.age + 5;
+      return 10 * currentWeight + 6.25 * profile.height - 5 * profile.age + 5;
     } else {
-      return 10 * profile.weight + 6.25 * profile.height - 5 * profile.age - 161;
+      return 10 * currentWeight + 6.25 * profile.height - 5 * profile.age - 161;
     }
   };
 
@@ -86,9 +87,10 @@ export function DashboardOverview({ profile, userId, progressData, onWeightAdded
   };
 
   const calculateTimeToGoal = (dailyDeficit: number): { weeks: number; months: number } | null => {
-    if (!profile?.goal_weight || !profile?.weight || profile.goal_weight === profile.weight || dailyDeficit === 0) return null;
+    const currentWeight = getCurrentWeight();
+    if (!profile?.goal_weight || !currentWeight || profile.goal_weight === currentWeight || dailyDeficit === 0) return null;
     
-    const remainingWeight = Math.abs(profile.weight - profile.goal_weight);
+    const remainingWeight = Math.abs(currentWeight - profile.goal_weight);
     const weeklyWeightChange = Math.abs((dailyDeficit * 7) / 7700);
     const weeks = Math.ceil(remainingWeight / weeklyWeightChange);
     const months = Math.round(weeks / 4.33);
@@ -97,18 +99,19 @@ export function DashboardOverview({ profile, userId, progressData, onWeightAdded
   };
 
   const calculateProgress = (): number => {
-    if (!profile?.goal_weight || !profile?.weight || profile.goal_weight === profile.weight) return 0;
+    const currentWeight = getCurrentWeight();
+    if (!profile?.goal_weight || !currentWeight || profile.goal_weight === currentWeight) return 0;
     
     // Determine starting weight based on goal
-    let startWeight = profile.weight;
-    if (profile.goal === 'hubnutie' && profile.goal_weight < profile.weight) {
-      startWeight = profile.weight + Math.abs(profile.weight - profile.goal_weight);
-    } else if (profile.goal === 'nabrat' && profile.goal_weight > profile.weight) {
-      startWeight = profile.weight;
+    let startWeight = currentWeight;
+    if (profile.goal === 'hubnutie' && profile.goal_weight < currentWeight) {
+      startWeight = currentWeight + Math.abs(currentWeight - profile.goal_weight);
+    } else if (profile.goal === 'nabrat' && profile.goal_weight > currentWeight) {
+      startWeight = currentWeight;
     }
     
     const totalChange = Math.abs(startWeight - profile.goal_weight);
-    const currentChange = Math.abs(startWeight - profile.weight);
+    const currentChange = Math.abs(startWeight - currentWeight);
     return Math.min(100, Math.round((currentChange / totalChange) * 100));
   };
 
