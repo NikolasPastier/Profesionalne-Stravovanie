@@ -19,6 +19,7 @@ import { WeeklyMenuManagement } from "@/components/admin/WeeklyMenuManagement";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { DashboardOverview } from "@/components/dashboard/DashboardOverview";
+import { OrderNotifications } from "@/components/dashboard/OrderNotifications";
 interface UserProfile {
   name: string;
   age: number;
@@ -889,31 +890,43 @@ const Dashboard = () => {
       <Navigation />
 
       <main className="container mx-auto px-4 py-20">
-        <div className="max-w-7xl mx-auto">
-          <div className="mt-5">
-            <h1 className="text-4xl font-display text-foreground mb-2">
-              Vitajte späť, {profile.name}! 👋
-            </h1>
-            <p className="text-muted-foreground text-lg">
-              Sledujte svoj pokrok a dosahujte svoje ciele
-            </p>
+        <div className="max-w-7xl mx-auto space-y-6">
+          {/* Header with Notifications */}
+          <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+            <div className="flex-1">
+              <h1 className="text-4xl font-display text-foreground mb-2">
+                Vitajte späť, {profile.name}! 👋
+              </h1>
+              <p className="text-muted-foreground text-lg">
+                Sledujte svoj pokrok a dosahujte svoje ciele
+              </p>
+            </div>
+            
+            {/* Order Notifications */}
+            <div className="w-full lg:w-80 shrink-0">
+              <OrderNotifications 
+                userId={userId} 
+                onOrderClick={(order) => {
+                  setSelectedOrder(order);
+                  setIsOrderModalOpen(true);
+                }}
+              />
+            </div>
           </div>
 
           {/* Dashboard Overview - All Components in One */}
-          <div className="mt-8">
-            <DashboardOverview
-              profile={profile}
-              userId={userId}
-              progressData={progressData}
-              onWeightAdded={async () => {
-                await loadProgressData(userId);
-                await checkUserAndLoadProfile();
-              }}
-            />
-          </div>
+          <DashboardOverview
+            profile={profile}
+            userId={userId}
+            progressData={progressData}
+            onWeightAdded={async () => {
+              await loadProgressData(userId);
+              await checkUserAndLoadProfile();
+            }}
+          />
 
           {/* Account Settings */}
-          <Card className="mt-6">
+          <Card>
             <CardHeader>
               <CardTitle>Nastavenia účtu</CardTitle>
               <CardDescription>
