@@ -81,6 +81,7 @@ const Dashboard = () => {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
   const [isAllOrdersModalOpen, setIsAllOrdersModalOpen] = useState(false);
+  const [cancellingDayIndex, setCancellingDayIndex] = useState<number | null>(null);
 
   // Account management states
   const [isEmailDialogOpen, setIsEmailDialogOpen] = useState(false);
@@ -454,6 +455,84 @@ const Dashboard = () => {
         description: error.message,
         variant: "destructive"
       });
+    }
+  };
+
+  const getDaysUntilDelivery = (deliveryDate: string) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const delivery = new Date(deliveryDate);
+    delivery.setHours(0, 0, 0, 0);
+    const diffTime = delivery.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays;
+  };
+
+  const handleCancelDay = async (orderId: string, dayIndex: number) => {
+    if (!selectedOrder) return;
+    
+    setCancellingDayIndex(dayIndex);
+    
+    try {
+      const updatedItems = [...selectedOrder.items];
+      updatedItems.splice(dayIndex, 1);
+
+      // If no items left, delete the entire order
+      if (updatedItems.length === 0) {
+        const { error: deleteError } = await supabase
+          .from('orders')
+          .delete()
+          .eq('id', orderId);
+
+        if (deleteError) throw deleteError;
+
+        toast({
+          title: "Úspech",
+          description: "Posledný deň bol zrušený, objednávka bola odstránená",
+        });
+
+        setIsOrderModalOpen(false);
+        setSelectedOrder(null);
+        loadUserOrders(userId);
+        return;
+      }
+
+      // Calculate new total price based on remaining days
+      const pricePerDay = selectedOrder.total_price / selectedOrder.items.length;
+      const newTotalPrice = pricePerDay * updatedItems.length;
+
+      const { error } = await supabase
+        .from('orders')
+        .update({ 
+          items: updatedItems,
+          total_price: newTotalPrice
+        })
+        .eq('id', orderId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Úspech",
+        description: "Deň bol zrušený z vašej objednávky",
+      });
+
+      // Update local state
+      const updatedOrder = {
+        ...selectedOrder,
+        items: updatedItems,
+        total_price: newTotalPrice
+      };
+      setSelectedOrder(updatedOrder);
+      loadUserOrders(userId);
+    } catch (error: any) {
+      console.error('Error cancelling day:', error);
+      toast({
+        title: "Chyba",
+        description: "Nepodarilo sa zrušiť deň",
+        variant: "destructive",
+      });
+    } finally {
+      setCancellingDayIndex(null);
     }
   };
 
@@ -1275,22 +1354,46 @@ const Dashboard = () => {
                 </h3>
                 <div className="space-y-3">
                   {selectedOrder.items && Array.isArray(selectedOrder.items) && 
-                    selectedOrder.items.map((day: any, idx: number) => (
-                      <div key={idx} className="border border-primary/10 rounded-lg p-4 bg-muted/30">
-                        <h4 className="font-semibold mb-2 text-primary">{day.day}</h4>
-                        <div className="space-y-1">
-                          {day.meals && day.meals.length > 0 ? (
-                            day.meals.map((meal: any, mealIdx: number) => (
-                              <p key={mealIdx} className="text-sm">
-                                • {typeof meal === 'string' ? meal : meal.name}
-                              </p>
-                            ))
-                          ) : (
-                            <p className="text-sm text-muted-foreground italic">Žiadne jedlá</p>
+                    selectedOrder.items.map((day: any, idx: number) => {
+                      const daysUntilDelivery = getDaysUntilDelivery(selectedOrder.delivery_date);
+                      const canCancel = daysUntilDelivery >= 2;
+                      const isMultiDay = selectedOrder.items.length > 1;
+                      
+                      return (
+                        <div key={idx} className="border border-primary/10 rounded-lg p-4 bg-muted/30">
+                          <div className="flex justify-between items-start mb-2">
+                            <h4 className="font-semibold text-primary">{day.day}</h4>
+                            {isMultiDay && (
+                              <Button
+                                size="sm"
+                                variant={canCancel ? "destructive" : "outline"}
+                                disabled={!canCancel || cancellingDayIndex === idx}
+                                onClick={() => handleCancelDay(selectedOrder.id, idx)}
+                                className="text-xs h-7"
+                              >
+                                {cancellingDayIndex === idx ? "Ruší sa..." : "Zrušiť deň"}
+                              </Button>
+                            )}
+                          </div>
+                          <div className="space-y-1">
+                            {day.meals && day.meals.length > 0 ? (
+                              day.meals.map((meal: any, mealIdx: number) => (
+                                <p key={mealIdx} className="text-sm">
+                                  • {typeof meal === 'string' ? meal : meal.name}
+                                </p>
+                              ))
+                            ) : (
+                              <p className="text-sm text-muted-foreground italic">Žiadne jedlá</p>
+                            )}
+                          </div>
+                          {isMultiDay && !canCancel && (
+                            <p className="text-xs text-muted-foreground mt-2 italic">
+                              Zrušenie nie je možné menej ako 2 dni pred dodaním
+                            </p>
                           )}
                         </div>
-                      </div>
-                    ))
+                      );
+                    })
                   }
                 </div>
               </div>
