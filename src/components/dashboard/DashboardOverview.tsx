@@ -49,6 +49,14 @@ export function DashboardOverview({ profile, userId, progressData, onWeightAdded
   const [newWeight, setNewWeight] = useState("");
   const [photoFile, setPhotoFile] = useState<File | null>(null);
 
+  // Helper functions
+  const getCurrentWeight = () => {
+    if (progressData.length > 0) {
+      return progressData[progressData.length - 1].weight;
+    }
+    return profile?.weight || 0;
+  };
+
   // CalorieTracker functions
   const calculateBMR = (): number => {
     const currentWeight = getCurrentWeight();
@@ -127,13 +135,6 @@ export function DashboardOverview({ profile, userId, progressData, onWeightAdded
   const dailyDeficit = tdee - targetCalories;
   const timeToGoal = calculateTimeToGoal(dailyDeficit);
   const progress = calculateProgress();
-
-  const getCurrentWeight = () => {
-    if (progressData.length > 0) {
-      return progressData[progressData.length - 1].weight;
-    }
-    return profile?.weight || 0;
-  };
 
   const getGoalWeight = () => {
     if (!profile) return 0;
