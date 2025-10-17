@@ -465,78 +465,79 @@ export function DashboardOverview({ profile, userId, progressData, onWeightAdded
 
           <Separator />
 
-          {/* Progress Chart */}
-          <div>
-            <h3 className="font-semibold text-lg mb-4">Graf pokroku</h3>
-            {getChartData().length > 0 ? (
-              <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={getChartData()}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="date" />
-                  <YAxis domain={['auto', 'auto']} />
-                  <Tooltip />
-                  <Line 
-                    type="monotone" 
-                    dataKey="weight" 
-                    stroke="hsl(var(--primary))" 
-                    strokeWidth={2} 
-                    dot={{ fill: 'hsl(var(--primary))', r: 4 }} 
+          {/* Progress Chart and Add Weight - Side by Side on Desktop */}
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-6">
+            {/* Progress Chart */}
+            <div>
+              <h3 className="font-semibold text-lg mb-4">Graf pokroku</h3>
+              {getChartData().length > 0 ? (
+                <ResponsiveContainer width="100%" height={300}>
+                  <LineChart data={getChartData()}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="date" />
+                    <YAxis domain={['auto', 'auto']} />
+                    <Tooltip />
+                    <Line 
+                      type="monotone" 
+                      dataKey="weight" 
+                      stroke="hsl(var(--primary))" 
+                      strokeWidth={2} 
+                      dot={{ fill: 'hsl(var(--primary))', r: 4 }} 
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-[300px] flex items-center justify-center text-muted-foreground border border-dashed rounded-lg">
+                  Zatiaľ nemáte žiadne záznamy. Pridajte svoju prvú váhu.
+                </div>
+              )}
+            </div>
+
+            {/* Add Weight Form */}
+            <div>
+              <h3 className="font-semibold text-lg mb-4">Pridať váhu</h3>
+              <form onSubmit={handleAddWeight} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="weight">Váha (kg)</Label>
+                  <Input
+                    id="weight"
+                    type="number"
+                    step="0.1"
+                    value={newWeight}
+                    onChange={(e) => setNewWeight(e.target.value)}
+                    placeholder="Napr. 75.5"
+                    required
                   />
-                </LineChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="h-[300px] flex items-center justify-center text-muted-foreground border border-dashed rounded-lg">
-                Zatiaľ nemáte žiadne záznamy. Pridajte svoju prvú váhu.
-              </div>
-            )}
-          </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="photo">Progress fotka (voliteľné)</Label>
+                  <Input
+                    id="photo"
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => setPhotoFile(e.target.files?.[0] || null)}
+                  />
+                  {photoFile && (
+                    <p className="text-sm text-muted-foreground">
+                      <Camera className="inline h-3 w-3 mr-1" />
+                      {photoFile.name}
+                    </p>
+                  )}
+                </div>
+                <Button type="submit" className="w-full">
+                  Uložiť váhu
+                </Button>
+              </form>
 
-          <Separator />
-
-          {/* Add Weight Form */}
-          <div>
-            <h3 className="font-semibold text-lg mb-4">Pridať váhu</h3>
-            <form onSubmit={handleAddWeight} className="space-y-4 max-w-md">
-              <div className="space-y-2">
-                <Label htmlFor="weight">Váha (kg)</Label>
-                <Input
-                  id="weight"
-                  type="number"
-                  step="0.1"
-                  value={newWeight}
-                  onChange={(e) => setNewWeight(e.target.value)}
-                  placeholder="Napr. 75.5"
-                  required
-                />
+              <div className="mt-6 space-y-2">
+                <h4 className="font-medium text-sm">Tipy na úspech:</h4>
+                <ul className="space-y-1 text-xs text-muted-foreground">
+                  <li>• Vážte sa ráno na prázdny žalúdok</li>
+                  <li>• Buďte konzistentní s meraním</li>
+                  <li>• Sledujte dlhodobý trend</li>
+                  <li>• Pridajte fotku pre lepšiu motiváciu</li>
+                </ul>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="photo">Progress fotka (voliteľné)</Label>
-                <Input
-                  id="photo"
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => setPhotoFile(e.target.files?.[0] || null)}
-                />
-                {photoFile && (
-                  <p className="text-sm text-muted-foreground">
-                    <Camera className="inline h-3 w-3 mr-1" />
-                    {photoFile.name}
-                  </p>
-                )}
-              </div>
-              <Button type="submit" className="w-full">
-                Uložiť váhu
-              </Button>
-            </form>
-
-            <div className="mt-6 space-y-2 max-w-md">
-              <h4 className="font-medium text-sm">Tipy na úspech:</h4>
-              <ul className="space-y-1 text-xs text-muted-foreground">
-                <li>• Vážte sa ráno na prázdny žalúdok</li>
-                <li>• Buďte konzistentní s meraním</li>
-                <li>• Sledujte dlhodobý trend</li>
-                <li>• Pridajte fotku pre lepšiu motiváciu</li>
-              </ul>
             </div>
           </div>
 
