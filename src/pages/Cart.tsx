@@ -168,7 +168,7 @@ const Cart = () => {
       const success = await createOrder(data.user.id);
       if (success) {
         setShowLoginDialog(false);
-        navigate("/orders");
+        navigate("/dashboard");
       }
     } catch (error: any) {
       toast.error("Prihlásenie zlyhalo: " + error.message);
@@ -215,7 +215,7 @@ const Cart = () => {
       const success = await createOrder(session.user.id);
       if (success) {
         setShowSetPasswordDialog(false);
-        navigate("/orders");
+        navigate("/dashboard");
       }
     } catch (error: any) {
       toast.error("Chyba pri nastavení hesla: " + error.message);
@@ -258,7 +258,7 @@ const Cart = () => {
         // User is logged in, create order directly
         const success = await createOrder(session.user.id);
         if (success) {
-          navigate("/orders");
+          navigate("/dashboard");
         }
         return;
       }
