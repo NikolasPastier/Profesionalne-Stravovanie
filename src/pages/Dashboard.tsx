@@ -19,7 +19,6 @@ import { WeeklyMenuManagement } from "@/components/admin/WeeklyMenuManagement";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { DashboardOverview } from "@/components/dashboard/DashboardOverview";
-import { OrderNotifications } from "@/components/dashboard/OrderNotifications";
 interface UserProfile {
   name: string;
   age: number;
@@ -77,12 +76,11 @@ const Dashboard = () => {
   const [progressData, setProgressData] = useState<ProgressEntry[]>([]);
   const [userOrders, setUserOrders] = useState<Order[]>([]);
   const [userId, setUserId] = useState<string>("");
-  
+
   // Order details modal state
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
   const [isAllOrdersModalOpen, setIsAllOrdersModalOpen] = useState(false);
-  const [cancellingDayIndex, setCancellingDayIndex] = useState<number | null>(null);
 
   // Account management states
   const [isEmailDialogOpen, setIsEmailDialogOpen] = useState(false);
@@ -431,24 +429,18 @@ const Dashboard = () => {
       });
     }
   };
-
   const handleDeleteOrder = async (orderId: string, e: React.MouseEvent) => {
     e.stopPropagation();
     if (!confirm("Naozaj chcete odstrániť túto objednávku?")) return;
-    
     try {
-      const { error } = await supabase
-        .from("orders")
-        .delete()
-        .eq("id", orderId);
-      
+      const {
+        error
+      } = await supabase.from("orders").delete().eq("id", orderId);
       if (error) throw error;
-      
       toast({
         title: "Úspech",
         description: "Objednávka bola odstránená"
       });
-      
       loadOrders();
     } catch (error: any) {
       toast({
@@ -458,85 +450,6 @@ const Dashboard = () => {
       });
     }
   };
-
-  const getDaysUntilDelivery = (deliveryDate: string) => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const delivery = new Date(deliveryDate);
-    delivery.setHours(0, 0, 0, 0);
-    const diffTime = delivery.getTime() - today.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays;
-  };
-
-  const handleCancelDay = async (orderId: string, dayIndex: number) => {
-    if (!selectedOrder) return;
-    
-    setCancellingDayIndex(dayIndex);
-    
-    try {
-      const updatedItems = [...selectedOrder.items];
-      updatedItems.splice(dayIndex, 1);
-
-      // If no items left, delete the entire order
-      if (updatedItems.length === 0) {
-        const { error: deleteError } = await supabase
-          .from('orders')
-          .delete()
-          .eq('id', orderId);
-
-        if (deleteError) throw deleteError;
-
-        toast({
-          title: "Úspech",
-          description: "Posledný deň bol zrušený, objednávka bola odstránená",
-        });
-
-        setIsOrderModalOpen(false);
-        setSelectedOrder(null);
-        loadUserOrders(userId);
-        return;
-      }
-
-      // Calculate new total price based on remaining days
-      const pricePerDay = selectedOrder.total_price / selectedOrder.items.length;
-      const newTotalPrice = pricePerDay * updatedItems.length;
-
-      const { error } = await supabase
-        .from('orders')
-        .update({ 
-          items: updatedItems,
-          total_price: newTotalPrice
-        })
-        .eq('id', orderId);
-
-      if (error) throw error;
-
-      toast({
-        title: "Úspech",
-        description: "Deň bol zrušený z vašej objednávky",
-      });
-
-      // Update local state
-      const updatedOrder = {
-        ...selectedOrder,
-        items: updatedItems,
-        total_price: newTotalPrice
-      };
-      setSelectedOrder(updatedOrder);
-      loadUserOrders(userId);
-    } catch (error: any) {
-      console.error('Error cancelling day:', error);
-      toast({
-        title: "Chyba",
-        description: "Nepodarilo sa zrušiť deň",
-        variant: "destructive",
-      });
-    } finally {
-      setCancellingDayIndex(null);
-    }
-  };
-
   const handleOpenEditProfile = () => {
     if (!profile) return;
     setEditFormData({
@@ -553,14 +466,12 @@ const Dashboard = () => {
     });
     setIsEditProfileOpen(true);
   };
-
   const handleSaveProfile = async () => {
     try {
       // Validation
       const age = parseInt(editFormData.age);
       const height = parseInt(editFormData.height);
       const weight = parseFloat(editFormData.weight);
-
       if (age < 13 || age > 120) {
         toast({
           title: "Chyba",
@@ -569,7 +480,6 @@ const Dashboard = () => {
         });
         return;
       }
-
       if (height < 100 || height > 250) {
         toast({
           title: "Chyba",
@@ -578,7 +488,6 @@ const Dashboard = () => {
         });
         return;
       }
-
       if (weight < 30 || weight > 300) {
         toast({
           title: "Chyba",
@@ -587,7 +496,6 @@ const Dashboard = () => {
         });
         return;
       }
-
       if (!editFormData.goal || !editFormData.activity) {
         toast({
           title: "Chyba",
@@ -596,30 +504,25 @@ const Dashboard = () => {
         });
         return;
       }
-
-      const { error } = await supabase
-        .from("user_profiles")
-        .update({
-          age,
-          height,
-          weight,
-          goal: editFormData.goal,
-          activity: editFormData.activity,
-          allergies: editFormData.allergies.split(",").map(a => a.trim()).filter(Boolean),
-          preferences: editFormData.preferences.split(",").map(p => p.trim()).filter(Boolean),
-          dislikes: editFormData.dislikes.split(",").map(d => d.trim()).filter(Boolean),
-          favorite_foods: editFormData.favorite_foods.split(",").map(f => f.trim()).filter(Boolean),
-          health_issues: editFormData.health_issues
-        })
-        .eq("user_id", userId);
-
+      const {
+        error
+      } = await supabase.from("user_profiles").update({
+        age,
+        height,
+        weight,
+        goal: editFormData.goal,
+        activity: editFormData.activity,
+        allergies: editFormData.allergies.split(",").map(a => a.trim()).filter(Boolean),
+        preferences: editFormData.preferences.split(",").map(p => p.trim()).filter(Boolean),
+        dislikes: editFormData.dislikes.split(",").map(d => d.trim()).filter(Boolean),
+        favorite_foods: editFormData.favorite_foods.split(",").map(f => f.trim()).filter(Boolean),
+        health_issues: editFormData.health_issues
+      }).eq("user_id", userId);
       if (error) throw error;
-
       toast({
         title: "Úspech",
         description: "Profil bol úspešne aktualizovaný"
       });
-
       setIsEditProfileOpen(false);
       await checkUserAndLoadProfile();
     } catch (error: any) {
@@ -708,14 +611,10 @@ const Dashboard = () => {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {orders.map(order => <TableRow 
-                            key={order.id}
-                            className="cursor-pointer hover:bg-muted/50"
-                            onClick={() => {
-                              setSelectedOrder(order);
-                              setIsOrderModalOpen(true);
-                            }}
-                          >
+                        {orders.map(order => <TableRow key={order.id} className="cursor-pointer hover:bg-muted/50" onClick={() => {
+                        setSelectedOrder(order);
+                        setIsOrderModalOpen(true);
+                      }}>
                             <TableCell>
                               {new Date(order.created_at).toLocaleDateString("sk-SK")}
                             </TableCell>
@@ -730,7 +629,7 @@ const Dashboard = () => {
                                 {getStatusLabel(order.status)}
                               </Badge>
                             </TableCell>
-                            <TableCell onClick={(e) => e.stopPropagation()}>
+                            <TableCell onClick={e => e.stopPropagation()}>
                               <div className="flex items-center gap-2">
                                 <select value={order.status} onChange={e => updateOrderStatus(order.id, e.target.value)} className="border rounded px-2 py-1 text-sm bg-card">
                                   <option value="pending">Čaká sa</option>
@@ -740,11 +639,7 @@ const Dashboard = () => {
                                   <option value="delivered">Doručené</option>
                                   <option value="cancelled">Zrušené</option>
                                 </select>
-                                <Button
-                                  variant="destructive"
-                                  size="sm"
-                                  onClick={(e) => handleDeleteOrder(order.id, e)}
-                                >
+                                <Button variant="destructive" size="sm" onClick={e => handleDeleteOrder(order.id, e)}>
                                   <Trash2 className="h-4 w-4" />
                                 </Button>
                               </div>
@@ -777,8 +672,7 @@ const Dashboard = () => {
               </DialogDescription>
             </DialogHeader>
 
-            {selectedOrder && (
-              <div className="space-y-6">
+            {selectedOrder && <div className="space-y-6">
                 {/* Customer Info */}
                 <div className="space-y-4">
                   <h3 className="font-semibold text-lg border-b pb-2">Informácie o zákazníkovi</h3>
@@ -822,14 +716,12 @@ const Dashboard = () => {
                         {getStatusLabel(selectedOrder.status)}
                       </Badge>
                     </div>
-                    {selectedOrder.delivery_date && (
-                      <div>
+                    {selectedOrder.delivery_date && <div>
                         <p className="text-sm text-muted-foreground">Dátum doručenia</p>
                         <p className="font-medium">
                           {new Date(selectedOrder.delivery_date).toLocaleDateString("sk-SK")}
                         </p>
-                      </div>
-                    )}
+                      </div>}
                     <div>
                       <p className="text-sm text-muted-foreground">Celková cena</p>
                       <p className="font-medium text-lg">{selectedOrder.total_price}€</p>
@@ -841,34 +733,23 @@ const Dashboard = () => {
                 <div className="space-y-4">
                   <h3 className="font-semibold text-lg border-b pb-2">Obsah objednávky</h3>
                   <div className="space-y-3">
-                    {selectedOrder.items && Array.isArray(selectedOrder.items) && selectedOrder.items.map((day: any, idx: number) => (
-                      <div key={idx} className="border rounded-lg p-4 bg-muted/30">
+                    {selectedOrder.items && Array.isArray(selectedOrder.items) && selectedOrder.items.map((day: any, idx: number) => <div key={idx} className="border rounded-lg p-4 bg-muted/30">
                         <h4 className="font-semibold mb-2 text-primary">{day.day}</h4>
                         <div className="space-y-1">
-                          {day.meals && day.meals.length > 0 ? (
-                            day.meals.map((meal: any, mealIdx: number) => (
-                              <p key={mealIdx} className="text-sm">
+                          {day.meals && day.meals.length > 0 ? day.meals.map((meal: any, mealIdx: number) => <p key={mealIdx} className="text-sm">
                                 • {typeof meal === 'string' ? meal : meal.name}
-                              </p>
-                            ))
-                          ) : (
-                            <p className="text-sm text-muted-foreground italic">Žiadne jedlá</p>
-                          )}
+                              </p>) : <p className="text-sm text-muted-foreground italic">Žiadne jedlá</p>}
                         </div>
-                      </div>
-                    ))}
+                      </div>)}
                   </div>
                 </div>
 
                 {/* Note */}
-                {selectedOrder.note && (
-                  <div className="space-y-2">
+                {selectedOrder.note && <div className="space-y-2">
                     <h3 className="font-semibold text-lg border-b pb-2">Poznámka</h3>
                     <p className="text-sm bg-muted/30 p-3 rounded-lg">{selectedOrder.note}</p>
-                  </div>
-                )}
-              </div>
-            )}
+                  </div>}
+              </div>}
 
             <DialogFooter>
               <Button variant="outline" onClick={() => setIsOrderModalOpen(false)}>
@@ -890,43 +771,26 @@ const Dashboard = () => {
       <Navigation />
 
       <main className="container mx-auto px-4 py-20">
-        <div className="max-w-7xl mx-auto space-y-6">
-          {/* Header with Notifications */}
-          <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
-            <div className="flex-1">
-              <h1 className="text-4xl font-display text-foreground mb-2">
-                Vitajte späť, {profile.name}! 👋
-              </h1>
-              <p className="text-muted-foreground text-lg">
-                Sledujte svoj pokrok a dosahujte svoje ciele
-              </p>
-            </div>
-            
-            {/* Notifications */}
-            <div className="w-full lg:w-80 shrink-0">
-              <OrderNotifications 
-                userId={userId} 
-                onOrderClick={(order) => {
-                  setSelectedOrder(order);
-                  setIsOrderModalOpen(true);
-                }}
-              />
-            </div>
+        <div className="max-w-7xl mx-auto">
+          <div className="mt-5">
+            <h1 className="text-4xl font-display text-foreground mb-2">
+              Vitajte späť, {profile.name}! 👋
+            </h1>
+            <p className="text-muted-foreground text-lg">
+              Sledujte svoj pokrok a dosahujte svoje ciele
+            </p>
           </div>
 
-          {/* Dashboard Overview */}
-          <DashboardOverview
-            profile={profile}
-            userId={userId}
-            progressData={progressData}
-            onWeightAdded={async () => {
-              await loadProgressData(userId);
-              await checkUserAndLoadProfile();
-            }}
-          />
+          {/* Dashboard Overview - All Components in One */}
+          <div className="mt-8">
+            <DashboardOverview profile={profile} userId={userId} progressData={progressData} onWeightAdded={async () => {
+            await loadProgressData(userId);
+            await checkUserAndLoadProfile();
+          }} />
+          </div>
 
           {/* Account Settings */}
-          <Card>
+          <Card className="mt-6">
             <CardHeader>
               <CardTitle>Nastavenia účtu</CardTitle>
               <CardDescription>
@@ -984,7 +848,7 @@ const Dashboard = () => {
       </Dialog>
 
       {/* Password Change Dialog */}
-      <Dialog open={isPasswordDialogOpen} onOpenChange={setIsPasswordDialogOpen}>
+      <Dialog open={isPasswordDialogOpen} onOpenChange={setIsPasswordDialogOpen} className="my-[20px] mx-0 px-[20px] py-[20px]">
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Zmeniť heslo</DialogTitle>
@@ -1048,49 +912,31 @@ const Dashboard = () => {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="edit-age">Vek *</Label>
-                  <Input
-                    id="edit-age"
-                    type="number"
-                    value={editFormData.age}
-                    onChange={(e) => setEditFormData({ ...editFormData, age: e.target.value })}
-                    placeholder="napr. 25"
-                    min="13"
-                    max="120"
-                  />
+                  <Input id="edit-age" type="number" value={editFormData.age} onChange={e => setEditFormData({
+                  ...editFormData,
+                  age: e.target.value
+                })} placeholder="napr. 25" min="13" max="120" />
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="edit-height">Výška (cm) *</Label>
-                  <Input
-                    id="edit-height"
-                    type="number"
-                    value={editFormData.height}
-                    onChange={(e) => setEditFormData({ ...editFormData, height: e.target.value })}
-                    placeholder="napr. 175"
-                    min="100"
-                    max="250"
-                  />
+                  <Input id="edit-height" type="number" value={editFormData.height} onChange={e => setEditFormData({
+                  ...editFormData,
+                  height: e.target.value
+                })} placeholder="napr. 175" min="100" max="250" />
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="edit-weight">
                     Aktuálna váha (kg) *
-                    {progressData.length > 0 && (
-                      <span className="text-xs text-muted-foreground ml-2 font-normal">
+                    {progressData.length > 0 && <span className="text-xs text-muted-foreground ml-2 font-normal">
                         (aktualizované {new Date(progressData[progressData.length - 1].date).toLocaleDateString("sk-SK")})
-                      </span>
-                    )}
+                      </span>}
                   </Label>
-                  <Input
-                    id="edit-weight"
-                    type="number"
-                    step="0.1"
-                    value={editFormData.weight}
-                    onChange={(e) => setEditFormData({ ...editFormData, weight: e.target.value })}
-                    placeholder="napr. 70"
-                    min="30"
-                    max="300"
-                  />
+                  <Input id="edit-weight" type="number" step="0.1" value={editFormData.weight} onChange={e => setEditFormData({
+                  ...editFormData,
+                  weight: e.target.value
+                })} placeholder="napr. 70" min="30" max="300" />
                   <p className="text-xs text-muted-foreground">
                     Zmena váhy ovplyvní vaše odporúčané veľkosti menu
                   </p>
@@ -1100,10 +946,10 @@ const Dashboard = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="edit-goal">Cieľ *</Label>
-                  <Select
-                    value={editFormData.goal}
-                    onValueChange={(value) => setEditFormData({ ...editFormData, goal: value })}
-                  >
+                  <Select value={editFormData.goal} onValueChange={value => setEditFormData({
+                  ...editFormData,
+                  goal: value
+                })}>
                     <SelectTrigger id="edit-goal">
                       <SelectValue placeholder="Vyberte cieľ" />
                     </SelectTrigger>
@@ -1117,10 +963,10 @@ const Dashboard = () => {
 
                 <div className="space-y-2">
                   <Label htmlFor="edit-activity">Úroveň aktivity *</Label>
-                  <Select
-                    value={editFormData.activity}
-                    onValueChange={(value) => setEditFormData({ ...editFormData, activity: value })}
-                  >
+                  <Select value={editFormData.activity} onValueChange={value => setEditFormData({
+                  ...editFormData,
+                  activity: value
+                })}>
                     <SelectTrigger id="edit-activity">
                       <SelectValue placeholder="Vyberte úroveň" />
                     </SelectTrigger>
@@ -1141,57 +987,46 @@ const Dashboard = () => {
               
               <div className="space-y-2">
                 <Label htmlFor="edit-allergies">Alergie</Label>
-                <Input
-                  id="edit-allergies"
-                  value={editFormData.allergies}
-                  onChange={(e) => setEditFormData({ ...editFormData, allergies: e.target.value })}
-                  placeholder="napr. laktóza, gluten, orechy (oddelené čiarkou)"
-                />
+                <Input id="edit-allergies" value={editFormData.allergies} onChange={e => setEditFormData({
+                ...editFormData,
+                allergies: e.target.value
+              })} placeholder="napr. laktóza, gluten, orechy (oddelené čiarkou)" />
                 <p className="text-xs text-muted-foreground">Oddeľte čiarkou</p>
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="edit-preferences">Stravovacie preferencie</Label>
-                <Input
-                  id="edit-preferences"
-                  value={editFormData.preferences}
-                  onChange={(e) => setEditFormData({ ...editFormData, preferences: e.target.value })}
-                  placeholder="napr. vegetarián, vegan, bez cukru (oddelené čiarkou)"
-                />
+                <Input id="edit-preferences" value={editFormData.preferences} onChange={e => setEditFormData({
+                ...editFormData,
+                preferences: e.target.value
+              })} placeholder="napr. vegetarián, vegan, bez cukru (oddelené čiarkou)" />
                 <p className="text-xs text-muted-foreground">Oddeľte čiarkou</p>
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="edit-dislikes">Neobľúbené jedlá</Label>
-                <Input
-                  id="edit-dislikes"
-                  value={editFormData.dislikes}
-                  onChange={(e) => setEditFormData({ ...editFormData, dislikes: e.target.value })}
-                  placeholder="napr. brokolica, špenát (oddelené čiarkou)"
-                />
+                <Input id="edit-dislikes" value={editFormData.dislikes} onChange={e => setEditFormData({
+                ...editFormData,
+                dislikes: e.target.value
+              })} placeholder="napr. brokolica, špenát (oddelené čiarkou)" />
                 <p className="text-xs text-muted-foreground">Oddeľte čiarkou</p>
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="edit-favorite-foods">Obľúbené jedlá</Label>
-                <Input
-                  id="edit-favorite-foods"
-                  value={editFormData.favorite_foods}
-                  onChange={(e) => setEditFormData({ ...editFormData, favorite_foods: e.target.value })}
-                  placeholder="napr. kuracie mäso, ryža, cesnak (oddelené čiarkou)"
-                />
+                <Input id="edit-favorite-foods" value={editFormData.favorite_foods} onChange={e => setEditFormData({
+                ...editFormData,
+                favorite_foods: e.target.value
+              })} placeholder="napr. kuracie mäso, ryža, cesnak (oddelené čiarkou)" />
                 <p className="text-xs text-muted-foreground">Oddeľte čiarkou</p>
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="edit-health-issues">Zdravotné problémy (voliteľné)</Label>
-                <Textarea
-                  id="edit-health-issues"
-                  value={editFormData.health_issues}
-                  onChange={(e) => setEditFormData({ ...editFormData, health_issues: e.target.value })}
-                  placeholder="Popíšte akékoľvek zdravotné problémy, ktoré by sme mali brať do úvahy..."
-                  rows={3}
-                />
+                <Textarea id="edit-health-issues" value={editFormData.health_issues} onChange={e => setEditFormData({
+                ...editFormData,
+                health_issues: e.target.value
+              })} placeholder="Popíšte akékoľvek zdravotné problémy, ktoré by sme mali brať do úvahy..." rows={3} />
               </div>
             </div>
           </div>
@@ -1217,30 +1052,22 @@ const Dashboard = () => {
             </DialogDescription>
           </DialogHeader>
 
-          {userOrders.length === 0 ? (
-            <div className="text-center py-8">
+          {userOrders.length === 0 ? <div className="text-center py-8">
               <Package className="h-16 w-16 text-primary/50 mx-auto mb-4" />
               <p className="text-xl text-muted-foreground mb-4">
                 Zatiaľ nemáte žiadne objednávky
               </p>
               <Button onClick={() => {
-                setIsAllOrdersModalOpen(false);
-                navigate("/menu");
-              }}>
+            setIsAllOrdersModalOpen(false);
+            navigate("/menu");
+          }}>
                 Prejsť do menu
               </Button>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {userOrders.map((order) => (
-                <Card 
-                  key={order.id} 
-                  className="border-primary/20 cursor-pointer hover:border-primary/40 transition-all"
-                  onClick={() => {
-                    setSelectedOrder(order);
-                    setIsOrderModalOpen(true);
-                  }}
-                >
+            </div> : <div className="space-y-4">
+              {userOrders.map(order => <Card key={order.id} className="border-primary/20 cursor-pointer hover:border-primary/40 transition-all" onClick={() => {
+            setSelectedOrder(order);
+            setIsOrderModalOpen(true);
+          }}>
                   <CardHeader>
                     <div className="flex justify-between items-start flex-wrap gap-2">
                       <CardTitle className="text-primary">
@@ -1275,14 +1102,12 @@ const Dashboard = () => {
                         </div>
                       </div>
                       <div className="space-y-2">
-                        {order.delivery_date && (
-                          <div className="flex justify-between">
+                        {order.delivery_date && <div className="flex justify-between">
                             <span className="text-sm text-muted-foreground">Dátum doručenia:</span>
                             <span className="font-semibold">
                               {new Date(order.delivery_date).toLocaleDateString("sk-SK")}
                             </span>
-                          </div>
-                        )}
+                          </div>}
                         <div className="flex justify-between">
                           <span className="text-sm text-muted-foreground">Celková cena:</span>
                           <span className="font-bold text-primary text-lg">
@@ -1292,10 +1117,8 @@ const Dashboard = () => {
                       </div>
                     </div>
                   </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
+                </Card>)}
+            </div>}
         </DialogContent>
       </Dialog>
 
@@ -1309,8 +1132,7 @@ const Dashboard = () => {
             </DialogDescription>
           </DialogHeader>
 
-          {selectedOrder && (
-            <div className="space-y-6">
+          {selectedOrder && <div className="space-y-6">
               {/* Order Details */}
               <div className="space-y-4">
                 <h3 className="font-semibold text-lg border-b border-primary/20 pb-2">
@@ -1343,14 +1165,12 @@ const Dashboard = () => {
                       {getStatusLabel(selectedOrder.status)}
                     </Badge>
                   </div>
-                  {selectedOrder.delivery_date && (
-                    <div>
+                  {selectedOrder.delivery_date && <div>
                       <p className="text-sm text-muted-foreground">Dátum doručenia</p>
                       <p className="font-medium">
                         {new Date(selectedOrder.delivery_date).toLocaleDateString("sk-SK")}
                       </p>
-                    </div>
-                  )}
+                    </div>}
                   <div>
                     <p className="text-sm text-muted-foreground">Celková cena</p>
                     <p className="font-medium text-lg text-primary">
@@ -1366,60 +1186,23 @@ const Dashboard = () => {
                   Obsah objednávky
                 </h3>
                 <div className="space-y-3">
-                  {selectedOrder.items && Array.isArray(selectedOrder.items) && 
-                    selectedOrder.items.map((day: any, idx: number) => {
-                      const daysUntilDelivery = getDaysUntilDelivery(selectedOrder.delivery_date);
-                      const canCancel = daysUntilDelivery >= 2;
-                      const isMultiDay = selectedOrder.items.length > 1;
-                      
-                      return (
-                        <div key={idx} className="border border-primary/10 rounded-lg p-4 bg-muted/30">
-                          <div className="flex justify-between items-start mb-2">
-                            <h4 className="font-semibold text-primary">{day.day}</h4>
-                            {isMultiDay && (
-                              <Button
-                                size="sm"
-                                variant={canCancel ? "destructive" : "outline"}
-                                disabled={!canCancel || cancellingDayIndex === idx}
-                                onClick={() => handleCancelDay(selectedOrder.id, idx)}
-                                className="text-xs h-7"
-                              >
-                                {cancellingDayIndex === idx ? "Ruší sa..." : "Zrušiť deň"}
-                              </Button>
-                            )}
-                          </div>
-                          <div className="space-y-1">
-                            {day.meals && day.meals.length > 0 ? (
-                              day.meals.map((meal: any, mealIdx: number) => (
-                                <p key={mealIdx} className="text-sm">
-                                  • {typeof meal === 'string' ? meal : meal.name}
-                                </p>
-                              ))
-                            ) : (
-                              <p className="text-sm text-muted-foreground italic">Žiadne jedlá</p>
-                            )}
-                          </div>
-                          {isMultiDay && !canCancel && (
-                            <p className="text-xs text-muted-foreground mt-2 italic">
-                              Zrušenie nie je možné menej ako 2 dni pred dodaním
-                            </p>
-                          )}
+                  {selectedOrder.items && Array.isArray(selectedOrder.items) && selectedOrder.items.map((day: any, idx: number) => <div key={idx} className="border border-primary/10 rounded-lg p-4 bg-muted/30">
+                        <h4 className="font-semibold mb-2 text-primary">{day.day}</h4>
+                        <div className="space-y-1">
+                          {day.meals && day.meals.length > 0 ? day.meals.map((meal: any, mealIdx: number) => <p key={mealIdx} className="text-sm">
+                                • {typeof meal === 'string' ? meal : meal.name}
+                              </p>) : <p className="text-sm text-muted-foreground italic">Žiadne jedlá</p>}
                         </div>
-                      );
-                    })
-                  }
+                      </div>)}
                 </div>
               </div>
 
               {/* Note */}
-              {selectedOrder.note && (
-                <div className="space-y-2">
+              {selectedOrder.note && <div className="space-y-2">
                   <h3 className="font-semibold text-lg border-b border-primary/20 pb-2">Poznámka</h3>
                   <p className="text-sm bg-muted/30 p-3 rounded-lg">{selectedOrder.note}</p>
-                </div>
-              )}
-            </div>
-          )}
+                </div>}
+            </div>}
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsOrderModalOpen(false)}>
