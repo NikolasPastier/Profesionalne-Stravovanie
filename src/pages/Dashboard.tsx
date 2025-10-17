@@ -96,6 +96,8 @@ const Dashboard = () => {
     age: "",
     height: "",
     weight: "",
+    gender: "",
+    goal_weight: "",
     goal: "",
     activity: "",
     allergies: "",
@@ -456,6 +458,8 @@ const Dashboard = () => {
       age: profile.age?.toString() || "",
       height: profile.height?.toString() || "",
       weight: getCurrentWeight().toString() || "",
+      gender: profile.gender || "",
+      goal_weight: profile.goal_weight?.toString() || "",
       goal: profile.goal || "",
       activity: profile.activity || "",
       allergies: profile.allergies?.join(", ") || "",
@@ -510,6 +514,8 @@ const Dashboard = () => {
         age,
         height,
         weight,
+        gender: editFormData.gender || null,
+        goal_weight: editFormData.goal_weight ? parseFloat(editFormData.goal_weight) : null,
         goal: editFormData.goal,
         activity: editFormData.activity,
         allergies: editFormData.allergies.split(",").map(a => a.trim()).filter(Boolean),
@@ -848,7 +854,7 @@ const Dashboard = () => {
       </Dialog>
 
       {/* Password Change Dialog */}
-      <Dialog open={isPasswordDialogOpen} onOpenChange={setIsPasswordDialogOpen} className="my-[20px] mx-0 px-[20px] py-[20px]">
+      <Dialog open={isPasswordDialogOpen} onOpenChange={setIsPasswordDialogOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Zmeniť heslo</DialogTitle>
@@ -939,6 +945,38 @@ const Dashboard = () => {
                 })} placeholder="napr. 70" min="30" max="300" />
                   <p className="text-xs text-muted-foreground">
                     Zmena váhy ovplyvní vaše odporúčané veľkosti menu
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-gender">Pohlavie *</Label>
+                  <Select value={editFormData.gender} onValueChange={value => setEditFormData({
+                  ...editFormData,
+                  gender: value
+                })}>
+                    <SelectTrigger id="edit-gender">
+                      <SelectValue placeholder="Vyberte pohlavie" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="male">Muž</SelectItem>
+                      <SelectItem value="female">Žena</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    Pohlavie ovplyvňuje výpočet BMR a kalorických potrieb
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="edit-goal-weight">Cieľová váha (kg)</Label>
+                  <Input id="edit-goal-weight" type="number" step="0.1" value={editFormData.goal_weight} onChange={e => setEditFormData({
+                  ...editFormData,
+                  goal_weight: e.target.value
+                })} placeholder="napr. 75" min="30" max="300" />
+                  <p className="text-xs text-muted-foreground">
+                    Použije sa na výpočet času a sledovanie pokroku
                   </p>
                 </div>
               </div>
