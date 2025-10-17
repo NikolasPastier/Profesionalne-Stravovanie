@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { UtensilsCrossed, Scale, Target, Calendar, Camera, Flame, TrendingUp, Clock, Activity, Weight, Trash2, Plus, Info } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { format } from "date-fns";
+import { ProgressGallery } from "./ProgressGallery";
 
 interface UserProfile {
   name: string;
@@ -36,14 +37,6 @@ interface ProgressEntry {
   created_at: string;
 }
 
-interface ProgressPhoto {
-  id: string;
-  date: string;
-  weight: number | null;
-  photo_url: string;
-  signed_url?: string;
-}
-
 interface DashboardOverviewProps {
   profile: UserProfile;
   userId: string;
@@ -55,94 +48,6 @@ export function DashboardOverview({ profile, userId, progressData, onWeightAdded
   const { toast } = useToast();
   const [newWeight, setNewWeight] = useState("");
   const [photoFile, setPhotoFile] = useState<File | null>(null);
-  const [photos, setPhotos] = useState<ProgressPhoto[]>([]);
-  const [selectedPhoto, setSelectedPhoto] = useState<ProgressPhoto | null>(null);
-  const [isLoadingPhotos, setIsLoadingPhotos] = useState(true);
-
-  // Load progress photos
-  useEffect(() => {
-    loadPhotos();
-  }, [userId]);
-
-  const loadPhotos = async () => {
-    try {
-      const { data, error } = await supabase
-        .from("progress")
-        .select("id, date, weight, photo_url")
-        .eq("user_id", userId)
-        .not("photo_url", "is", null)
-        .order("date", { ascending: false });
-
-      if (error) throw error;
-
-      // Create signed URLs for each photo
-      const photosWithSignedUrls = await Promise.all(
-        (data || []).map(async (photo) => {
-          const { data: signedData, error: signedError } = await supabase.storage
-            .from("progress-photos")
-            .createSignedUrl(photo.photo_url, 3600); // 1 hour expiration
-
-          if (signedError) {
-            if (import.meta.env.DEV) {
-              console.error("Error creating signed URL:", signedError);
-            }
-            return { ...photo, signed_url: "" };
-          }
-
-          return { ...photo, signed_url: signedData.signedUrl };
-        })
-      );
-
-      setPhotos(photosWithSignedUrls);
-    } catch (error) {
-      if (import.meta.env.DEV) {
-        console.error("Error loading photos:", error);
-      }
-      toast({
-        title: "Chyba",
-        description: "Nepodarilo sa načítať fotky",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoadingPhotos(false);
-    }
-  };
-
-  const deletePhoto = async (photo: ProgressPhoto) => {
-    try {
-      // Delete from storage
-      const { error: storageError } = await supabase.storage
-        .from("progress-photos")
-        .remove([photo.photo_url]);
-
-      if (storageError) throw storageError;
-
-      // Update database record
-      const { error: dbError } = await supabase
-        .from("progress")
-        .update({ photo_url: null })
-        .eq("id", photo.id);
-
-      if (dbError) throw dbError;
-
-      toast({
-        title: "Úspech",
-        description: "Fotka bola vymazaná",
-      });
-
-      setSelectedPhoto(null);
-      loadPhotos();
-    } catch (error) {
-      if (import.meta.env.DEV) {
-        console.error("Error deleting photo:", error);
-      }
-      toast({
-        title: "Chyba",
-        description: "Nepodarilo sa vymazať fotku",
-        variant: "destructive",
-      });
-    }
-  };
 
   // CalorieTracker functions
   const calculateBMR = (): number => {
@@ -328,7 +233,6 @@ export function DashboardOverview({ profile, userId, progressData, onWeightAdded
       });
       setNewWeight("");
       setPhotoFile(null);
-      loadPhotos(); // Reload photos after adding new one
     } catch (error: any) {
       toast({
         title: "Chyba",
@@ -593,80 +497,8 @@ export function DashboardOverview({ profile, userId, progressData, onWeightAdded
         </Card>
 
         {/* Photo Gallery */}
-        {!isLoadingPhotos && photos.length > 0 && (
-          <Card className="card-premium border-border/50">
-            <CardContent className="p-6">
-              <h3 className="text-lg font-semibold text-white mb-4">
-                Fotogaléria pokroku ({photos.length})
-              </h3>
-              <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
-                {photos.slice(0, 6).map((photo) => (
-                  <div
-                    key={photo.id}
-                    className="relative group cursor-pointer rounded-lg overflow-hidden border border-border/30 hover:border-orange-500/50 transition-smooth aspect-square"
-                    onClick={() => setSelectedPhoto(photo)}
-                  >
-                    <img
-                      src={photo.signed_url || ""}
-                      alt={`Progress ${format(new Date(photo.date), "dd.MM.yyyy")}`}
-                      className="w-full h-full object-cover"
-                    />
-                    <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition-smooth flex flex-col items-center justify-center text-white p-1">
-                      <div className="text-xs font-medium">{format(new Date(photo.date), "dd.MM")}</div>
-                      {photo.weight && (
-                        <div className="flex items-center gap-1 text-xs mt-1">
-                          <Weight className="h-3 w-3" />
-                          {photo.weight}kg
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
+        <ProgressGallery userId={userId} />
       </div>
-
-      {/* Photo Detail Dialog */}
-      <Dialog open={!!selectedPhoto} onOpenChange={(open) => !open && setSelectedPhoto(null)}>
-        <DialogContent className="max-w-3xl">
-          <DialogHeader>
-            <DialogTitle>Detail fotky</DialogTitle>
-          </DialogHeader>
-          {selectedPhoto && (
-            <div className="space-y-4">
-              <img
-                src={selectedPhoto.signed_url || ""}
-                alt="Progress detail"
-                className="w-full rounded-lg"
-              />
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <Calendar className="h-4 w-4" />
-                    {format(new Date(selectedPhoto.date), "dd.MM.yyyy")}
-                  </div>
-                  {selectedPhoto.weight && (
-                    <div className="flex items-center gap-2 text-sm mt-2">
-                      <Weight className="h-4 w-4" />
-                      {selectedPhoto.weight} kg
-                    </div>
-                  )}
-                </div>
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={() => deletePhoto(selectedPhoto)}
-                >
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Vymazať
-                </Button>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
     </TooltipProvider>
   );
 }
