@@ -36,6 +36,10 @@
 
     --radius: 0.5rem;
 
+    /* Fitness colors */
+    --orange: 25 95% 53%;
+    --green: 142 76% 36%;
+
     /* Minimal gold gradients */
     --gradient-gold: linear-gradient(135deg, hsl(43, 55%, 51%) 0%, hsl(43, 55%, 61%) 100%);
     --gradient-dark: linear-gradient(180deg, hsl(0, 0%, 4%) 0%, hsl(0, 0%, 6%) 100%);
