@@ -103,7 +103,6 @@ const Menu = () => {
   useEffect(() => {
     fetchMenus();
   }, []);
-
   useEffect(() => {
     // Set all days as selected by default when menu loads
     if (currentMenu?.items && Array.isArray(currentMenu.items)) {
@@ -190,15 +189,9 @@ const Menu = () => {
     setCustomFats("");
     navigate("/cart");
   };
-
   const toggleDay = (day: string) => {
-    setSelectedDays(prev => 
-      prev.includes(day) 
-        ? prev.filter(d => d !== day)
-        : [...prev, day]
-    );
+    setSelectedDays(prev => prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day]);
   };
-
   const toggleAllDays = () => {
     if (currentMenu?.items && Array.isArray(currentMenu.items)) {
       const allDays = currentMenu.items.map((day: any) => day.day);
@@ -304,7 +297,7 @@ const Menu = () => {
               </div>
                 <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                   <DialogTrigger asChild>
-                    <Button className="mt-8 w-full md:w-auto bg-accent text-accent-foreground hover:glow-gold-strong text-lg py-6 px-8 transition-smooth">
+                    <Button className="mt-8 w-full md:w-auto bg-accent text-accent-foreground hover:glow-gold-strong text-lg py-6 px-8 transition-smooth mx-0">
                       Objednať toto menu 🍱
                     </Button>
                   </DialogTrigger>
@@ -320,32 +313,17 @@ const Menu = () => {
                     <div className="space-y-4 p-4 border border-accent/30 rounded-lg bg-accent/5">
                       <div className="flex items-center justify-between">
                         <h4 className="font-semibold text-foreground">Dni v týždni</h4>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={toggleAllDays}
-                          className="text-xs"
-                        >
+                        <Button type="button" variant="outline" size="sm" onClick={toggleAllDays} className="text-xs">
                           {selectedDays.length === currentMenu?.items?.length ? "Zrušiť všetky" : "Vybrať všetky"}
                         </Button>
                       </div>
                       <div className="grid grid-cols-2 gap-3">
-                        {currentMenu?.items && Array.isArray(currentMenu.items) && currentMenu.items.map((day: any) => (
-                          <div key={day.day} className="flex items-center space-x-2">
-                            <Checkbox
-                              id={`day-${day.day}`}
-                              checked={selectedDays.includes(day.day)}
-                              onCheckedChange={() => toggleDay(day.day)}
-                            />
-                            <Label
-                              htmlFor={`day-${day.day}`}
-                              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-                            >
+                        {currentMenu?.items && Array.isArray(currentMenu.items) && currentMenu.items.map((day: any) => <div key={day.day} className="flex items-center space-x-2">
+                            <Checkbox id={`day-${day.day}`} checked={selectedDays.includes(day.day)} onCheckedChange={() => toggleDay(day.day)} />
+                            <Label htmlFor={`day-${day.day}`} className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer">
                               {day.day}
                             </Label>
-                          </div>
-                        ))}
+                          </div>)}
                       </div>
                     </div>
 
