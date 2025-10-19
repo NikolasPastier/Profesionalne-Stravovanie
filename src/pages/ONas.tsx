@@ -8,17 +8,12 @@ const ONas = () => {
   const profileRef = useScrollAnimation();
   const statsRef = useScrollAnimation();
   const philosophyRef = useScrollAnimation();
-  
-  return (
-    <div className="min-h-screen bg-background">
+  return <div className="min-h-screen bg-background">
       <Navigation />
 
       <div className="container mx-auto px-4 pt-32 pb-20">
         <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-16 animate-fade-in">
-            <h1 className="font-display text-4xl md:text-6xl font-bold mb-6 text-gradient-gold">O nás</h1>
-            <p className="text-xl text-muted-foreground">Tvoje telo. Tvoje ciele. Naša zodpovednosť.</p>
-          </div>
+          
 
           <Card ref={profileRef.ref} className={`card-premium mb-12 transition-all duration-700 ${profileRef.isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
             <CardContent className="p-8 md:p-12">
@@ -37,11 +32,7 @@ const ONas = () => {
                   </p>
                   <p className="font-bold text-primary">Nebojte sa zmeny - začnite dnes!</p>
                 </div>
-                <Button
-                  onClick={() => window.open("https://instagram.com/patrik.rigodanzo/", "_blank")}
-                  className="bg-primary hover:glow-gold-strong gap-2"
-                  size="lg"
-                >
+                <Button onClick={() => window.open("https://instagram.com/patrik.rigodanzo/", "_blank")} className="bg-primary hover:glow-gold-strong gap-2" size="lg">
                   <Instagram className="h-5 w-5" />
                   Sleduj ma na Instagrame
                 </Button>
@@ -112,7 +103,6 @@ const ONas = () => {
       </div>
 
       <Footer />
-    </div>
-  );
+    </div>;
 };
 export default ONas;
