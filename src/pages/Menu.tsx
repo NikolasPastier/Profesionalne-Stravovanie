@@ -264,7 +264,7 @@ const Menu = () => {
 
         {currentMenu ? <Card className="card-premium">
             <CardHeader>
-              <CardTitle className="text-2xl text-gradient-gold">
+              <CardTitle className="text-2xl text-gradient-gold mx-0 py-0 my-px px-[290px]">
                 Menu na týždeň {new Date(currentMenu.start_date).toLocaleDateString("sk-SK")} - {new Date(currentMenu.end_date).toLocaleDateString("sk-SK")}
               </CardTitle>
             </CardHeader>
