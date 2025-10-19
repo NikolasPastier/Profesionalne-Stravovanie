@@ -3,24 +3,14 @@ import { Footer } from "@/components/Footer";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Truck, Clock, MapPin, Euro } from "lucide-react";
 import { useScrollAnimation } from "@/hooks/use-scroll-animation";
-
 const Doprava = () => {
   const cardsRef = useScrollAnimation();
   const infoRef = useScrollAnimation();
-  
-  return (
-    <div className="min-h-screen bg-background">
+  return <div className="min-h-screen bg-background">
       <Navigation />
 
       <div className="container mx-auto px-4 pt-32 pb-20">
-        <div className="text-center mb-16 animate-fade-in">
-          <h1 className="font-display text-4xl md:text-6xl font-bold mb-6 text-gradient-gold">
-            Doprava a Rozvoz
-          </h1>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Vaše jedlo doručíme čerstvé priamo k vašim dverám
-          </p>
-        </div>
+        
 
         <Card ref={cardsRef.ref} className={`card-premium max-w-5xl mx-auto mb-16 transition-all duration-700 ${cardsRef.isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
           <CardHeader className="text-center">
@@ -105,8 +95,6 @@ const Doprava = () => {
       </div>
 
       <Footer />
-    </div>
-  );
+    </div>;
 };
-
 export default Doprava;
