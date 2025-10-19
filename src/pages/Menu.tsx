@@ -254,21 +254,19 @@ const Menu = () => {
       <Navigation />
 
       <div className="container mx-auto px-4 pt-32 pb-20">
-        <h1 className="font-display text-4xl md:text-6xl font-bold text-center mb-12 text-gradient-gold">
-          Týždenné Menu
-        </h1>
+        
 
         {/* Current Menu */}
         <section className="mb-20">
           
 
-        {currentMenu ? <Card className="card-premium">
+        {currentMenu ? <Card className="card-premium px-0 mx-[150px]">
             <CardHeader>
-              <CardTitle className="text-2xl text-gradient-gold mx-0 py-0 my-px px-[290px]">
+              <CardTitle className="text-2xl text-gradient-gold mx-0 py-0 my-px px-[140px]">
                 Menu na týždeň {new Date(currentMenu.start_date).toLocaleDateString("sk-SK")} - {new Date(currentMenu.end_date).toLocaleDateString("sk-SK")}
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="px-[2px]">
               <div className="grid grid-cols-1 gap-6 max-w-2xl mx-auto">
                 {currentMenu.items && Array.isArray(currentMenu.items) && currentMenu.items.map((day: any, idx: number) => <div key={idx} className="border border-border rounded-lg p-4 bg-card/50 cursor-pointer hover:bg-card/70 hover:border-accent/50 transition-smooth hover:glow-gold" onClick={() => {
                 setSelectedDay(day);
