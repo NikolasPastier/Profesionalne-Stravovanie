@@ -89,52 +89,80 @@ const Cennik = () => {
           </p>
         </div>
 
-        <div ref={pricingRef.ref} className={`grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 mb-16 transition-all duration-700 ${pricingRef.isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
-          {pricingTiers.map((tier, idx) => (
-            <Card 
-              key={idx} 
-              className={`card-premium relative hover:scale-110 transition-transform duration-300 cursor-pointer ${tier.popular ? 'border-2 border-primary glow-gold' : ''}`}
-            >
-              {tier.popular && (
-                <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                  <span className="bg-primary text-primary-foreground px-4 py-1 rounded-full text-sm font-bold">
-                    Najpopulárnejšie
-                  </span>
-                </div>
-              )}
-              <CardHeader>
-                <CardTitle className="text-3xl font-display text-gradient-gold">
-                  {tier.size}
-                </CardTitle>
-                <CardDescription className="text-primary text-lg font-bold">
-                  {tier.calories}
-                </CardDescription>
-                <div className="mt-4">
-                  <span className="text-4xl font-bold text-primary">{tier.price}</span>
-                  <span className="text-muted-foreground">/deň</span>
-                </div>
-                <p className="text-muted-foreground mt-2">{tier.description}</p>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-3 mb-6">
-                  {tier.features.map((feature, featureIdx) => (
-                    <li key={featureIdx} className="flex items-start gap-2">
-                      <Check className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
-                      <span className="text-sm">{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-                <Button
-                  onClick={() => navigate("/menu")}
-                  className={`w-full ${tier.popular ? 'bg-primary hover:glow-gold-strong' : ''}`}
-                  variant={tier.popular ? "default" : "outline"}
+        <Card ref={pricingRef.ref} className={`card-premium max-w-5xl mx-auto mb-16 transition-all duration-700 ${pricingRef.isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
+          <CardHeader className="text-center">
+            <CardTitle className="text-4xl font-display text-gradient-gold mb-4">
+              Jednotná cena pre všetky menu
+            </CardTitle>
+            <div className="mt-4">
+              <span className="text-5xl font-bold text-primary">€14.99</span>
+              <span className="text-xl text-muted-foreground">/deň</span>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+              {pricingTiers.map((tier, idx) => (
+                <div
+                  key={idx}
+                  className={`border rounded-lg p-6 hover:scale-105 transition-transform duration-300 ${
+                    tier.popular ? 'border-primary border-2 bg-primary/5' : 'border-primary/20'
+                  }`}
                 >
-                  Objednať
-                </Button>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+                  {tier.popular && (
+                    <div className="mb-3">
+                      <span className="bg-primary text-primary-foreground px-3 py-1 rounded-full text-xs font-bold">
+                        Najpopulárnejšie
+                      </span>
+                    </div>
+                  )}
+                  <h3 className="text-2xl font-display text-gradient-gold mb-2">
+                    {tier.size}
+                  </h3>
+                  <p className="text-primary text-lg font-bold mb-1">{tier.calories}</p>
+                  <p className="text-sm text-muted-foreground mb-4">{tier.description}</p>
+                  <ul className="space-y-2">
+                    {tier.features.slice(0, 3).map((feature, featureIdx) => (
+                      <li key={featureIdx} className="flex items-start gap-2">
+                        <Check className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
+                        <span className="text-xs">{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+              <div className="border border-primary/20 rounded-lg p-6 hover:scale-105 transition-transform duration-300">
+                <h3 className="text-2xl font-display text-gradient-gold mb-2">
+                  Na mieru
+                </h3>
+                <p className="text-primary text-lg font-bold mb-1">Vlastný počet kalórií</p>
+                <p className="text-sm text-muted-foreground mb-4">Prispôsobené vašim potrebám</p>
+                <ul className="space-y-2">
+                  <li className="flex items-start gap-2">
+                    <Check className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
+                    <span className="text-xs">Vlastný počet kalórií</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
+                    <span className="text-xs">Vlastné makroživiny</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
+                    <span className="text-xs">Čerstvé suroviny</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+            <div className="text-center">
+              <Button
+                onClick={() => navigate("/menu")}
+                size="lg"
+                className="bg-primary hover:glow-gold-strong px-8"
+              >
+                Vybrať menu
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
 
         <Card ref={weeklyRef.ref} className={`card-premium max-w-4xl mx-auto transition-all duration-700 ${weeklyRef.isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
           <CardHeader>
