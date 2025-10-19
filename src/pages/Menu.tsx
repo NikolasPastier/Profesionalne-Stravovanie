@@ -276,7 +276,7 @@ const Menu = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 gap-6 max-w-2xl mx-auto">
                 {currentMenu.items && Array.isArray(currentMenu.items) && currentMenu.items.map((day: any, idx: number) => <div key={idx} className="border border-border rounded-lg p-4 bg-card/50 cursor-pointer hover:bg-card/70 hover:border-accent/50 transition-smooth hover:glow-gold" onClick={() => {
                 setSelectedDay(day);
                 setSelectedMenuContext(currentMenu);
@@ -531,7 +531,7 @@ const Menu = () => {
             <h2 className="font-display text-3xl font-bold mb-8 text-primary">
               História menu
             </h2>
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-6 grid-cols-1 max-w-2xl mx-auto">
               {menuHistory.map(menu => <Card key={menu.id} className="card-premium">
                   <CardHeader>
                     <CardTitle className="text-lg text-accent">
