@@ -49,9 +49,7 @@ const Cennik = () => {
 
         <Card ref={pricingRef.ref} className={`card-premium max-w-5xl mx-auto mb-16 transition-all duration-700 ${pricingRef.isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
           <CardHeader className="text-center">
-            <CardTitle className="text-4xl font-display text-gradient-gold mb-4">
-              Jednotná cena pre všetky menu
-            </CardTitle>
+            <CardTitle className="text-4xl font-display text-gradient-gold mb-4">Cenník</CardTitle>
             <div className="mt-4">
               <span className="text-5xl font-bold text-primary">€14.99</span>
               <span className="text-xl text-muted-foreground">/deň</span>
