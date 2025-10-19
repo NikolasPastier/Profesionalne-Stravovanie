@@ -15,7 +15,7 @@ const Cennik = () => {
     {
       size: "S",
       calories: "1600 kcal",
-      price: "€8.99",
+      price: "€14.99",
       description: "Ženy, redukcia tuku",
       features: [
         "Ideálne pre redukciu hmotnosti",
@@ -27,7 +27,7 @@ const Cennik = () => {
     {
       size: "M",
       calories: "2000 kcal",
-      price: "€9.99",
+      price: "€14.99",
       description: "Udržanie hmotnosti",
       features: [
         "Optimálne pre udržanie formy",
@@ -39,7 +39,7 @@ const Cennik = () => {
     {
       size: "L",
       calories: "2500 kcal",
-      price: "€10.99",
+      price: "€14.99",
       description: "Muži, aktívny životný štýl",
       popular: true,
       features: [
@@ -52,7 +52,7 @@ const Cennik = () => {
     {
       size: "XL",
       calories: "3000 kcal",
-      price: "€11.99",
+      price: "€14.99",
       description: "Vyššia fyzická aktivita",
       features: [
         "Pre športovcov",
@@ -64,7 +64,7 @@ const Cennik = () => {
     {
       size: "XXL+",
       calories: "3500+ kcal",
-      price: "€12.99",
+      price: "€14.99",
       description: "Profesionálni športovci",
       features: [
         "Pre profesionálov",
@@ -85,7 +85,7 @@ const Cennik = () => {
             Cenník
           </h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Vyberte si balík, ktorý najlepšie vyhovuje vašim cieľom a potrebám
+            Jednotná cena €14.99 za deň pre všetky veľkosti menu. Vyberte si balík podľa vašich kalórií a cieľov.
           </p>
         </div>
 
