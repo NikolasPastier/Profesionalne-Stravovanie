@@ -295,7 +295,7 @@ const Menu = () => {
               </div>
                 <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                   <DialogTrigger asChild>
-                    <Button className="mt-8 w-full md:w-auto bg-accent text-accent-foreground hover:glow-gold-strong text-lg py-6 transition-smooth mx-0 px-[10px]">
+                    <Button className="mt-8 w-full md:w-auto bg-accent text-accent-foreground hover:glow-gold-strong text-lg py-6 transition-smooth mx-px px-0">
                       Objednať toto menu 🍱
                     </Button>
                   </DialogTrigger>
