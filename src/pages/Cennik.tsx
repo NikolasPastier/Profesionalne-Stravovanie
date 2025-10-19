@@ -105,36 +105,7 @@ const Cennik = () => {
           </CardContent>
         </Card>
 
-        <Card ref={weeklyRef.ref} className={`card-premium max-w-4xl mx-auto transition-all duration-700 ${weeklyRef.isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
-          <CardHeader>
-            <CardTitle className="text-3xl font-display text-gradient-gold text-center">
-              Týždenné balíky
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <p className="text-center text-muted-foreground">
-              Objednajte si celý týždeň a ušetrite!
-            </p>
-            <div className="grid md:grid-cols-2 gap-6 mt-8">
-              <div className="border border-primary/20 rounded-lg p-6 hover:scale-110 transition-transform duration-300 cursor-pointer">
-                <h3 className="font-bold text-xl mb-2 text-primary">Týždenný balík</h3>
-                <p className="text-3xl font-bold mb-2">5 dní</p>
-                <p className="text-muted-foreground mb-4">Pondelok - Piatok</p>
-                <p className="text-sm text-muted-foreground">
-                  Ušetrite čas a peniaze s týždennou objednávkou
-                </p>
-              </div>
-              <div className="border border-primary/20 rounded-lg p-6 hover:scale-110 transition-transform duration-300 cursor-pointer">
-                <h3 className="font-bold text-xl mb-2 text-primary">Platba</h3>
-                <p className="text-lg mb-2">Hotovosť</p>
-                <p className="text-muted-foreground mb-4">Pri doručení prvej objednávky</p>
-                <p className="text-sm text-muted-foreground">
-                  Zaplatíte celú sumu pri prvom doručení
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        
       </div>
 
       <Footer />
