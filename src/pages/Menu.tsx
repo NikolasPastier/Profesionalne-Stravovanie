@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -48,6 +49,7 @@ const Menu = () => {
   const [customDayProteins, setCustomDayProteins] = useState("");
   const [customDayCarbs, setCustomDayCarbs] = useState("");
   const [customDayFats, setCustomDayFats] = useState("");
+  const [selectedDays, setSelectedDays] = useState<string[]>([]);
   const navigate = useNavigate();
 
   // Helpers to support legacy weekly_menus that store meal names as strings with emojis
@@ -101,6 +103,14 @@ const Menu = () => {
   useEffect(() => {
     fetchMenus();
   }, []);
+
+  useEffect(() => {
+    // Set all days as selected by default when menu loads
+    if (currentMenu?.items && Array.isArray(currentMenu.items)) {
+      const allDays = currentMenu.items.map((day: any) => day.day);
+      setSelectedDays(allDays);
+    }
+  }, [currentMenu]);
   const fetchMenus = async () => {
     const {
       data,
@@ -134,6 +144,10 @@ const Menu = () => {
     }
   };
   const handleAddToCart = () => {
+    if (selectedDays.length === 0) {
+      toast.error("Prosím vyberte aspoň jeden deň");
+      return;
+    }
     if (!selectedSize) {
       toast.error("Prosím vyberte veľkosť menu");
       return;
@@ -149,12 +163,13 @@ const Menu = () => {
       return;
     }
 
-    // Store in localStorage for now - whole week
+    // Store in localStorage for now - selected days
     const cartItem = {
       type: 'week',
       menuId: currentMenu.id,
       size: selectedSize,
       menu: currentMenu,
+      selectedDays: selectedDays,
       ...(selectedSize === "CUSTOM" && {
         customNutrition: {
           calories: parseInt(customCalories),
@@ -174,6 +189,25 @@ const Menu = () => {
     setCustomCarbs("");
     setCustomFats("");
     navigate("/cart");
+  };
+
+  const toggleDay = (day: string) => {
+    setSelectedDays(prev => 
+      prev.includes(day) 
+        ? prev.filter(d => d !== day)
+        : [...prev, day]
+    );
+  };
+
+  const toggleAllDays = () => {
+    if (currentMenu?.items && Array.isArray(currentMenu.items)) {
+      const allDays = currentMenu.items.map((day: any) => day.day);
+      if (selectedDays.length === allDays.length) {
+        setSelectedDays([]);
+      } else {
+        setSelectedDays(allDays);
+      }
+    }
   };
   const handleAddDayToCart = () => {
     if (!selectedDaySize) {
@@ -274,14 +308,50 @@ const Menu = () => {
                       Objednať toto menu 🍱
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="bg-background">
+                  <DialogContent className="bg-background max-h-[85vh] overflow-y-auto">
                     <DialogHeader>
-                      <DialogTitle className="text-gradient-gold">Vyberte veľkosť svojho denného menu</DialogTitle>
+                      <DialogTitle className="text-gradient-gold">Vyberte dni a veľkosť menu</DialogTitle>
                       <DialogDescription>
-                        Vyberte veľkosť menu podľa vašich potrieb a cieľov
+                        Vyberte dni ktoré chcete objednať a veľkosť menu
                       </DialogDescription>
                     </DialogHeader>
-                    <RadioGroup value={selectedSize} onValueChange={setSelectedSize}>
+
+                    {/* Days Selection */}
+                    <div className="space-y-4 p-4 border border-accent/30 rounded-lg bg-accent/5">
+                      <div className="flex items-center justify-between">
+                        <h4 className="font-semibold text-foreground">Dni v týždni</h4>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={toggleAllDays}
+                          className="text-xs"
+                        >
+                          {selectedDays.length === currentMenu?.items?.length ? "Zrušiť všetky" : "Vybrať všetky"}
+                        </Button>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        {currentMenu?.items && Array.isArray(currentMenu.items) && currentMenu.items.map((day: any) => (
+                          <div key={day.day} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={`day-${day.day}`}
+                              checked={selectedDays.includes(day.day)}
+                              onCheckedChange={() => toggleDay(day.day)}
+                            />
+                            <Label
+                              htmlFor={`day-${day.day}`}
+                              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                            >
+                              {day.day}
+                            </Label>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="pt-2">
+                      <h4 className="font-semibold text-foreground mb-3">Veľkosť menu</h4>
+                      <RadioGroup value={selectedSize} onValueChange={setSelectedSize}>
                       {menuSizes.map(size => <div key={size.value} className="flex items-center space-x-3 card-premium p-4">
                           <RadioGroupItem value={size.value} id={size.value} />
                           <Label htmlFor={size.value} className="flex-1 cursor-pointer">
@@ -289,7 +359,8 @@ const Menu = () => {
                             <div className="text-sm text-muted-foreground">{size.description}</div>
                           </Label>
                         </div>)}
-                    </RadioGroup>
+                      </RadioGroup>
+                    </div>
                     
                     {selectedSize === "CUSTOM" && <div className="space-y-4 mt-4 p-4 border border-accent/30 rounded-lg bg-accent/5">
                         <h4 className="font-semibold text-foreground">Zadajte vlastné hodnoty:</h4>
@@ -313,7 +384,7 @@ const Menu = () => {
                         </div>
                       </div>}
 
-                    <Button onClick={handleAddToCart} className="w-full bg-accent text-accent-foreground hover:glow-gold-strong transition-smooth" disabled={!selectedSize}>
+                    <Button onClick={handleAddToCart} className="w-full bg-accent text-accent-foreground hover:glow-gold-strong transition-smooth" disabled={!selectedSize || selectedDays.length === 0}>
                       Pokračovať do košíka
                     </Button>
                   </DialogContent>
