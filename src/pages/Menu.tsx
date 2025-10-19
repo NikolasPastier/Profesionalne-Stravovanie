@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -42,6 +43,14 @@ const Menu = () => {
   const [selectedMenuContext, setSelectedMenuContext] = useState<WeeklyMenu | null>(null);
   const [mealDetails, setMealDetails] = useState<Record<string, MenuItem>>({});
   const [mealDetailsByName, setMealDetailsByName] = useState<Record<string, MenuItem>>({});
+  const [customCalories, setCustomCalories] = useState("");
+  const [customProteins, setCustomProteins] = useState("");
+  const [customCarbs, setCustomCarbs] = useState("");
+  const [customFats, setCustomFats] = useState("");
+  const [customDayCalories, setCustomDayCalories] = useState("");
+  const [customDayProteins, setCustomDayProteins] = useState("");
+  const [customDayCarbs, setCustomDayCarbs] = useState("");
+  const [customDayFats, setCustomDayFats] = useState("");
   const navigate = useNavigate();
 
   // Helpers to support legacy weekly_menus that store meal names as strings with emojis
@@ -66,6 +75,7 @@ const Menu = () => {
     { value: "L", label: "L (2500 kcal)", description: "Muži, aktívny životný štýl" },
     { value: "XL", label: "XL (3000 kcal)", description: "Vyššia fyzická aktivita" },
     { value: "XXL", label: "XXL+ (3500+ kcal)", description: "Profesionálni športovci" },
+    { value: "CUSTOM", label: "Na mieru", description: "Vlastný počet kalórií a makroživín" },
   ];
 
   useEffect(() => {
@@ -111,6 +121,13 @@ const Menu = () => {
       return;
     }
 
+    if (selectedSize === "CUSTOM") {
+      if (!customCalories || !customProteins || !customCarbs || !customFats) {
+        toast.error("Prosím vyplňte všetky hodnoty pre vlastné menu");
+        return;
+      }
+    }
+
     if (!currentMenu) {
       toast.error("Žiadne menu nie je k dispozícii");
       return;
@@ -121,13 +138,26 @@ const Menu = () => {
       type: 'week',
       menuId: currentMenu.id,
       size: selectedSize,
-      menu: currentMenu
+      menu: currentMenu,
+      ...(selectedSize === "CUSTOM" && {
+        customNutrition: {
+          calories: parseInt(customCalories),
+          proteins: parseInt(customProteins),
+          carbs: parseInt(customCarbs),
+          fats: parseInt(customFats)
+        }
+      })
     };
 
     localStorage.setItem("cart", JSON.stringify([cartItem]));
     window.dispatchEvent(new Event("cartUpdated"));
     toast.success("Menu pridané do košíka!");
     setIsDialogOpen(false);
+    setSelectedSize("");
+    setCustomCalories("");
+    setCustomProteins("");
+    setCustomCarbs("");
+    setCustomFats("");
     navigate("/cart");
   };
 
@@ -135,6 +165,13 @@ const Menu = () => {
     if (!selectedDaySize) {
       toast.error("Prosím vyberte veľkosť menu");
       return;
+    }
+
+    if (selectedDaySize === "CUSTOM") {
+      if (!customDayCalories || !customDayProteins || !customDayCarbs || !customDayFats) {
+        toast.error("Prosím vyplňte všetky hodnoty pre vlastné menu");
+        return;
+      }
     }
 
     if (!selectedDay || !selectedMenuContext) {
@@ -153,7 +190,15 @@ const Menu = () => {
       size: selectedDaySize,
       day: selectedDay.day,
       meals: selectedDay.meals,
-      weekRange: `${new Date(selectedMenuContext.start_date).toLocaleDateString("sk-SK")} - ${new Date(selectedMenuContext.end_date).toLocaleDateString("sk-SK")}`
+      weekRange: `${new Date(selectedMenuContext.start_date).toLocaleDateString("sk-SK")} - ${new Date(selectedMenuContext.end_date).toLocaleDateString("sk-SK")}`,
+      ...(selectedDaySize === "CUSTOM" && {
+        customNutrition: {
+          calories: parseInt(customDayCalories),
+          proteins: parseInt(customDayProteins),
+          carbs: parseInt(customDayCarbs),
+          fats: parseInt(customDayFats)
+        }
+      })
     };
 
     cart.push(dayItem);
@@ -162,6 +207,10 @@ const Menu = () => {
     toast.success(`${selectedDay.day} pridaný do košíka!`);
     setIsDayDetailOpen(false);
     setSelectedDaySize("");
+    setCustomDayCalories("");
+    setCustomDayProteins("");
+    setCustomDayCarbs("");
+    setCustomDayFats("");
   };
 
   return (
@@ -245,6 +294,59 @@ const Menu = () => {
                         </div>
                       ))}
                     </RadioGroup>
+                    
+                    {selectedSize === "CUSTOM" && (
+                      <div className="space-y-4 mt-4 p-4 border border-accent/30 rounded-lg bg-accent/5">
+                        <h4 className="font-semibold text-foreground">Zadajte vlastné hodnoty:</h4>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="custom-calories">Kalórie (kcal)</Label>
+                            <Input
+                              id="custom-calories"
+                              type="number"
+                              placeholder="napr. 2200"
+                              value={customCalories}
+                              onChange={(e) => setCustomCalories(e.target.value)}
+                              className="bg-background"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="custom-proteins">Bielkoviny (g)</Label>
+                            <Input
+                              id="custom-proteins"
+                              type="number"
+                              placeholder="napr. 150"
+                              value={customProteins}
+                              onChange={(e) => setCustomProteins(e.target.value)}
+                              className="bg-background"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="custom-carbs">Sacharidy (g)</Label>
+                            <Input
+                              id="custom-carbs"
+                              type="number"
+                              placeholder="napr. 200"
+                              value={customCarbs}
+                              onChange={(e) => setCustomCarbs(e.target.value)}
+                              className="bg-background"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="custom-fats">Tuky (g)</Label>
+                            <Input
+                              id="custom-fats"
+                              type="number"
+                              placeholder="napr. 70"
+                              value={customFats}
+                              onChange={(e) => setCustomFats(e.target.value)}
+                              className="bg-background"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
                     <Button
                       onClick={handleAddToCart}
                       className="w-full bg-accent text-accent-foreground hover:glow-gold-strong transition-smooth"
@@ -353,6 +455,59 @@ const Menu = () => {
                             </div>
                           ))}
                         </RadioGroup>
+                        
+                        {selectedDaySize === "CUSTOM" && (
+                          <div className="space-y-4 mt-4 p-4 border border-accent/30 rounded-lg bg-accent/5">
+                            <h4 className="font-semibold text-foreground text-sm">Zadajte vlastné hodnoty:</h4>
+                            <div className="grid grid-cols-2 gap-3">
+                              <div className="space-y-2">
+                                <Label htmlFor="custom-day-calories" className="text-xs">Kalórie (kcal)</Label>
+                                <Input
+                                  id="custom-day-calories"
+                                  type="number"
+                                  placeholder="napr. 2200"
+                                  value={customDayCalories}
+                                  onChange={(e) => setCustomDayCalories(e.target.value)}
+                                  className="bg-background h-9"
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <Label htmlFor="custom-day-proteins" className="text-xs">Bielkoviny (g)</Label>
+                                <Input
+                                  id="custom-day-proteins"
+                                  type="number"
+                                  placeholder="napr. 150"
+                                  value={customDayProteins}
+                                  onChange={(e) => setCustomDayProteins(e.target.value)}
+                                  className="bg-background h-9"
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <Label htmlFor="custom-day-carbs" className="text-xs">Sacharidy (g)</Label>
+                                <Input
+                                  id="custom-day-carbs"
+                                  type="number"
+                                  placeholder="napr. 200"
+                                  value={customDayCarbs}
+                                  onChange={(e) => setCustomDayCarbs(e.target.value)}
+                                  className="bg-background h-9"
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <Label htmlFor="custom-day-fats" className="text-xs">Tuky (g)</Label>
+                                <Input
+                                  id="custom-day-fats"
+                                  type="number"
+                                  placeholder="napr. 70"
+                                  value={customDayFats}
+                                  onChange={(e) => setCustomDayFats(e.target.value)}
+                                  className="bg-background h-9"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
                         <div className="flex gap-3">
                           <Button
                             onClick={handleAddDayToCart}
