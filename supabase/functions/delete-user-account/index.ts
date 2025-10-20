@@ -92,8 +92,6 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    console.log("Processing account deletion request");
-
     // Delete user data in correct order (respecting foreign key constraints)
     
     // 1. Delete achievements
@@ -104,8 +102,6 @@ const handler = async (req: Request): Promise<Response> => {
     
     if (achievementsError) {
       console.error("Error deleting achievements:", achievementsError);
-    } else {
-      console.log("Achievements deleted successfully");
     }
 
     // 2. Delete progress data
@@ -116,8 +112,6 @@ const handler = async (req: Request): Promise<Response> => {
     
     if (progressError) {
       console.error("Error deleting progress:", progressError);
-    } else {
-      console.log("Progress data deleted successfully");
     }
 
     // 3. Delete admin notifications for user's orders
@@ -135,8 +129,6 @@ const handler = async (req: Request): Promise<Response> => {
       
       if (notificationsError) {
         console.error("Error deleting notifications:", notificationsError);
-      } else {
-        console.log("Admin notifications deleted successfully");
       }
     }
 
@@ -148,8 +140,6 @@ const handler = async (req: Request): Promise<Response> => {
     
     if (ordersError) {
       console.error("Error deleting orders:", ordersError);
-    } else {
-      console.log("Orders deleted successfully");
     }
 
     // 5. Delete user roles
@@ -160,8 +150,6 @@ const handler = async (req: Request): Promise<Response> => {
     
     if (rolesError) {
       console.error("Error deleting user roles:", rolesError);
-    } else {
-      console.log("User roles deleted successfully");
     }
 
     // 6. Delete user profile
@@ -172,8 +160,6 @@ const handler = async (req: Request): Promise<Response> => {
     
     if (profileError) {
       console.error("Error deleting user profile:", profileError);
-    } else {
-      console.log("User profile deleted successfully");
     }
 
     // 7. Finally, delete the user from auth
@@ -188,8 +174,6 @@ const handler = async (req: Request): Promise<Response> => {
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
-
-    console.log("User account deleted successfully from auth");
 
     return new Response(
       JSON.stringify({ success: true, message: "Account deleted successfully" }),

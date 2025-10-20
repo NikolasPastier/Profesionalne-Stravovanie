@@ -388,42 +388,37 @@ const Cart = () => {
         return;
       }
 
-      // Check if email exists
-      const { data: emailExists, error: checkError } = await supabase.rpc('check_email_exists', { 
-        email_input: email 
-      });
+      // Use secure checkout handler
+      const { data: checkoutData, error: checkoutError } = await supabase.functions.invoke(
+        'checkout-handler',
+        {
+          body: { email, name, phone, address, note, deliveryType }
+        }
+      );
 
-      if (checkError) {
-        toast.error("Chyba pri kontrole emailu");
+      if (checkoutError) {
+        if (checkoutError.message?.includes('rate limit')) {
+          toast.error("Príliš veľa pokusov. Skúste to neskôr.");
+        } else {
+          toast.error("Chyba pri spracovaní objednávky");
+        }
         return;
       }
 
-      if (emailExists) {
-        // Email exists - show login dialog
+      if (checkoutData.rateLimitExceeded) {
+        toast.error("Príliš veľa pokusov. Skúste to neskôr.");
+        return;
+      }
+
+      if (checkoutData.accountExists) {
+        // Show login dialog
         setTempOrderData({ name, email, phone, address, note, deliveryType });
         setShowLoginDialog(true);
-      } else {
-        // Email doesn't exist - create new account with cryptographically secure password
-        const array = new Uint8Array(20);
-        crypto.getRandomValues(array);
-        const tempPassword = Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('') + 'Aa1!';
-        
-        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-          email,
-          password: tempPassword,
-          options: {
-            emailRedirectTo: `${window.location.origin}/orders`,
-            data: { temp_password: true }
-          }
-        });
-
-        if (signUpError) throw signUpError;
-
-        if (signUpData.user) {
-          setTempOrderData({ name, email, phone, address, note, deliveryType });
-          setShowSetPasswordDialog(true);
-          toast.success("Účet vytvorený! Nastavte si heslo.");
-        }
+      } else if (checkoutData.accountCreated) {
+        // Show password setup dialog
+        setTempOrderData({ name, email, phone, address, note, deliveryType });
+        setShowSetPasswordDialog(true);
+        toast.success("Účet vytvorený! Nastavte si heslo.");
       }
     } catch (error: any) {
       toast.error(error.message);
