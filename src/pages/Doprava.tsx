@@ -48,9 +48,7 @@ const Doprava = () => {
                   <Euro className="h-6 w-6 text-primary" />
                   <h3 className="text-xl font-display text-gradient-gold">Platba</h3>
                 </div>
-                <p className="text-sm text-muted-foreground">
-                  Hotovosť pri doručení prvej objednávky v celej sume. Pri ďalších objednávkach je možné platiť aj prevodom.
-                </p>
+                <p className="text-sm text-muted-foreground">Hotovosť pri doručení prvej objednávky v celej sume. </p>
               </div>
 
               <div className="border border-primary/20 rounded-lg p-6 hover:scale-105 transition-transform duration-300">
