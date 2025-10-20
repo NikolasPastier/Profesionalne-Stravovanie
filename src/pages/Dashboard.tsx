@@ -699,11 +699,11 @@ const Dashboard = () => {
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <p className="text-sm text-muted-foreground">Meno</p>
-                      <p className="font-medium">{selectedOrder.name || "N/A"}</p>
+                      <p className="font-medium">{selectedOrder.name || selectedOrder.user_profiles?.name || "N/A"}</p>
                     </div>
                     <div>
                       <p className="text-sm text-muted-foreground">Email</p>
-                      <p className="font-medium">{selectedOrder.email || "N/A"}</p>
+                      <p className="font-medium">{selectedOrder.email || selectedOrder.user_profiles?.email || "N/A"}</p>
                     </div>
                     <div>
                       <p className="text-sm text-muted-foreground">Telefón</p>
