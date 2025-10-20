@@ -13,9 +13,10 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { User, Package, Mail, Lock, Trash2, MapPin, UtensilsCrossed, Calendar } from "lucide-react";
+import { User, Package, Mail, Lock, Trash2, MapPin, UtensilsCrossed, Calendar, Users } from "lucide-react";
 import { MenuManagement } from "@/components/admin/MenuManagement";
 import { WeeklyMenuManagement } from "@/components/admin/WeeklyMenuManagement";
+import { UserStatistics } from "@/components/admin/UserStatistics";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { DashboardOverview } from "@/components/dashboard/DashboardOverview";
@@ -581,7 +582,7 @@ const Dashboard = () => {
               </Card>}
 
             <Tabs defaultValue="orders" className="space-y-6">
-              <TabsList className="grid w-full max-w-md grid-cols-3">
+              <TabsList className="grid w-full max-w-4xl grid-cols-4">
                 <TabsTrigger value="orders">
                   <Package className="h-4 w-4 mr-2" />
                   Objednávky
@@ -593,6 +594,10 @@ const Dashboard = () => {
                 <TabsTrigger value="weekly-menu">
                   <Calendar className="h-4 w-4 mr-2" />
                   Menu
+                </TabsTrigger>
+                <TabsTrigger value="users">
+                  <Users className="h-4 w-4 mr-2" />
+                  Používatelia
                 </TabsTrigger>
               </TabsList>
 
@@ -661,10 +666,14 @@ const Dashboard = () => {
                 <MenuManagement />
               </TabsContent>
 
-              <TabsContent value="weekly-menu">
-                <WeeklyMenuManagement />
-              </TabsContent>
-            </Tabs>
+                <TabsContent value="weekly-menu">
+                  <WeeklyMenuManagement />
+                </TabsContent>
+
+                <TabsContent value="users">
+                  <UserStatistics />
+                </TabsContent>
+              </Tabs>
           </div>
         </main>
 
