@@ -407,6 +407,21 @@ const Menu = () => {
                       </div>
                     </div>
 
+                    {/* Vegetarian Option */}
+                    {selectedSize && selectedSize !== "CUSTOM" && (
+                      <div className="flex items-center space-x-3 p-4 border border-accent/30 rounded-lg bg-accent/5">
+                        <Checkbox 
+                          id="vegetarian" 
+                          checked={isVegetarian} 
+                          onCheckedChange={(checked) => setIsVegetarian(checked as boolean)}
+                        />
+                        <Label htmlFor="vegetarian" className="flex-1 cursor-pointer">
+                          <div className="font-bold text-primary">Vegetariánske menu</div>
+                          <div className="text-sm text-muted-foreground">€16.99/deň - Bez mäsa, čerstvé ingrediencie</div>
+                        </Label>
+                      </div>
+                    )}
+
                     <div className="pt-2 space-y-4">
                       <h4 className="font-semibold text-foreground mb-3">Veľkosť menu</h4>
                       <RadioGroup value={selectedSize} onValueChange={setSelectedSize}>
@@ -418,20 +433,6 @@ const Menu = () => {
                           </Label>
                         </div>)}
                       </RadioGroup>
-                      
-                      {selectedSize && selectedSize !== "CUSTOM" && (
-                        <div className="flex items-center space-x-3 p-4 border border-accent/30 rounded-lg bg-accent/5">
-                          <Checkbox 
-                            id="vegetarian" 
-                            checked={isVegetarian} 
-                            onCheckedChange={(checked) => setIsVegetarian(checked as boolean)}
-                          />
-                          <Label htmlFor="vegetarian" className="flex-1 cursor-pointer">
-                            <div className="font-bold text-primary">Vegetariánske menu</div>
-                            <div className="text-sm text-muted-foreground">€16.99/deň - Bez mäsa, čerstvé ingrediencie</div>
-                          </Label>
-                        </div>
-                      )}
                     </div>
                     
                     {selectedSize === "CUSTOM" && <div className="space-y-4 mt-4 p-4 border border-accent/30 rounded-lg bg-accent/5">
@@ -549,17 +550,7 @@ const Menu = () => {
                     
                     {/* Size selection and add to cart - only for current menu */}
                     {selectedMenuContext?.id === currentMenu?.id && <div className="mt-6 pt-6 border-t border-border space-y-4">
-                        <h4 className="font-bold text-lg text-foreground">Vyberte veľkosť</h4>
-                        <RadioGroup value={selectedDaySize} onValueChange={setSelectedDaySize}>
-                          {menuSizes.map(size => <div key={size.value} className="flex items-center space-x-3 card-premium p-3">
-                              <RadioGroupItem value={size.value} id={`day-${size.value}`} />
-                              <Label htmlFor={`day-${size.value}`} className="flex-1 cursor-pointer">
-                                <div className="font-bold text-primary text-sm">{size.label}</div>
-                                <div className="text-xs text-muted-foreground">{size.description}</div>
-                              </Label>
-                            </div>)}
-                        </RadioGroup>
-                        
+                        {/* Vegetarian Option */}
                         {selectedDaySize && selectedDaySize !== "CUSTOM" && (
                           <div className="flex items-center space-x-3 p-3 border border-accent/30 rounded-lg bg-accent/5">
                             <Checkbox 
@@ -573,6 +564,17 @@ const Menu = () => {
                             </Label>
                           </div>
                         )}
+                        
+                        <h4 className="font-bold text-lg text-foreground">Vyberte veľkosť</h4>
+                        <RadioGroup value={selectedDaySize} onValueChange={setSelectedDaySize}>
+                          {menuSizes.map(size => <div key={size.value} className="flex items-center space-x-3 card-premium p-3">
+                              <RadioGroupItem value={size.value} id={`day-${size.value}`} />
+                              <Label htmlFor={`day-${size.value}`} className="flex-1 cursor-pointer">
+                                <div className="font-bold text-primary text-sm">{size.label}</div>
+                                <div className="text-xs text-muted-foreground">{size.description}</div>
+                              </Label>
+                            </div>)}
+                        </RadioGroup>
                         
                         {selectedDaySize === "CUSTOM" && <div className="space-y-4 mt-4 p-4 border border-accent/30 rounded-lg bg-accent/5">
                             <h4 className="font-semibold text-foreground text-sm">Zadajte vlastné hodnoty:</h4>
