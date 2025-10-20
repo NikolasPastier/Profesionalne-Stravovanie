@@ -327,9 +327,6 @@ export const MenuManagement = () => {
             <TableRow>
               <TableHead>Názov</TableHead>
               <TableHead>Kategória</TableHead>
-              <TableHead>Cena</TableHead>
-              <TableHead>Kalórie</TableHead>
-              <TableHead>Proteíny</TableHead>
               <TableHead>Akcie</TableHead>
             </TableRow>
           </TableHeader>
@@ -338,9 +335,6 @@ export const MenuManagement = () => {
               <TableRow key={item.id}>
                 <TableCell className="font-medium">{item.name}</TableCell>
                 <TableCell>{item.category}</TableCell>
-                <TableCell className="font-bold">{item.price.toFixed(2)} €</TableCell>
-                <TableCell>{item.calories} kcal</TableCell>
-                <TableCell>{item.proteins}g</TableCell>
                 <TableCell>
                   <div className="flex gap-2">
                     <Button

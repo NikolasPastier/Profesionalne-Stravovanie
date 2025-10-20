@@ -512,29 +512,6 @@ const Menu = () => {
                                     {mealData.description}
                                   </p>}
                                 
-                                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 pt-3 border-t border-border">
-                                  <div className="text-center bg-card/50 rounded-lg p-3">
-                                    <div className="text-xs text-muted-foreground mb-1">Kalórie</div>
-                                    <div className="font-bold text-primary text-lg">{mealData.calories || 0}</div>
-                                    <div className="text-xs text-muted-foreground">kcal</div>
-                                  </div>
-                                  <div className="text-center bg-card/50 rounded-lg p-3">
-                                    <div className="text-xs text-muted-foreground mb-1">Bielkoviny</div>
-                                    <div className="font-bold text-primary text-lg">{mealData.proteins || 0}</div>
-                                    <div className="text-xs text-muted-foreground">g</div>
-                                  </div>
-                                  <div className="text-center bg-card/50 rounded-lg p-3">
-                                    <div className="text-xs text-muted-foreground mb-1">Sacharidy</div>
-                                    <div className="font-bold text-primary text-lg">{mealData.carbs || 0}</div>
-                                    <div className="text-xs text-muted-foreground">g</div>
-                                  </div>
-                                  <div className="text-center bg-card/50 rounded-lg p-3">
-                                    <div className="text-xs text-muted-foreground mb-1">Tuky</div>
-                                    <div className="font-bold text-primary text-lg">{mealData.fats || 0}</div>
-                                    <div className="text-xs text-muted-foreground">g</div>
-                                  </div>
-                                </div>
-                                
                                 {mealData.allergens && mealData.allergens.length > 0 && <div className="pt-3 border-t border-border">
                                     <div className="text-xs font-semibold text-foreground mb-2">⚠️ Alergény:</div>
                                     <div className="flex flex-wrap gap-2">
