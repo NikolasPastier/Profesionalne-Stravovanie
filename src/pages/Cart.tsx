@@ -140,8 +140,11 @@ const Cart = () => {
       for (const item of cartItems) {
         // Calculate price based on size and vegetarian option
         const isVegetarian = item.isVegetarian || false;
-        const weekPrice = isVegetarian ? 118.93 : 45.95; // €16.99 * 7 days for vegetarian, €6.99 * 7 days for regular
         const dayPrice = isVegetarian ? 16.99 : 6.99;
+        
+        // For weekly menu, calculate price based on actual number of selected days
+        const numberOfDays = item.type === 'week' ? (item.selectedDays?.length || item.menu?.items?.length || 5) : 1;
+        const weekPrice = dayPrice * numberOfDays;
         
         // Calculate delivery fee per item (divide by number of items)
         const itemDeliveryFee = deliveryFee / cartItems.length;
@@ -416,9 +419,14 @@ const Cart = () => {
 
   const subtotalPrice = cartItems.reduce((sum, item) => {
     const isVegetarian = item.isVegetarian || false;
-    const weekPrice = isVegetarian ? 118.93 : 45.95;
     const dayPrice = isVegetarian ? 16.99 : 6.99;
-    return sum + (item.type === 'week' ? weekPrice : dayPrice);
+    
+    if (item.type === 'week') {
+      const numberOfDays = item.selectedDays?.length || item.menu?.items?.length || 5;
+      return sum + (dayPrice * numberOfDays);
+    } else {
+      return sum + dayPrice;
+    }
   }, 0);
 
   const totalPrice = subtotalPrice + deliveryFee;
@@ -489,10 +497,13 @@ const Cart = () => {
                     <span className="font-bold text-xl text-primary">
                       €{(() => {
                         const isVegetarian = item.isVegetarian || false;
+                        const dayPrice = isVegetarian ? 16.99 : 6.99;
+                        
                         if (item.type === 'week') {
-                          return isVegetarian ? '118.93' : '45.95';
+                          const numberOfDays = item.selectedDays?.length || item.menu?.items?.length || 5;
+                          return (dayPrice * numberOfDays).toFixed(2);
                         } else {
-                          return isVegetarian ? '16.99' : '6.99';
+                          return dayPrice.toFixed(2);
                         }
                       })()}
                     </span>
