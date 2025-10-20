@@ -73,7 +73,7 @@ const Cart = () => {
   const calculateDeliveryFee = (address: string) => {
     const lowerAddress = address.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
     
-    // Nitra a okolie - zdarma
+    // Nitra a okolie - zdarma (do 20km)
     const nitraRegions = [
       'nitra', 'lapas', 'beladice', 'luzianky', 'ludanice', 'cabaj', 'capor',
       'jelšovce', 'jeľsovce', 'ivanka', 'lehota', 'parovske haje',
@@ -81,25 +81,25 @@ const Cart = () => {
     ];
     
     if (nitraRegions.some(region => lowerAddress.includes(region))) {
-      return { fee: 0, region: 'nitra' };
+      return { fee: 0.00, region: 'nitra' };
     }
     
-    // Sereď
+    // Sereď - €4.00
     if (lowerAddress.includes('sered')) {
-      return { fee: 4, region: 'sered' };
+      return { fee: 4.00, region: 'sered' };
     }
     
-    // Trnava
+    // Trnava - €5.00
     if (lowerAddress.includes('trnava')) {
-      return { fee: 5, region: 'trnava' };
+      return { fee: 5.00, region: 'trnava' };
     }
     
-    // Bratislava
+    // Bratislava - €6.00
     if (lowerAddress.includes('bratislava')) {
-      return { fee: 6, region: 'bratislava' };
+      return { fee: 6.00, region: 'bratislava' };
     }
     
-    // Iná lokalita
+    // Iné vzdialenosti - dohodou
     return { fee: 0, region: 'other' };
   };
 
