@@ -75,6 +75,34 @@ const Menu = () => {
       label: 'Jedlo'
     };
   };
+  // Helper to check if a day is in the past or today
+  const isDayBeforeOrToday = (dayName: string, menuStartDate: string) => {
+    const dayMap: Record<string, number> = {
+      "Pondelok": 1,
+      "Utorok": 2,
+      "Streda": 3,
+      "Štvrtok": 4,
+      "Piatok": 5
+    };
+    
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const menuStart = new Date(menuStartDate);
+    menuStart.setHours(0, 0, 0, 0);
+    
+    // Calculate which day of the week this day falls on
+    const dayIndex = dayMap[dayName];
+    if (!dayIndex) return true; // If unknown day, disable it
+    
+    // Calculate the actual date for this day (Monday = 1, Friday = 5)
+    const dayDate = new Date(menuStart);
+    dayDate.setDate(menuStart.getDate() + (dayIndex - 1));
+    
+    // Return true if this day is today or before today
+    return dayDate <= today;
+  };
+
   const menuSizes = [{
     value: "S",
     label: "S (1600 kcal)",
@@ -108,12 +136,13 @@ const Menu = () => {
     fetchMenus();
   }, []);
   useEffect(() => {
-    // Set only weekdays as selected by default when menu loads
+    // Set only future weekdays as selected by default when menu loads
     if (currentMenu?.items && Array.isArray(currentMenu.items)) {
-      const weekdays = currentMenu.items
+      const availableDays = currentMenu.items
         .filter((day: any) => ["Pondelok","Utorok","Streda","Štvrtok","Piatok"].includes(day.day))
+        .filter((day: any) => !isDayBeforeOrToday(day.day, currentMenu.start_date))
         .map((day: any) => day.day);
-      setSelectedDays(weekdays);
+      setSelectedDays(availableDays);
     }
   }, [currentMenu]);
   const fetchMenus = async () => {
@@ -153,6 +182,13 @@ const Menu = () => {
       toast.error("Prosím vyberte aspoň jeden deň");
       return;
     }
+    
+    // Check if any selected day is in the past or today
+    if (currentMenu && selectedDays.some(day => isDayBeforeOrToday(day, currentMenu.start_date))) {
+      toast.error("Nemôžete objednať dni v minulosti alebo dnešný deň");
+      return;
+    }
+    
     if (!selectedSize) {
       toast.error("Prosím vyberte veľkosť menu");
       return;
@@ -201,12 +237,14 @@ const Menu = () => {
   };
   const toggleAllDays = () => {
     if (currentMenu?.items && Array.isArray(currentMenu.items)) {
-      const filtered = currentMenu.items.filter((day: any) => ["Pondelok","Utorok","Streda","Štvrtok","Piatok"].includes(day.day));
-      const allDays = filtered.map((day: any) => day.day);
-      if (selectedDays.length === allDays.length) {
+      const availableDays = currentMenu.items
+        .filter((day: any) => ["Pondelok","Utorok","Streda","Štvrtok","Piatok"].includes(day.day))
+        .filter((day: any) => !isDayBeforeOrToday(day.day, currentMenu.start_date))
+        .map((day: any) => day.day);
+      if (selectedDays.length === availableDays.length) {
         setSelectedDays([]);
       } else {
-        setSelectedDays(allDays);
+        setSelectedDays(availableDays);
       }
     }
   };
@@ -215,6 +253,13 @@ const Menu = () => {
       toast.error("Prosím vyberte veľkosť menu");
       return;
     }
+    
+    // Check if selected day is in the past or today
+    if (selectedDay && selectedMenuContext && isDayBeforeOrToday(selectedDay.day, selectedMenuContext.start_date)) {
+      toast.error("Nemôžete objednať dni v minulosti alebo dnešný deň");
+      return;
+    }
+    
     if (selectedDaySize === "CUSTOM") {
       if (!customDayCalories || !customDayProteins || !customDayCarbs || !customDayFats) {
         toast.error("Prosím vyplňte všetky hodnoty pre vlastné menu");
@@ -276,11 +321,23 @@ const Menu = () => {
             </CardHeader>
             <CardContent className="px-4 md:px-6">
               <div className="grid grid-cols-1 gap-6 max-w-2xl mx-auto">
-                {currentMenu.items && Array.isArray(currentMenu.items) && currentMenu.items.filter((d: any) => ["Pondelok","Utorok","Streda","Štvrtok","Piatok"].includes(d.day)).map((day: any, idx: number) => <div key={idx} className="border border-border rounded-lg p-4 bg-card/50 cursor-pointer hover:bg-card/70 hover:border-accent/50 transition-smooth hover:glow-gold" onClick={() => {
-                setSelectedDay(day);
-                setSelectedMenuContext(currentMenu);
-                setIsDayDetailOpen(true);
-              }}>
+                {currentMenu.items && Array.isArray(currentMenu.items) && currentMenu.items.filter((d: any) => ["Pondelok","Utorok","Streda","Štvrtok","Piatok"].includes(d.day)).map((day: any, idx: number) => {
+                  const isPastDay = isDayBeforeOrToday(day.day, currentMenu.start_date);
+                  return <div 
+                    key={idx} 
+                    className={`border border-border rounded-lg p-4 bg-card/50 transition-smooth ${
+                      isPastDay 
+                        ? 'opacity-50 cursor-not-allowed' 
+                        : 'cursor-pointer hover:bg-card/70 hover:border-accent/50 hover:glow-gold'
+                    }`}
+                    onClick={() => {
+                      if (!isPastDay) {
+                        setSelectedDay(day);
+                        setSelectedMenuContext(currentMenu);
+                        setIsDayDetailOpen(true);
+                      }
+                    }}
+                  >
                     <h3 className="font-display text-xl font-bold mb-3 text-accent border-b border-accent pb-2">
                       {day.day}
                     </h3>
@@ -297,9 +354,10 @@ const Menu = () => {
                   })}
                     </div>
                     <p className="text-xs text-muted-foreground mt-3 italic">
-                      Kliknite pre detaily →
+                      {isPastDay ? 'Tento deň už nie je dostupný ⏱️' : 'Kliknite pre detaily →'}
                     </p>
-                  </div>)}
+                  </div>;
+                })}
               </div>
                 <div className="flex justify-center">
                   <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -321,18 +379,29 @@ const Menu = () => {
                       <div className="flex items-center justify-between">
                         <h4 className="font-semibold text-foreground">Dni v týždni</h4>
                         <Button type="button" variant="outline" size="sm" onClick={toggleAllDays} className="text-xs">
-                          {selectedDays.length === (currentMenu?.items?.filter((d: any) => ["Pondelok","Utorok","Streda","Štvrtok","Piatok"].includes(d.day)).length || 0) ? "Zrušiť všetky" : "Vybrať všetky"}
+                          {selectedDays.length === (currentMenu?.items?.filter((d: any) => ["Pondelok","Utorok","Streda","Štvrtok","Piatok"].includes(d.day) && !isDayBeforeOrToday(d.day, currentMenu.start_date)).length || 0) ? "Zrušiť všetky" : "Vybrať všetky"}
                         </Button>
                       </div>
                       <div className="grid grid-cols-2 gap-3">
                          {currentMenu?.items && Array.isArray(currentMenu.items) && currentMenu.items
                           .filter((day: any) => ["Pondelok","Utorok","Streda","Štvrtok","Piatok"].includes(day.day))
-                          .map((day: any) => <div key={day.day} className="flex items-center space-x-2">
-                             <Checkbox id={`day-${day.day}`} checked={selectedDays.includes(day.day)} onCheckedChange={() => toggleDay(day.day)} />
-                             <Label htmlFor={`day-${day.day}`} className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer">
-                               {day.day}
+                          .map((day: any) => {
+                            const isPastDay = isDayBeforeOrToday(day.day, currentMenu.start_date);
+                            return <div key={day.day} className="flex items-center space-x-2">
+                             <Checkbox 
+                               id={`day-${day.day}`} 
+                               checked={selectedDays.includes(day.day)} 
+                               onCheckedChange={() => toggleDay(day.day)}
+                               disabled={isPastDay}
+                             />
+                             <Label 
+                               htmlFor={`day-${day.day}`} 
+                               className={`text-sm font-medium leading-none ${isPastDay ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                             >
+                               {day.day} {isPastDay ? '(nedostupný)' : ''}
                              </Label>
-                           </div>)}
+                           </div>;
+                          })}
                       </div>
                     </div>
 
