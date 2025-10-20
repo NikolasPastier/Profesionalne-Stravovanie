@@ -582,22 +582,22 @@ const Dashboard = () => {
               </Card>}
 
             <Tabs defaultValue="orders" className="space-y-6">
-              <TabsList className="grid w-full max-w-4xl grid-cols-4">
-                <TabsTrigger value="orders">
-                  <Package className="h-4 w-4 mr-2" />
-                  Objednávky
+              <TabsList className="grid w-full max-w-4xl grid-cols-2 md:grid-cols-4 gap-2">
+                <TabsTrigger value="orders" className="flex-col md:flex-row gap-1 md:gap-2 py-3">
+                  <Package className="h-4 w-4" />
+                  <span className="text-xs md:text-sm">Objednávky</span>
                 </TabsTrigger>
-                <TabsTrigger value="dishes">
-                  <UtensilsCrossed className="h-4 w-4 mr-2" />
-                  Správa jedál
+                <TabsTrigger value="dishes" className="flex-col md:flex-row gap-1 md:gap-2 py-3">
+                  <UtensilsCrossed className="h-4 w-4" />
+                  <span className="text-xs md:text-sm">Správa jedál</span>
                 </TabsTrigger>
-                <TabsTrigger value="weekly-menu">
-                  <Calendar className="h-4 w-4 mr-2" />
-                  Menu
+                <TabsTrigger value="weekly-menu" className="flex-col md:flex-row gap-1 md:gap-2 py-3">
+                  <Calendar className="h-4 w-4" />
+                  <span className="text-xs md:text-sm">Menu</span>
                 </TabsTrigger>
-                <TabsTrigger value="users">
-                  <Users className="h-4 w-4 mr-2" />
-                  Používatelia
+                <TabsTrigger value="users" className="flex-col md:flex-row gap-1 md:gap-2 py-3">
+                  <Users className="h-4 w-4" />
+                  <span className="text-xs md:text-sm">Používatelia</span>
                 </TabsTrigger>
               </TabsList>
 
