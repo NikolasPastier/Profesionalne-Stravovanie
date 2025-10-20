@@ -33,10 +33,15 @@ const Doprava = () => {
                   <Truck className="h-6 w-6 text-primary" />
                   <h3 className="text-xl font-display text-gradient-gold">Mimo okolia Nitry</h3>
                 </div>
-                <p className="text-primary text-lg font-bold mb-2">Individuálna cena</p>
-                <p className="text-sm text-muted-foreground">
-                  Cena dopravy sa určí individuálne
-                </p>
+                <div className="space-y-2">
+                  <p className="text-sm text-muted-foreground mb-3">Smer smerom k Bratislave:</p>
+                  <div className="space-y-1">
+                    <p className="text-sm"><span className="font-semibold text-primary">Sereď:</span> €18.99</p>
+                    <p className="text-sm"><span className="font-semibold text-primary">Trnava:</span> €19.99</p>
+                    <p className="text-sm"><span className="font-semibold text-primary">Bratislava:</span> €20.99</p>
+                    <p className="text-sm text-muted-foreground mt-2">Iné vzdialenosti: dohodou</p>
+                  </div>
+                </div>
               </div>
 
               <div className="border border-primary/20 rounded-lg p-6 hover:scale-105 transition-transform duration-300">
