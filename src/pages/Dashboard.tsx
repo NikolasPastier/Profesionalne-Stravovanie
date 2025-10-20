@@ -412,19 +412,36 @@ const Dashboard = () => {
   };
   const handleAccountDelete = async () => {
     try {
-      // First delete user data
-      const {
-        data: {
-          user
-        }
-      } = await supabase.auth.getUser();
-      if (!user) return;
+      setIsDeleteDialogOpen(false);
+      
+      // Get current session for authorization
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast({
+          title: "Chyba",
+          description: "Musíte byť prihlásený",
+          variant: "destructive"
+        });
+        return;
+      }
 
-      // Delete user profile
-      await supabase.from("user_profiles").delete().eq("user_id", user.id);
+      // Call edge function to delete account and all related data
+      const { data, error } = await supabase.functions.invoke('delete-user-account', {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
 
-      // Delete progress data
-      await supabase.from("progress").delete().eq("user_id", user.id);
+      if (error) {
+        console.error("Delete account error:", error);
+        toast({
+          title: "Chyba",
+          description: "Nepodarilo sa vymazať účet. Skúste to prosím znova.",
+          variant: "destructive"
+        });
+        return;
+      }
+
       toast({
         title: "Účet vymazaný",
         description: "Váš účet a všetky údaje boli úspešne vymazané"
@@ -434,9 +451,10 @@ const Dashboard = () => {
       await supabase.auth.signOut();
       navigate("/");
     } catch (error: any) {
+      console.error("Account deletion error:", error);
       toast({
         title: "Chyba",
-        description: error.message,
+        description: "Nepodarilo sa vymazať účet",
         variant: "destructive"
       });
     }
