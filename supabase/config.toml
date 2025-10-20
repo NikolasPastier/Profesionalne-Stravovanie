@@ -2,3 +2,6 @@ project_id = "vmddyjosfwvsdtofnrjf"
 
 [functions.health-assistant]
 verify_jwt = true
+
+[functions.send-order-email]
+verify_jwt = false

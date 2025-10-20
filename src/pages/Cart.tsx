@@ -215,6 +215,42 @@ const Cart = () => {
           address: orderData.address
         });
 
+      // Send order confirmation emails
+      try {
+        const orderItems = cartItems.map(item => {
+          const isVegetarian = item.isVegetarian || false;
+          const dayPrice = isVegetarian ? 16.99 : 6.99;
+          const numberOfDays = item.type === 'week' ? (item.selectedDays?.length || item.menu?.items?.length || 5) : 1;
+          const price = item.type === 'week' ? (dayPrice * numberOfDays) : dayPrice;
+          
+          return {
+            name: item.type === 'week' ? 'Týždenné menu' : `Menu - ${item.day}`,
+            size: item.size,
+            quantity: 1,
+            price: price
+          };
+        });
+
+        await supabase.functions.invoke('send-order-email', {
+          body: {
+            orderId: userId,
+            customerName: orderData.name,
+            customerEmail: orderData.email,
+            orderItems: orderItems,
+            totalPrice: subtotalPrice + deliveryFee,
+            deliveryFee: deliveryFee,
+            deliveryAddress: orderData.address,
+            deliveryDate: orderData.deliveryType === 'delivery' ? 'Na mieru' : undefined,
+            phone: orderData.phone
+          }
+        });
+        
+        console.log("Order confirmation emails sent successfully");
+      } catch (emailError) {
+        console.error("Failed to send order emails:", emailError);
+        // Don't fail the order if email fails
+      }
+
       localStorage.removeItem("cart");
       window.dispatchEvent(new Event("cartUpdated"));
       toast.success("Objednávka úspešne vytvorená!");
