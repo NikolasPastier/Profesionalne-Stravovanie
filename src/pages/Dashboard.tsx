@@ -55,6 +55,8 @@ interface Order {
   user_profiles?: {
     name: string;
     email: string;
+    allergies?: string[];
+    dislikes?: string[];
   };
 }
 interface Notification {
@@ -182,12 +184,14 @@ const Dashboard = () => {
       const ordersWithProfiles = await Promise.all((data || []).map(async order => {
         const {
           data: profile
-        } = await supabase.from("user_profiles").select("name, email").eq("user_id", order.user_id).maybeSingle();
+        } = await supabase.from("user_profiles").select("name, email, allergies, dislikes").eq("user_id", order.user_id).maybeSingle();
         return {
           ...order,
           user_profiles: profile || {
             name: "N/A",
-            email: "N/A"
+            email: "N/A",
+            allergies: [],
+            dislikes: []
           }
         };
       }));
@@ -721,6 +725,40 @@ const Dashboard = () => {
                     <p className="font-medium">{selectedOrder.address}</p>
                   </div>
                 </div>
+
+                {/* Dietary Requirements */}
+                {(selectedOrder.user_profiles?.allergies && selectedOrder.user_profiles.allergies.length > 0) || 
+                 (selectedOrder.user_profiles?.dislikes && selectedOrder.user_profiles.dislikes.length > 0) ? (
+                  <div className="space-y-4">
+                    <h3 className="font-semibold text-lg border-b pb-2">Diétne požiadavky zákazníka</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {selectedOrder.user_profiles?.allergies && selectedOrder.user_profiles.allergies.length > 0 && (
+                        <div>
+                          <p className="text-sm text-muted-foreground mb-2">Alergény</p>
+                          <div className="flex flex-wrap gap-2">
+                            {selectedOrder.user_profiles.allergies.map((allergy, idx) => (
+                              <Badge key={idx} variant="destructive" className="text-xs">
+                                {allergy}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      {selectedOrder.user_profiles?.dislikes && selectedOrder.user_profiles.dislikes.length > 0 && (
+                        <div>
+                          <p className="text-sm text-muted-foreground mb-2">Nechce</p>
+                          <div className="flex flex-wrap gap-2">
+                            {selectedOrder.user_profiles.dislikes.map((dislike, idx) => (
+                              <Badge key={idx} variant="outline" className="text-xs">
+                                {dislike}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ) : null}
 
                 {/* Order Details */}
                 <div className="space-y-4">
