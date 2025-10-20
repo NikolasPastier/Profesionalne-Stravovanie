@@ -408,7 +408,7 @@ const Menu = () => {
                     </div>
 
                     {/* Vegetarian Option */}
-                    {selectedSize && selectedSize !== "CUSTOM" && (
+                    {selectedSize && (
                       <div className="flex items-center space-x-3 p-4 border border-accent/30 rounded-lg bg-accent/5">
                         <Checkbox 
                           id="vegetarian" 
@@ -551,7 +551,7 @@ const Menu = () => {
                     {/* Size selection and add to cart - only for current menu */}
                     {selectedMenuContext?.id === currentMenu?.id && <div className="mt-6 pt-6 border-t border-border space-y-4">
                         {/* Vegetarian Option */}
-                        {selectedDaySize && selectedDaySize !== "CUSTOM" && (
+                        {selectedDaySize && (
                           <div className="flex items-center space-x-3 p-3 border border-accent/30 rounded-lg bg-accent/5">
                             <Checkbox 
                               id="day-vegetarian" 
