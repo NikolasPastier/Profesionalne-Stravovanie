@@ -599,9 +599,9 @@ const Cart = () => {
                     setDeliveryRegion(value);
                     const fees: Record<string, number> = {
                       'nitra': 0,
-                      'sered': 18.99,
-                      'trnava': 19.99,
-                      'bratislava': 20.99,
+                      'sered': 4.00,
+                      'trnava': 5.00,
+                      'bratislava': 6.00,
                       'other': 0
                     };
                     setDeliveryFee(fees[value]);
@@ -611,9 +611,9 @@ const Cart = () => {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="nitra">Nitra a okolie (zdarma)</SelectItem>
-                      <SelectItem value="sered">Sereď (+€18.99)</SelectItem>
-                      <SelectItem value="trnava">Trnava (+€19.99)</SelectItem>
-                      <SelectItem value="bratislava">Bratislava (+€20.99)</SelectItem>
+                      <SelectItem value="sered">Sereď (+€4.00)</SelectItem>
+                      <SelectItem value="trnava">Trnava (+€5.00)</SelectItem>
+                      <SelectItem value="bratislava">Bratislava (+€6.00)</SelectItem>
                       <SelectItem value="other">Iná vzdialenosť (dohodou)</SelectItem>
                     </SelectContent>
                   </Select>
