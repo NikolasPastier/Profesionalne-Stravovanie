@@ -32,7 +32,7 @@ const handler = async (req: Request): Promise<Response> => {
 
   try {
     const orderData: OrderEmailRequest = await req.json();
-    console.log("Processing order email for:", orderData.orderId);
+    console.log("Processing order email request");
 
     const adminEmail = Deno.env.get("ADMIN_EMAIL");
     
@@ -175,17 +175,17 @@ const handler = async (req: Request): Promise<Response> => {
       html: customerEmailHtml,
     });
 
-    console.log("Customer email sent:", customerEmailResponse);
+    console.log("Customer email sent successfully");
 
     // Send admin notification email
     const adminEmailResponse = await resend.emails.send({
       from: "Objednávky <onboarding@resend.dev>",
       to: [adminEmail],
-      subject: `Nová objednávka od ${orderData.customerName}`,
+      subject: "Nová objednávka",
       html: adminEmailHtml,
     });
 
-    console.log("Admin email sent:", adminEmailResponse);
+    console.log("Admin email sent successfully");
 
     return new Response(
       JSON.stringify({ 

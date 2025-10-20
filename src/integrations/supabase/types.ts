@@ -76,6 +76,33 @@ export type Database = {
           },
         ]
       }
+      edge_function_rate_limits: {
+        Row: {
+          created_at: string
+          function_name: string
+          id: string
+          last_request_at: string
+          request_count: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          function_name: string
+          id?: string
+          last_request_at?: string
+          request_count?: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          function_name?: string
+          id?: string
+          last_request_at?: string
+          request_count?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       menu_items: {
         Row: {
           allergens: string[] | null
@@ -347,6 +374,10 @@ export type Database = {
       check_email_exists: {
         Args: { email_input: string }
         Returns: boolean
+      }
+      get_current_user_role: {
+        Args: Record<PropertyKey, never>
+        Returns: string
       }
       has_role: {
         Args:

@@ -9,6 +9,67 @@ const corsHeaders = {
 const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
+// Rate limit: 10 requests per hour per user
+const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour
+const MAX_REQUESTS_PER_WINDOW = 10;
+
+async function checkRateLimit(supabase: any, userId: string, functionName: string): Promise<boolean> {
+  const { data, error } = await supabase
+    .from('edge_function_rate_limits')
+    .select('last_request_at, request_count')
+    .eq('user_id', userId)
+    .eq('function_name', functionName)
+    .single();
+
+  if (error && error.code !== 'PGRST116') { // PGRST116 = no rows found
+    console.error('Error checking rate limit:', error);
+    return true; // Allow on error to avoid blocking legitimate requests
+  }
+
+  if (data) {
+    const timeSinceLastRequest = Date.now() - new Date(data.last_request_at).getTime();
+    
+    if (timeSinceLastRequest < RATE_LIMIT_WINDOW_MS) {
+      // Within rate limit window
+      if (data.request_count >= MAX_REQUESTS_PER_WINDOW) {
+        return false; // Rate limit exceeded
+      }
+      
+      // Increment request count
+      await supabase
+        .from('edge_function_rate_limits')
+        .update({
+          request_count: data.request_count + 1,
+          last_request_at: new Date().toISOString(),
+        })
+        .eq('user_id', userId)
+        .eq('function_name', functionName);
+    } else {
+      // Window expired, reset counter
+      await supabase
+        .from('edge_function_rate_limits')
+        .update({
+          request_count: 1,
+          last_request_at: new Date().toISOString(),
+        })
+        .eq('user_id', userId)
+        .eq('function_name', functionName);
+    }
+  } else {
+    // First request, create record
+    await supabase
+      .from('edge_function_rate_limits')
+      .insert({
+        user_id: userId,
+        function_name: functionName,
+        request_count: 1,
+        last_request_at: new Date().toISOString(),
+      });
+  }
+
+  return true; // Allowed
+}
+
 Deno.serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -39,6 +100,18 @@ Deno.serve(async (req) => {
         JSON.stringify({ error: 'Neautorizovaný prístup' }),
         {
           status: 401,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
+    // Check rate limit
+    const allowed = await checkRateLimit(supabaseClient, user.id, 'upload-progress-photo');
+    if (!allowed) {
+      return new Response(
+        JSON.stringify({ error: 'Prekročený limit nahrávaní. Môžete nahrať maximálne 10 fotografií za hodinu.' }),
+        {
+          status: 429,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         }
       );

@@ -129,12 +129,14 @@ const Dashboard = () => {
         return;
       }
 
-      // Check if user is admin
-      // Note: isAdmin controls UI visibility only. Security is enforced by RLS policies.
-      const {
-        data: roleData
-      } = await supabase.from("user_roles").select("role").eq("user_id", user.id).eq("role", "admin").single();
-      const adminStatus = !!roleData;
+      // Check if user is admin using server-side security definer function
+      const { data: userRole, error: roleError } = await supabase.rpc("get_current_user_role");
+      const adminStatus = userRole === "admin";
+      
+      if (roleError) {
+        console.error("Error checking user role:", roleError);
+      }
+      
       setIsAdmin(adminStatus);
       if (adminStatus) {
         // Load admin data

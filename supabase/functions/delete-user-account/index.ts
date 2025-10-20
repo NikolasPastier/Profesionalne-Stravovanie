@@ -6,6 +6,41 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// Rate limit: 1 request per day per user
+const RATE_LIMIT_WINDOW_MS = 24 * 60 * 60 * 1000; // 24 hours
+
+async function checkRateLimit(supabase: any, userId: string, functionName: string): Promise<boolean> {
+  const { data, error } = await supabase
+    .from('edge_function_rate_limits')
+    .select('last_request_at')
+    .eq('user_id', userId)
+    .eq('function_name', functionName)
+    .single();
+
+  if (error && error.code !== 'PGRST116') { // PGRST116 = no rows found
+    console.error('Error checking rate limit:', error);
+    return true; // Allow on error to avoid blocking legitimate requests
+  }
+
+  if (data) {
+    const timeSinceLastRequest = Date.now() - new Date(data.last_request_at).getTime();
+    if (timeSinceLastRequest < RATE_LIMIT_WINDOW_MS) {
+      return false; // Rate limit exceeded
+    }
+  }
+
+  // Update or insert rate limit record
+  await supabase
+    .from('edge_function_rate_limits')
+    .upsert({
+      user_id: userId,
+      function_name: functionName,
+      last_request_at: new Date().toISOString(),
+    });
+
+  return true; // Allowed
+}
+
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -48,7 +83,16 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    console.log(`Deleting account for user: ${user.id}`);
+    // Check rate limit
+    const allowed = await checkRateLimit(supabaseAdmin, user.id, 'delete-user-account');
+    if (!allowed) {
+      return new Response(
+        JSON.stringify({ error: "Rate limit exceeded. You can only delete your account once per day." }),
+        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    console.log("Processing account deletion request");
 
     // Delete user data in correct order (respecting foreign key constraints)
     
