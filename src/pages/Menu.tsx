@@ -50,6 +50,8 @@ const Menu = () => {
   const [customDayCarbs, setCustomDayCarbs] = useState("");
   const [customDayFats, setCustomDayFats] = useState("");
   const [selectedDays, setSelectedDays] = useState<string[]>([]);
+  const [isVegetarian, setIsVegetarian] = useState(false);
+  const [isDayVegetarian, setIsDayVegetarian] = useState(false);
   const navigate = useNavigate();
 
   // Helpers to support legacy weekly_menus that store meal names as strings with emojis
@@ -123,10 +125,6 @@ const Menu = () => {
     value: "XXL",
     label: "XXL+ (3500+ kcal)",
     description: "Profesionálni športovci"
-  }, {
-    value: "VEGETARIAN",
-    label: "Vegetariánske menu na mieru",
-    description: "€16.99/deň - Bez mäsa, čerstvé ingrediencie"
   }, {
     value: "CUSTOM",
     label: "Na mieru",
@@ -210,6 +208,7 @@ const Menu = () => {
       type: 'week',
       menuId: currentMenu.id,
       size: selectedSize,
+      isVegetarian: isVegetarian,
       menu: { ...currentMenu, items: filteredItems },
       selectedDays: selectedDays,
       ...(selectedSize === "CUSTOM" && {
@@ -226,6 +225,7 @@ const Menu = () => {
     toast.success("Menu pridané do košíka!");
     setIsDialogOpen(false);
     setSelectedSize("");
+    setIsVegetarian(false);
     setCustomCalories("");
     setCustomProteins("");
     setCustomCarbs("");
@@ -280,6 +280,7 @@ const Menu = () => {
       type: 'day',
       menuId: selectedMenuContext.id,
       size: selectedDaySize,
+      isVegetarian: isDayVegetarian,
       day: selectedDay.day,
       meals: selectedDay.meals,
       weekRange: `${new Date(selectedMenuContext.start_date).toLocaleDateString("sk-SK")} - ${new Date(selectedMenuContext.end_date).toLocaleDateString("sk-SK")}`,
@@ -298,6 +299,7 @@ const Menu = () => {
     toast.success(`${selectedDay.day} pridaný do košíka!`);
     setIsDayDetailOpen(false);
     setSelectedDaySize("");
+    setIsDayVegetarian(false);
     setCustomDayCalories("");
     setCustomDayProteins("");
     setCustomDayCarbs("");
@@ -405,7 +407,7 @@ const Menu = () => {
                       </div>
                     </div>
 
-                    <div className="pt-2">
+                    <div className="pt-2 space-y-4">
                       <h4 className="font-semibold text-foreground mb-3">Veľkosť menu</h4>
                       <RadioGroup value={selectedSize} onValueChange={setSelectedSize}>
                       {menuSizes.map(size => <div key={size.value} className="flex items-center space-x-3 card-premium p-4">
@@ -416,6 +418,20 @@ const Menu = () => {
                           </Label>
                         </div>)}
                       </RadioGroup>
+                      
+                      {selectedSize && selectedSize !== "CUSTOM" && (
+                        <div className="flex items-center space-x-3 p-4 border border-accent/30 rounded-lg bg-accent/5">
+                          <Checkbox 
+                            id="vegetarian" 
+                            checked={isVegetarian} 
+                            onCheckedChange={(checked) => setIsVegetarian(checked as boolean)}
+                          />
+                          <Label htmlFor="vegetarian" className="flex-1 cursor-pointer">
+                            <div className="font-bold text-primary">Vegetariánske menu</div>
+                            <div className="text-sm text-muted-foreground">€16.99/deň - Bez mäsa, čerstvé ingrediencie</div>
+                          </Label>
+                        </div>
+                      )}
                     </div>
                     
                     {selectedSize === "CUSTOM" && <div className="space-y-4 mt-4 p-4 border border-accent/30 rounded-lg bg-accent/5">
@@ -543,6 +559,20 @@ const Menu = () => {
                               </Label>
                             </div>)}
                         </RadioGroup>
+                        
+                        {selectedDaySize && selectedDaySize !== "CUSTOM" && (
+                          <div className="flex items-center space-x-3 p-3 border border-accent/30 rounded-lg bg-accent/5">
+                            <Checkbox 
+                              id="day-vegetarian" 
+                              checked={isDayVegetarian} 
+                              onCheckedChange={(checked) => setIsDayVegetarian(checked as boolean)}
+                            />
+                            <Label htmlFor="day-vegetarian" className="flex-1 cursor-pointer">
+                              <div className="font-bold text-primary text-sm">Vegetariánske menu</div>
+                              <div className="text-xs text-muted-foreground">€16.99/deň - Bez mäsa, čerstvé ingrediencie</div>
+                            </Label>
+                          </div>
+                        )}
                         
                         {selectedDaySize === "CUSTOM" && <div className="space-y-4 mt-4 p-4 border border-accent/30 rounded-lg bg-accent/5">
                             <h4 className="font-semibold text-foreground text-sm">Zadajte vlastné hodnoty:</h4>
