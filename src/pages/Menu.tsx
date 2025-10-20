@@ -260,13 +260,13 @@ const Menu = () => {
         <section className="mb-20">
           
 
-        {currentMenu ? <Card className="card-premium px-0 mx-[150px]">
+        {currentMenu ? <Card className="card-premium mx-4 md:mx-[150px]">
             <CardHeader>
               <CardTitle className="text-2xl text-gradient-gold text-center">
                 Menu na týždeň {new Date(currentMenu.start_date).toLocaleDateString("sk-SK")} - {new Date(currentMenu.end_date).toLocaleDateString("sk-SK")}
               </CardTitle>
             </CardHeader>
-            <CardContent className="px-[2px]">
+            <CardContent className="px-4 md:px-6">
               <div className="grid grid-cols-1 gap-6 max-w-2xl mx-auto">
                 {currentMenu.items && Array.isArray(currentMenu.items) && currentMenu.items.map((day: any, idx: number) => <div key={idx} className="border border-border rounded-lg p-4 bg-card/50 cursor-pointer hover:bg-card/70 hover:border-accent/50 transition-smooth hover:glow-gold" onClick={() => {
                 setSelectedDay(day);
@@ -293,12 +293,13 @@ const Menu = () => {
                     </p>
                   </div>)}
               </div>
-                <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                  <DialogTrigger asChild>
-                    <Button className="mt-8 w-full md:w-auto mx-auto bg-accent text-accent-foreground hover:glow-gold-strong text-lg py-6 transition-smooth">
-                      Objednať toto menu 🍱
-                    </Button>
-                  </DialogTrigger>
+                <div className="flex justify-center">
+                  <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button className="mt-8 w-full md:w-auto bg-accent text-accent-foreground hover:glow-gold-strong text-lg py-6 transition-smooth">
+                        Objednať toto menu 🍱
+                      </Button>
+                    </DialogTrigger>
                   <DialogContent className="bg-background max-h-[85vh] overflow-y-auto">
                     <DialogHeader>
                       <DialogTitle className="text-gradient-gold">Vyberte dni a veľkosť menu</DialogTitle>
@@ -365,6 +366,7 @@ const Menu = () => {
                     </Button>
                   </DialogContent>
                 </Dialog>
+                </div>
 
                 {/* Day Detail Modal */}
                 <Dialog open={isDayDetailOpen} onOpenChange={setIsDayDetailOpen}>
