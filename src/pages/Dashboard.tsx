@@ -47,6 +47,9 @@ interface Order {
   address: string;
   items: any;
   note?: string;
+  menu_size?: string;
+  calories?: number;
+  menu_id?: string;
   user_profiles?: {
     name: string;
     email: string;
@@ -721,6 +724,33 @@ const Dashboard = () => {
                 <div className="space-y-4">
                   <h3 className="font-semibold text-lg border-b pb-2">Detaily objednávky</h3>
                   <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Typ menu</p>
+                      <p className="font-medium">{selectedOrder.menu_size}</p>
+                    </div>
+                    {selectedOrder.calories && <div>
+                      <p className="text-sm text-muted-foreground">Kalórie</p>
+                      <p className="font-medium">{selectedOrder.calories} kcal</p>
+                    </div>}
+                    <div>
+                      <p className="text-sm text-muted-foreground">Typ jedálnička</p>
+                      <div className="flex gap-2">
+                        {!selectedOrder.menu_id ? (
+                          <Badge variant="secondary">Na mieru</Badge>
+                        ) : (
+                          <Badge variant="outline">Týždenné menu</Badge>
+                        )}
+                        {selectedOrder.items?.some((day: any) => 
+                          day.meals?.some((meal: any) => 
+                            typeof meal === 'string' ? 
+                              meal.toLowerCase().includes('vegetarian') || meal.toLowerCase().includes('vegetariánsk') :
+                              meal.name?.toLowerCase().includes('vegetarian') || meal.name?.toLowerCase().includes('vegetariánsk')
+                          )
+                        ) && (
+                          <Badge className="bg-green-500 hover:bg-green-600">Vegetariánske</Badge>
+                        )}
+                      </div>
+                    </div>
                     <div>
                       <p className="text-sm text-muted-foreground">Typ doručenia</p>
                       <p className="font-medium">{selectedOrder.delivery_type}</p>
