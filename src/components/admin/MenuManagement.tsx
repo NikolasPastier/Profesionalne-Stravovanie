@@ -44,11 +44,6 @@ export const MenuManagement = () => {
   const [formData, setFormData] = useState({
     name: "",
     category: "",
-    price: "",
-    calories: "",
-    proteins: "",
-    fats: "",
-    carbs: "",
     description: "",
     allergens: "",
   });
@@ -81,11 +76,11 @@ export const MenuManagement = () => {
     const itemData = {
       name: formData.name,
       category: formData.category || "Všeobecné",
-      price: formData.price ? parseFloat(formData.price) : 0,
-      calories: formData.calories ? parseInt(formData.calories) : 0,
-      proteins: formData.proteins ? parseFloat(formData.proteins) : 0,
-      fats: formData.fats ? parseFloat(formData.fats) : 0,
-      carbs: formData.carbs ? parseFloat(formData.carbs) : 0,
+      price: 0,
+      calories: 0,
+      proteins: 0,
+      fats: 0,
+      carbs: 0,
       description: formData.description || "",
       allergens: formData.allergens.split(",").map((a) => a.trim()).filter(Boolean),
     };
@@ -158,11 +153,6 @@ export const MenuManagement = () => {
     setFormData({
       name: item.name,
       category: item.category,
-      price: item.price.toString(),
-      calories: item.calories.toString(),
-      proteins: item.proteins.toString(),
-      fats: item.fats.toString(),
-      carbs: item.carbs.toString(),
       description: item.description || "",
       allergens: item.allergens?.join(", ") || "",
     });
@@ -173,11 +163,6 @@ export const MenuManagement = () => {
     setFormData({
       name: "",
       category: "",
-      price: "",
-      calories: "",
-      proteins: "",
-      fats: "",
-      carbs: "",
       description: "",
       allergens: "",
     });
@@ -226,66 +211,7 @@ export const MenuManagement = () => {
                       }
                     />
                   </div>
-                  <div>
-                    <Label htmlFor="price">Cena (€) (voliteľné)</Label>
-                    <Input
-                      id="price"
-                      type="number"
-                      step="0.01"
-                      value={formData.price}
-                      onChange={(e) =>
-                        setFormData({ ...formData, price: e.target.value })
-                      }
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="calories">Kalórie (voliteľné)</Label>
-                    <Input
-                      id="calories"
-                      type="number"
-                      value={formData.calories}
-                      onChange={(e) =>
-                        setFormData({ ...formData, calories: e.target.value })
-                      }
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="proteins">Proteíny (g) (voliteľné)</Label>
-                    <Input
-                      id="proteins"
-                      type="number"
-                      step="0.1"
-                      value={formData.proteins}
-                      onChange={(e) =>
-                        setFormData({ ...formData, proteins: e.target.value })
-                      }
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="fats">Tuky (g) (voliteľné)</Label>
-                    <Input
-                      id="fats"
-                      type="number"
-                      step="0.1"
-                      value={formData.fats}
-                      onChange={(e) =>
-                        setFormData({ ...formData, fats: e.target.value })
-                      }
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="carbs">Sacharidy (g) (voliteľné)</Label>
-                    <Input
-                      id="carbs"
-                      type="number"
-                      step="0.1"
-                      value={formData.carbs}
-                      onChange={(e) =>
-                        setFormData({ ...formData, carbs: e.target.value })
-                      }
-                    />
-                  </div>
-                  <div>
+                  <div className="col-span-2">
                     <Label htmlFor="allergens">Alergény (oddelené čiarkou)</Label>
                     <Input
                       id="allergens"
