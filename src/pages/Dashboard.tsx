@@ -380,10 +380,35 @@ const Dashboard = () => {
       });
       return;
     }
-    if (newPassword.length < 6) {
+    // Validate password strength (same requirements as signup)
+    if (newPassword.length < 8) {
       toast({
         title: "Chyba",
-        description: "Heslo musí mať aspoň 6 znakov",
+        description: "Heslo musí mať aspoň 8 znakov",
+        variant: "destructive"
+      });
+      return;
+    }
+    if (!/[A-Z]/.test(newPassword)) {
+      toast({
+        title: "Chyba",
+        description: "Heslo musí obsahovať aspoň jedno veľké písmeno",
+        variant: "destructive"
+      });
+      return;
+    }
+    if (!/[a-z]/.test(newPassword)) {
+      toast({
+        title: "Chyba",
+        description: "Heslo musí obsahovať aspoň jedno malé písmeno",
+        variant: "destructive"
+      });
+      return;
+    }
+    if (!/[0-9]/.test(newPassword)) {
+      toast({
+        title: "Chyba",
+        description: "Heslo musí obsahovať aspoň jedno číslo",
         variant: "destructive"
       });
       return;
