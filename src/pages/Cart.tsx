@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -36,6 +37,8 @@ const Cart = () => {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [tempOrderData, setTempOrderData] = useState<any>(null);
+  const [deliveryRegion, setDeliveryRegion] = useState("nitra");
+  const [deliveryFee, setDeliveryFee] = useState(0);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -66,6 +69,49 @@ const Cart = () => {
     });
   }, []);
 
+  // Calculate delivery fee based on address
+  const calculateDeliveryFee = (address: string) => {
+    const lowerAddress = address.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    
+    // Nitra a okolie - zdarma
+    const nitraRegions = [
+      'nitra', 'lapas', 'beladice', 'luzianky', 'ludanice', 'cabaj', 'capor',
+      'jelšovce', 'jeľsovce', 'ivanka', 'lehota', 'parovske haje',
+      'mlynarce', 'janíkovce', 'janikovec', 'branc', 'drazovce'
+    ];
+    
+    if (nitraRegions.some(region => lowerAddress.includes(region))) {
+      return { fee: 0, region: 'nitra' };
+    }
+    
+    // Sereď
+    if (lowerAddress.includes('sered')) {
+      return { fee: 18.99, region: 'sered' };
+    }
+    
+    // Trnava
+    if (lowerAddress.includes('trnava')) {
+      return { fee: 19.99, region: 'trnava' };
+    }
+    
+    // Bratislava
+    if (lowerAddress.includes('bratislava')) {
+      return { fee: 20.99, region: 'bratislava' };
+    }
+    
+    // Iná lokalita
+    return { fee: 0, region: 'other' };
+  };
+
+  // Auto-detect delivery region when address changes
+  useEffect(() => {
+    if (address.length >= 5) {
+      const { fee, region } = calculateDeliveryFee(address);
+      setDeliveryFee(fee);
+      setDeliveryRegion(region);
+    }
+  }, [address]);
+
   const createOrder = async (userId: string) => {
     try {
       if (!cartItems || cartItems.length === 0) {
@@ -82,13 +128,17 @@ const Cart = () => {
         const weekPrice = isVegetarian ? 118.93 : 45.95; // €16.99 * 7 days
         const dayPrice = isVegetarian ? 16.99 : 6.99;
         
+        // Calculate delivery fee per item (divide by number of items)
+        const itemDeliveryFee = deliveryFee / cartItems.length;
+        
         const orderDetails = item.type === 'week' ? {
           user_id: userId,
           menu_id: item.menuId,
           items: item.menu.items,
           menu_size: item.size,
           calories: parseInt(item.size.match(/\d+/)?.[0] || "2000"),
-          total_price: weekPrice,
+          total_price: weekPrice + itemDeliveryFee,
+          delivery_fee: itemDeliveryFee,
           delivery_type: orderData.deliveryType,
           address: orderData.address,
           phone: orderData.phone,
@@ -101,7 +151,8 @@ const Cart = () => {
           items: [{ day: item.day, meals: item.meals }],
           menu_size: item.size,
           calories: parseInt(item.size.match(/\d+/)?.[0] || "2000"),
-          total_price: dayPrice,
+          total_price: dayPrice + itemDeliveryFee,
+          delivery_fee: itemDeliveryFee,
           delivery_type: orderData.deliveryType,
           address: orderData.address,
           phone: orderData.phone,
@@ -256,6 +307,17 @@ const Cart = () => {
         return;
       }
 
+      // Check for "other" region and confirm
+      if (deliveryRegion === 'other') {
+        const confirmed = window.confirm(
+          'Pre vašu oblasť je potrebné dohodnúť si cenu dopravy. Budeme vás kontaktovať. Chcete pokračovať?'
+        );
+        if (!confirmed) {
+          setLoading(false);
+          return;
+        }
+      }
+
       // Check if user is already logged in
       const { data: { session } } = await supabase.auth.getSession();
       
@@ -337,12 +399,14 @@ const Cart = () => {
     toast.success("Položka odstránená z košíka");
   };
 
-  const totalPrice = cartItems.reduce((sum, item) => {
+  const subtotalPrice = cartItems.reduce((sum, item) => {
     const isVegetarian = item.size === "VEGETARIAN";
     const weekPrice = isVegetarian ? 118.93 : 45.95;
     const dayPrice = isVegetarian ? 16.99 : 6.99;
     return sum + (item.type === 'week' ? weekPrice : dayPrice);
   }, 0);
+
+  const totalPrice = subtotalPrice + deliveryFee;
 
   return (
     <div className="min-h-screen bg-background">
@@ -413,11 +477,32 @@ const Cart = () => {
                   </div>
                 </div>
               ))}
-              <div className="border-t pt-4 mt-4">
+              <div className="border-t pt-4 mt-4 space-y-3">
                 <div className="flex justify-between items-center">
+                  <span className="text-base text-foreground">Jedlo:</span>
+                  <span className="text-base font-semibold">€{subtotalPrice.toFixed(2)}</span>
+                </div>
+                {deliveryFee > 0 && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-base text-foreground">Doprava:</span>
+                    <span className="text-base font-semibold">€{deliveryFee.toFixed(2)}</span>
+                  </div>
+                )}
+                {deliveryRegion === 'nitra' && (
+                  <div className="flex justify-between items-center text-green-600">
+                    <span className="text-base">Doprava:</span>
+                    <span className="text-base font-semibold">Zdarma ✓</span>
+                  </div>
+                )}
+                <div className="flex justify-between items-center border-t pt-3">
                   <span className="font-bold text-xl text-foreground">Celkom:</span>
                   <span className="font-bold text-2xl text-gradient-gold">€{totalPrice.toFixed(2)}</span>
                 </div>
+                {deliveryRegion === 'other' && (
+                  <p className="text-sm text-amber-500">
+                    ⚠️ Finálna cena bude potvrdená po dohode o doprave
+                  </p>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -476,6 +561,42 @@ const Cart = () => {
                 </div>
 
                 <div className="space-y-2">
+                  <Label htmlFor="deliveryRegion">Oblasť doručenia</Label>
+                  <Select value={deliveryRegion} onValueChange={(value) => {
+                    setDeliveryRegion(value);
+                    const fees: Record<string, number> = {
+                      'nitra': 0,
+                      'sered': 18.99,
+                      'trnava': 19.99,
+                      'bratislava': 20.99,
+                      'other': 0
+                    };
+                    setDeliveryFee(fees[value]);
+                  }}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="nitra">Nitra a okolie (zdarma)</SelectItem>
+                      <SelectItem value="sered">Sereď (+€18.99)</SelectItem>
+                      <SelectItem value="trnava">Trnava (+€19.99)</SelectItem>
+                      <SelectItem value="bratislava">Bratislava (+€20.99)</SelectItem>
+                      <SelectItem value="other">Iná vzdialenosť (dohodou)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {deliveryFee > 0 && (
+                    <p className="text-sm text-muted-foreground">
+                      Poplatok za dopravu: €{deliveryFee.toFixed(2)}
+                    </p>
+                  )}
+                  {deliveryRegion === 'other' && (
+                    <p className="text-sm text-amber-500">
+                      ⚠️ Pre túto oblasť je potrebné dohodnúť si cenu dopravy
+                    </p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
                   <Label htmlFor="note">Poznámka (voliteľná)</Label>
                   <Textarea
                     id="note"
@@ -486,10 +607,33 @@ const Cart = () => {
                 </div>
 
                 <div className="border-t border-primary/20 pt-4 mt-6">
-                  <div className="flex justify-between items-center mb-4">
+                  <div className="space-y-2 mb-4">
+                    <div className="flex justify-between items-center">
+                      <span className="text-base">Jedlo:</span>
+                      <span className="text-base font-semibold">€{subtotalPrice.toFixed(2)}</span>
+                    </div>
+                    {deliveryFee > 0 && (
+                      <div className="flex justify-between items-center">
+                        <span className="text-base">Doprava:</span>
+                        <span className="text-base font-semibold">€{deliveryFee.toFixed(2)}</span>
+                      </div>
+                    )}
+                    {deliveryRegion === 'nitra' && (
+                      <div className="flex justify-between items-center text-green-600">
+                        <span className="text-base">Doprava:</span>
+                        <span className="text-base font-semibold">Zdarma ✓</span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex justify-between items-center border-t pt-2 mb-2">
                     <span className="text-lg font-bold">Celková suma:</span>
                     <span className="text-2xl font-bold text-primary">€{totalPrice.toFixed(2)}</span>
                   </div>
+                  {deliveryRegion === 'other' && (
+                    <p className="text-sm text-amber-500 mb-2">
+                      ⚠️ Finálna cena bude potvrdená po dohode o doprave
+                    </p>
+                  )}
                   <p className="text-sm text-muted-foreground mb-4">
                     💰 Platba: Hotovosť pri doručení prvej objednávky v celej sume
                   </p>

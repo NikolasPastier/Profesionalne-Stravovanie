@@ -127,6 +127,7 @@ export type Database = {
           calories: number | null
           created_at: string | null
           delivery_date: string | null
+          delivery_fee: number | null
           delivery_type: string
           id: string
           items: Json
@@ -144,6 +145,7 @@ export type Database = {
           calories?: number | null
           created_at?: string | null
           delivery_date?: string | null
+          delivery_fee?: number | null
           delivery_type: string
           id?: string
           items: Json
@@ -161,6 +163,7 @@ export type Database = {
           calories?: number | null
           created_at?: string | null
           delivery_date?: string | null
+          delivery_fee?: number | null
           delivery_type?: string
           id?: string
           items?: Json
