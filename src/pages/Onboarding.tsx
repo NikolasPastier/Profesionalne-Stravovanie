@@ -287,23 +287,6 @@ const Onboarding = () => {
                 </Select>
               </div>
 
-              <div>
-                <Label htmlFor="budget">Rozpočet</Label>
-                <Select
-                  value={formData.budget}
-                  onValueChange={(value) => handleInputChange("budget", value)}
-                >
-                  <SelectTrigger className="border-primary/20">
-                    <SelectValue placeholder="Vyberte rozpočet" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="standard">Standard</SelectItem>
-                    <SelectItem value="premium">Premium</SelectItem>
-                    <SelectItem value="vip">VIP</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
               <div className="flex gap-4">
                 <Button
                   onClick={() => setStep(1)}
