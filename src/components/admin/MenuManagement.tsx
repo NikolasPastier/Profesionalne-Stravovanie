@@ -80,13 +80,13 @@ export const MenuManagement = () => {
 
     const itemData = {
       name: formData.name,
-      category: formData.category || null,
-      price: formData.price ? parseFloat(formData.price) : null,
-      calories: formData.calories ? parseInt(formData.calories) : null,
-      proteins: formData.proteins ? parseFloat(formData.proteins) : null,
-      fats: formData.fats ? parseFloat(formData.fats) : null,
-      carbs: formData.carbs ? parseFloat(formData.carbs) : null,
-      description: formData.description || null,
+      category: formData.category || "Všeobecné",
+      price: formData.price ? parseFloat(formData.price) : 0,
+      calories: formData.calories ? parseInt(formData.calories) : 0,
+      proteins: formData.proteins ? parseFloat(formData.proteins) : 0,
+      fats: formData.fats ? parseFloat(formData.fats) : 0,
+      carbs: formData.carbs ? parseFloat(formData.carbs) : 0,
+      description: formData.description || "",
       allergens: formData.allergens.split(",").map((a) => a.trim()).filter(Boolean),
     };
 
