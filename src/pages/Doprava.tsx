@@ -25,9 +25,7 @@ const Doprava = () => {
                   <h3 className="text-xl font-display text-gradient-gold">Nitra a okolie</h3>
                 </div>
                 <p className="text-primary text-lg font-bold mb-2">Doprava ZDARMA</p>
-                <p className="text-sm text-muted-foreground">
-                  Bezplatné doručenie v Nitre a okolí
-                </p>
+                <p className="text-sm text-muted-foreground">Bezplatné doručenie v Nitre a okolité dediny do 20km.</p>
               </div>
 
               <div className="border border-primary/20 rounded-lg p-6 hover:scale-105 transition-transform duration-300">
