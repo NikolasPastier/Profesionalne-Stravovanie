@@ -248,7 +248,7 @@ const Onboarding = () => {
                     <SelectValue placeholder="Vyberte cieľ" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="hubnutie">Schudnúť</SelectItem>
+                    <SelectItem value="hubnutie">Chudnutie</SelectItem>
                     <SelectItem value="nabrat">Nabrať hmotu</SelectItem>
                     <SelectItem value="udrzat">Udržať váhu</SelectItem>
                     <SelectItem value="zdravie">Zlepšiť zdravie</SelectItem>

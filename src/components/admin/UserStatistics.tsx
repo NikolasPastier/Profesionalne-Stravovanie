@@ -168,6 +168,11 @@ export const UserStatistics = () => {
       lose: "Schudnúť",
       gain: "Pribrať",
       maintain: "Udržať",
+      hubnutie: "Chudnutie",
+      nabrat: "Nabrať hmotu",
+      udrzat: "Udržať váhu",
+      udrzanie: "Udržanie váhy",
+      zdravie: "Zlepšiť zdravie",
     };
     return labels[goal || ""] || goal || "N/A";
   };
