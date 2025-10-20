@@ -15,9 +15,7 @@ const Doprava = () => {
         <Card ref={cardsRef.ref} className={`card-premium max-w-5xl mx-auto mb-16 transition-all duration-700 ${cardsRef.isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
           <CardHeader className="text-center">
             <CardTitle className="text-4xl font-display text-gradient-gold mb-4">Doprava a Rozvoz</CardTitle>
-            <CardDescription className="text-lg">
-              Doručenie každú nedeľu - piatok večer (18:00 - 21:00)
-            </CardDescription>
+            
           </CardHeader>
           <CardContent>
             <div className="grid md:grid-cols-2 gap-6 mb-8">
