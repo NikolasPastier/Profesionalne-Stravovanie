@@ -93,14 +93,14 @@ export const WeeklyMenuManagement = () => {
   const setAutoDateRange = () => {
     const today = new Date();
     const monday = new Date(today);
-    monday.setDate(today.getDate() - today.getDay() + 1);
-    const sunday = new Date(monday);
-    sunday.setDate(monday.getDate() + 6);
+    // getDay(): 0 = Sunday, 1 = Monday, ...
+    monday.setDate(today.getDate() - ((today.getDay() + 6) % 7));
+    const friday = new Date(monday);
+    friday.setDate(monday.getDate() + 4);
 
     setStartDate(monday.toISOString().split("T")[0]);
-    setEndDate(sunday.toISOString().split("T")[0]);
+    setEndDate(friday.toISOString().split("T")[0]);
   };
-
   const addMealToDay = (dayIndex: number, category: typeof CATEGORIES[number], mealId: string) => {
     const meal = menuItems.find(m => m.id === mealId);
     if (!meal) return;

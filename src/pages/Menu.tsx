@@ -108,10 +108,12 @@ const Menu = () => {
     fetchMenus();
   }, []);
   useEffect(() => {
-    // Set all days as selected by default when menu loads
+    // Set only weekdays as selected by default when menu loads
     if (currentMenu?.items && Array.isArray(currentMenu.items)) {
-      const allDays = currentMenu.items.map((day: any) => day.day);
-      setSelectedDays(allDays);
+      const weekdays = currentMenu.items
+        .filter((day: any) => ["Pondelok","Utorok","Streda","Štvrtok","Piatok"].includes(day.day))
+        .map((day: any) => day.day);
+      setSelectedDays(weekdays);
     }
   }, [currentMenu]);
   const fetchMenus = async () => {
@@ -166,12 +168,13 @@ const Menu = () => {
       return;
     }
 
-    // Store in localStorage for now - selected days
+    // Store in localStorage for now - selected weekdays only
+    const filteredItems = (currentMenu.items || []).filter((day: any) => selectedDays.includes(day.day));
     const cartItem = {
       type: 'week',
       menuId: currentMenu.id,
       size: selectedSize,
-      menu: currentMenu,
+      menu: { ...currentMenu, items: filteredItems },
       selectedDays: selectedDays,
       ...(selectedSize === "CUSTOM" && {
         customNutrition: {
@@ -198,7 +201,8 @@ const Menu = () => {
   };
   const toggleAllDays = () => {
     if (currentMenu?.items && Array.isArray(currentMenu.items)) {
-      const allDays = currentMenu.items.map((day: any) => day.day);
+      const filtered = currentMenu.items.filter((day: any) => ["Pondelok","Utorok","Streda","Štvrtok","Piatok"].includes(day.day));
+      const allDays = filtered.map((day: any) => day.day);
       if (selectedDays.length === allDays.length) {
         setSelectedDays([]);
       } else {
@@ -272,7 +276,7 @@ const Menu = () => {
             </CardHeader>
             <CardContent className="px-4 md:px-6">
               <div className="grid grid-cols-1 gap-6 max-w-2xl mx-auto">
-                {currentMenu.items && Array.isArray(currentMenu.items) && currentMenu.items.map((day: any, idx: number) => <div key={idx} className="border border-border rounded-lg p-4 bg-card/50 cursor-pointer hover:bg-card/70 hover:border-accent/50 transition-smooth hover:glow-gold" onClick={() => {
+                {currentMenu.items && Array.isArray(currentMenu.items) && currentMenu.items.filter((d: any) => ["Pondelok","Utorok","Streda","Štvrtok","Piatok"].includes(d.day)).map((day: any, idx: number) => <div key={idx} className="border border-border rounded-lg p-4 bg-card/50 cursor-pointer hover:bg-card/70 hover:border-accent/50 transition-smooth hover:glow-gold" onClick={() => {
                 setSelectedDay(day);
                 setSelectedMenuContext(currentMenu);
                 setIsDayDetailOpen(true);
@@ -317,16 +321,18 @@ const Menu = () => {
                       <div className="flex items-center justify-between">
                         <h4 className="font-semibold text-foreground">Dni v týždni</h4>
                         <Button type="button" variant="outline" size="sm" onClick={toggleAllDays} className="text-xs">
-                          {selectedDays.length === currentMenu?.items?.length ? "Zrušiť všetky" : "Vybrať všetky"}
+                          {selectedDays.length === (currentMenu?.items?.filter((d: any) => ["Pondelok","Utorok","Streda","Štvrtok","Piatok"].includes(d.day)).length || 0) ? "Zrušiť všetky" : "Vybrať všetky"}
                         </Button>
                       </div>
                       <div className="grid grid-cols-2 gap-3">
-                        {currentMenu?.items && Array.isArray(currentMenu.items) && currentMenu.items.map((day: any) => <div key={day.day} className="flex items-center space-x-2">
-                            <Checkbox id={`day-${day.day}`} checked={selectedDays.includes(day.day)} onCheckedChange={() => toggleDay(day.day)} />
-                            <Label htmlFor={`day-${day.day}`} className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer">
-                              {day.day}
-                            </Label>
-                          </div>)}
+                         {currentMenu?.items && Array.isArray(currentMenu.items) && currentMenu.items
+                          .filter((day: any) => ["Pondelok","Utorok","Streda","Štvrtok","Piatok"].includes(day.day))
+                          .map((day: any) => <div key={day.day} className="flex items-center space-x-2">
+                             <Checkbox id={`day-${day.day}`} checked={selectedDays.includes(day.day)} onCheckedChange={() => toggleDay(day.day)} />
+                             <Label htmlFor={`day-${day.day}`} className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer">
+                               {day.day}
+                             </Label>
+                           </div>)}
                       </div>
                     </div>
 
@@ -522,7 +528,9 @@ const Menu = () => {
                   </CardHeader>
                   <CardContent>
                     <div className="grid grid-cols-1 gap-3">
-                      {menu.items && Array.isArray(menu.items) && menu.items.map((day: any, idx: number) => <div key={idx} className="border border-border rounded-lg p-3 bg-card/30 cursor-pointer hover:bg-card/60 hover:border-accent/50 transition-smooth" onClick={() => {
+                      {menu.items && Array.isArray(menu.items) && menu.items
+                        .filter((day: any) => ["Pondelok","Utorok","Streda","Štvrtok","Piatok"].includes(day.day))
+                        .map((day: any, idx: number) => <div key={idx} className="border border-border rounded-lg p-3 bg-card/30 cursor-pointer hover:bg-card/60 hover:border-accent/50 transition-smooth" onClick={() => {
                   setSelectedDay(day);
                   setSelectedMenuContext(menu);
                   setIsDayDetailOpen(true);
