@@ -41,6 +41,21 @@ const Cart = () => {
   const [deliveryFee, setDeliveryFee] = useState(0);
   const navigate = useNavigate();
 
+  // Helper function to get calories from size
+  const getCaloriesFromSize = (size: string, customNutrition?: any): number => {
+    if (size === "CUSTOM" && customNutrition?.calories) {
+      return customNutrition.calories;
+    }
+    const calorieMap: Record<string, number> = {
+      "S": 1600,
+      "M": 2000,
+      "L": 2500,
+      "XL": 3000,
+      "XXL": 3500
+    };
+    return calorieMap[size] || 2000;
+  };
+
   useEffect(() => {
     const storedCart = localStorage.getItem("cart");
     if (storedCart) {
@@ -136,7 +151,7 @@ const Cart = () => {
           menu_id: item.menuId,
           items: item.menu.items,
           menu_size: item.size,
-          calories: parseInt(item.size.match(/\d+/)?.[0] || "2000"),
+          calories: getCaloriesFromSize(item.size, item.customNutrition),
           total_price: weekPrice + itemDeliveryFee,
           delivery_fee: itemDeliveryFee,
           delivery_type: orderData.deliveryType,
@@ -150,7 +165,7 @@ const Cart = () => {
           menu_id: item.menuId,
           items: [{ day: item.day, meals: item.meals }],
           menu_size: item.size,
-          calories: parseInt(item.size.match(/\d+/)?.[0] || "2000"),
+          calories: getCaloriesFromSize(item.size, item.customNutrition),
           total_price: dayPrice + itemDeliveryFee,
           delivery_fee: itemDeliveryFee,
           delivery_type: orderData.deliveryType,
@@ -463,7 +478,7 @@ const Cart = () => {
                   <div className="flex justify-between items-center mt-4">
                     <div className="flex flex-col gap-1">
                       <span className="font-bold text-primary">
-                        Veľkosť: {item.size} {item.size !== "CUSTOM" && `(${parseInt(item.size.match(/\d+/)?.[0] || "2000")} kcal)`}
+                        Veľkosť: {item.size} ({getCaloriesFromSize(item.size, item.customNutrition)} kcal)
                       </span>
                       {item.isVegetarian && (
                         <span className="text-xs text-accent font-semibold">
