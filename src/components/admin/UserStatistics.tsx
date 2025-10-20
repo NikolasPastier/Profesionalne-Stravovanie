@@ -340,9 +340,11 @@ export const UserStatistics = () => {
                   <CardTitle>Profilové informácie</CardTitle>
                 </CardHeader>
                 <CardContent className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Email</p>
-                    <p className="font-medium">{selectedUser.profile.email || "N/A"}</p>
+                  <div className="col-span-2">
+                    <p className="text-sm text-muted-foreground mb-1">Email</p>
+                    <p className="font-medium text-base break-all bg-muted/30 px-3 py-2 rounded-md">
+                      {selectedUser.profile.email || "N/A"}
+                    </p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Vek</p>
