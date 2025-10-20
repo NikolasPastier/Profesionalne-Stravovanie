@@ -129,10 +129,12 @@ export type Database = {
           delivery_date: string | null
           delivery_fee: number | null
           delivery_type: string
+          email: string | null
           id: string
           items: Json
           menu_id: string | null
           menu_size: string
+          name: string | null
           note: string | null
           payment_type: string | null
           phone: string
@@ -147,10 +149,12 @@ export type Database = {
           delivery_date?: string | null
           delivery_fee?: number | null
           delivery_type: string
+          email?: string | null
           id?: string
           items: Json
           menu_id?: string | null
           menu_size: string
+          name?: string | null
           note?: string | null
           payment_type?: string | null
           phone: string
@@ -165,10 +169,12 @@ export type Database = {
           delivery_date?: string | null
           delivery_fee?: number | null
           delivery_type?: string
+          email?: string | null
           id?: string
           items?: Json
           menu_id?: string | null
           menu_size?: string
+          name?: string | null
           note?: string | null
           payment_type?: string | null
           phone?: string

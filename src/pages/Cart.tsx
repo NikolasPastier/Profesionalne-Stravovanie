@@ -160,6 +160,8 @@ const Cart = () => {
           delivery_type: orderData.deliveryType,
           address: orderData.address,
           phone: orderData.phone,
+          name: orderData.name,
+          email: orderData.email,
           note: orderData.note,
           payment_type: "cash",
           status: "pending"
@@ -174,6 +176,8 @@ const Cart = () => {
           delivery_type: orderData.deliveryType,
           address: orderData.address,
           phone: orderData.phone,
+          name: orderData.name,
+          email: orderData.email,
           note: orderData.note,
           payment_type: "cash",
           status: "pending"
