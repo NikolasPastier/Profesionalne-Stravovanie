@@ -75,6 +75,27 @@ const Cennik = () => {
                       </li>)}
                   </ul>
                 </div>)}
+              <div className="border border-accent/40 rounded-lg p-6 hover:scale-105 transition-transform duration-300 bg-accent/5">
+                <h3 className="text-2xl font-display text-gradient-gold mb-2">
+                  🌱 Vegetariánske
+                </h3>
+                <p className="text-primary text-lg font-bold mb-1">€16.99/deň</p>
+                <p className="text-sm text-muted-foreground mb-4">Bez mäsa, plné živín</p>
+                <ul className="space-y-2">
+                  <li className="flex items-start gap-2">
+                    <Check className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
+                    <span className="text-xs">100% vegetariánske jedlá</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
+                    <span className="text-xs">Vyvážené rastlinné bielkoviny</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
+                    <span className="text-xs">Čerstvé suroviny</span>
+                  </li>
+                </ul>
+              </div>
               <div className="border border-primary/20 rounded-lg p-6 hover:scale-105 transition-transform duration-300">
                 <h3 className="text-2xl font-display text-gradient-gold mb-2">
                   Na mieru

@@ -96,6 +96,10 @@ const Menu = () => {
     label: "XXL+ (3500+ kcal)",
     description: "Profesionálni športovci"
   }, {
+    value: "VEGETARIAN",
+    label: "Vegetariánske menu na mieru",
+    description: "€16.99/deň - Bez mäsa, čerstvé ingrediencie"
+  }, {
     value: "CUSTOM",
     label: "Na mieru",
     description: "Vlastný počet kalórií a makroživín"

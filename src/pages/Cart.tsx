@@ -77,13 +77,18 @@ const Cart = () => {
 
       // Create orders for each cart item
       for (const item of cartItems) {
+        // Calculate price based on size
+        const isVegetarian = item.size === "VEGETARIAN";
+        const weekPrice = isVegetarian ? 118.93 : 45.95; // €16.99 * 7 days
+        const dayPrice = isVegetarian ? 16.99 : 6.99;
+        
         const orderDetails = item.type === 'week' ? {
           user_id: userId,
           menu_id: item.menuId,
           items: item.menu.items,
           menu_size: item.size,
           calories: parseInt(item.size.match(/\d+/)?.[0] || "2000"),
-          total_price: 45.95,
+          total_price: weekPrice,
           delivery_type: orderData.deliveryType,
           address: orderData.address,
           phone: orderData.phone,
@@ -96,7 +101,7 @@ const Cart = () => {
           items: [{ day: item.day, meals: item.meals }],
           menu_size: item.size,
           calories: parseInt(item.size.match(/\d+/)?.[0] || "2000"),
-          total_price: 6.99,
+          total_price: dayPrice,
           delivery_type: orderData.deliveryType,
           address: orderData.address,
           phone: orderData.phone,
@@ -333,7 +338,10 @@ const Cart = () => {
   };
 
   const totalPrice = cartItems.reduce((sum, item) => {
-    return sum + (item.type === 'week' ? 45.95 : 6.99);
+    const isVegetarian = item.size === "VEGETARIAN";
+    const weekPrice = isVegetarian ? 118.93 : 45.95;
+    const dayPrice = isVegetarian ? 16.99 : 6.99;
+    return sum + (item.type === 'week' ? weekPrice : dayPrice);
   }, 0);
 
   return (
@@ -390,10 +398,17 @@ const Cart = () => {
                   )}
                   <div className="flex justify-between items-center mt-4">
                     <span className="font-bold text-primary">
-                      Veľkosť: {item.size} ({parseInt(item.size.match(/\d+/)?.[0] || "2000")} kcal)
+                      Veľkosť: {item.size} {item.size !== "VEGETARIAN" && item.size !== "CUSTOM" && `(${parseInt(item.size.match(/\d+/)?.[0] || "2000")} kcal)`}
                     </span>
                     <span className="font-bold text-xl text-primary">
-                      €{item.type === 'week' ? '45.95' : '6.99'}
+                      €{(() => {
+                        const isVegetarian = item.size === "VEGETARIAN";
+                        if (item.type === 'week') {
+                          return isVegetarian ? '118.93' : '45.95';
+                        } else {
+                          return isVegetarian ? '16.99' : '6.99';
+                        }
+                      })()}
                     </span>
                   </div>
                 </div>
