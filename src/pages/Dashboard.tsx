@@ -601,14 +601,14 @@ const Dashboard = () => {
                 </TabsTrigger>
               </TabsList>
 
-              <TabsContent value="orders">
+              <TabsContent value="orders" className="mt-6">
                 <Card className="border-primary/20">
                   <CardHeader>
                     <CardTitle className="text-primary">
                       Správa objednávok
                     </CardTitle>
                   </CardHeader>
-                  <CardContent>
+                  <CardContent className="overflow-x-auto">
                     <Table>
                       <TableHeader>
                         <TableRow>
@@ -662,15 +662,15 @@ const Dashboard = () => {
                 </Card>
               </TabsContent>
 
-              <TabsContent value="dishes">
+              <TabsContent value="dishes" className="mt-6">
                 <MenuManagement />
               </TabsContent>
 
-                <TabsContent value="weekly-menu">
+                <TabsContent value="weekly-menu" className="mt-6">
                   <WeeklyMenuManagement />
                 </TabsContent>
 
-                <TabsContent value="users">
+                <TabsContent value="users" className="mt-6">
                   <UserStatistics />
                 </TabsContent>
               </Tabs>
