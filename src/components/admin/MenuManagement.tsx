@@ -80,13 +80,13 @@ export const MenuManagement = () => {
 
     const itemData = {
       name: formData.name,
-      category: formData.category,
-      price: parseFloat(formData.price),
-      calories: parseInt(formData.calories),
-      proteins: parseFloat(formData.proteins),
-      fats: parseFloat(formData.fats),
-      carbs: parseFloat(formData.carbs),
-      description: formData.description,
+      category: formData.category || null,
+      price: formData.price ? parseFloat(formData.price) : null,
+      calories: formData.calories ? parseInt(formData.calories) : null,
+      proteins: formData.proteins ? parseFloat(formData.proteins) : null,
+      fats: formData.fats ? parseFloat(formData.fats) : null,
+      carbs: formData.carbs ? parseFloat(formData.carbs) : null,
+      description: formData.description || null,
       allergens: formData.allergens.split(",").map((a) => a.trim()).filter(Boolean),
     };
 
@@ -217,18 +217,17 @@ export const MenuManagement = () => {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="category">Kategória</Label>
+                    <Label htmlFor="category">Kategória (voliteľné)</Label>
                     <Input
                       id="category"
                       value={formData.category}
                       onChange={(e) =>
                         setFormData({ ...formData, category: e.target.value })
                       }
-                      required
                     />
                   </div>
                   <div>
-                    <Label htmlFor="price">Cena (€)</Label>
+                    <Label htmlFor="price">Cena (€) (voliteľné)</Label>
                     <Input
                       id="price"
                       type="number"
@@ -237,11 +236,10 @@ export const MenuManagement = () => {
                       onChange={(e) =>
                         setFormData({ ...formData, price: e.target.value })
                       }
-                      required
                     />
                   </div>
                   <div>
-                    <Label htmlFor="calories">Kalórie</Label>
+                    <Label htmlFor="calories">Kalórie (voliteľné)</Label>
                     <Input
                       id="calories"
                       type="number"
@@ -249,11 +247,10 @@ export const MenuManagement = () => {
                       onChange={(e) =>
                         setFormData({ ...formData, calories: e.target.value })
                       }
-                      required
                     />
                   </div>
                   <div>
-                    <Label htmlFor="proteins">Proteíny (g)</Label>
+                    <Label htmlFor="proteins">Proteíny (g) (voliteľné)</Label>
                     <Input
                       id="proteins"
                       type="number"
@@ -262,11 +259,10 @@ export const MenuManagement = () => {
                       onChange={(e) =>
                         setFormData({ ...formData, proteins: e.target.value })
                       }
-                      required
                     />
                   </div>
                   <div>
-                    <Label htmlFor="fats">Tuky (g)</Label>
+                    <Label htmlFor="fats">Tuky (g) (voliteľné)</Label>
                     <Input
                       id="fats"
                       type="number"
@@ -275,11 +271,10 @@ export const MenuManagement = () => {
                       onChange={(e) =>
                         setFormData({ ...formData, fats: e.target.value })
                       }
-                      required
                     />
                   </div>
                   <div>
-                    <Label htmlFor="carbs">Sacharidy (g)</Label>
+                    <Label htmlFor="carbs">Sacharidy (g) (voliteľné)</Label>
                     <Input
                       id="carbs"
                       type="number"
@@ -288,7 +283,6 @@ export const MenuManagement = () => {
                       onChange={(e) =>
                         setFormData({ ...formData, carbs: e.target.value })
                       }
-                      required
                     />
                   </div>
                   <div>
