@@ -86,17 +86,17 @@ const Cart = () => {
     
     // Sereď
     if (lowerAddress.includes('sered')) {
-      return { fee: 18.99, region: 'sered' };
+      return { fee: 4, region: 'sered' };
     }
     
     // Trnava
     if (lowerAddress.includes('trnava')) {
-      return { fee: 19.99, region: 'trnava' };
+      return { fee: 5, region: 'trnava' };
     }
     
     // Bratislava
     if (lowerAddress.includes('bratislava')) {
-      return { fee: 20.99, region: 'bratislava' };
+      return { fee: 6, region: 'bratislava' };
     }
     
     // Iná lokalita
