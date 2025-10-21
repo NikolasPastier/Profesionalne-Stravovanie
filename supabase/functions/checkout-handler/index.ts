@@ -124,8 +124,11 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Check if user exists (without revealing if account exists)
-    const { data: { users }, error: getUserError } = await supabaseAdmin.auth.admin.listUsers();
+    // Check if user exists using efficient RPC function (without revealing if account exists)
+    const { data: userExists, error: getUserError } = await supabaseAdmin.rpc(
+      'check_email_exists',
+      { email_input: email }
+    );
     
     if (getUserError) {
       console.error("Error checking user:", getUserError);
@@ -138,8 +141,6 @@ const handler = async (req: Request): Promise<Response> => {
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
-
-    const userExists = users?.some(u => u.email === email);
 
     if (userExists) {
       // User exists - require login
