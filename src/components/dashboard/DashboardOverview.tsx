@@ -28,6 +28,7 @@ interface UserProfile {
   health_issues?: string;
   gender?: 'male' | 'female';
   goal_weight?: number;
+  created_at?: string;
 }
 
 interface ProgressEntry {
@@ -171,13 +172,33 @@ export function DashboardOverview({ profile, userId, progressData, onWeightAdded
   };
 
   const getChartData = () => {
-    return progressData.map(entry => ({
+    const chartData = [];
+    
+    // Add initial weight from profile as the first data point
+    if (profile?.weight && profile?.created_at) {
+      chartData.push({
+        date: new Date(profile.created_at).toLocaleDateString("sk-SK", {
+          day: "numeric",
+          month: "numeric"
+        }),
+        weight: profile.weight,
+        isInitial: true
+      });
+    }
+    
+    // Add all progress entries
+    const progressEntries = progressData.map(entry => ({
       date: new Date(entry.date).toLocaleDateString("sk-SK", {
         day: "numeric",
         month: "numeric"
       }),
-      weight: entry.weight
+      weight: entry.weight,
+      isInitial: false
     }));
+    
+    chartData.push(...progressEntries);
+    
+    return chartData;
   };
 
   const handleAddWeight = async (e: FormEvent) => {

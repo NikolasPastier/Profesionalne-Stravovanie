@@ -34,6 +34,7 @@ interface UserProfile {
   health_issues?: string;
   gender?: 'male' | 'female';
   goal_weight?: number;
+  created_at?: string;
 }
 interface Order {
   id: string;
