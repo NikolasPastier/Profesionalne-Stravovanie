@@ -29,6 +29,7 @@ interface OrderEmailRequest {
   deliveryFee: number;
   deliveryAddress: string;
   deliveryDate?: string;
+  orderDate?: string;
   phone: string;
 }
 
@@ -120,6 +121,7 @@ const handler = async (req: Request): Promise<Response> => {
             <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0;">
               <h2 style="color: #667eea; margin-top: 0;">Detaily objednávky</h2>
               <p><strong>Číslo objednávky:</strong> ${orderData.orderId}</p>
+              ${orderData.orderDate ? `<p><strong>Dátum objednávky:</strong> ${orderData.orderDate}</p>` : ""}
               <p><strong>Adresa doručenia:</strong> ${orderData.deliveryAddress}</p>
               ${orderData.deliveryDate ? `<p><strong>Dátum doručenia:</strong> ${orderData.deliveryDate}</p>` : ""}
               <p><strong>Telefón:</strong> ${orderData.phone}</p>
@@ -181,6 +183,7 @@ const handler = async (req: Request): Promise<Response> => {
               
               <h2 style="color: #f5576c; margin-top: 30px;">Detaily objednávky</h2>
               <p><strong>Číslo objednávky:</strong> ${orderData.orderId}</p>
+              ${orderData.orderDate ? `<p><strong>Dátum objednávky:</strong> ${orderData.orderDate}</p>` : ""}
               
               <table style="width: 100%; margin-top: 20px; border-collapse: collapse;">
                 <thead>

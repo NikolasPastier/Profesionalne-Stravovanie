@@ -241,6 +241,15 @@ const Cart = () => {
           return orderItem;
         });
 
+        const now = new Date();
+        const orderDate = now.toLocaleDateString('sk-SK', { 
+          year: 'numeric', 
+          month: 'long', 
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+
         await supabase.functions.invoke('send-order-email', {
           body: {
             orderId: userId,
@@ -251,6 +260,7 @@ const Cart = () => {
             deliveryFee: deliveryFee,
             deliveryAddress: orderData.address,
             deliveryDate: orderData.deliveryType === 'delivery' ? 'Na mieru' : undefined,
+            orderDate: orderDate,
             phone: orderData.phone
           }
         });
