@@ -215,7 +215,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Send customer confirmation email
     const customerEmailResponse = await resend.emails.send({
-      from: fromEmail,
+      from: `Profesionálne Stravovanie <${fromEmail}>`,
       to: [orderData.customerEmail],
       subject: `Potvrdenie objednávky #${orderData.orderId.slice(0, 8)}`,
       html: customerEmailHtml,
@@ -225,7 +225,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Send admin notification email
     const adminEmailResponse = await resend.emails.send({
-      from: fromEmail,
+      from: `Profesionálne Stravovanie <${fromEmail}>`,
       to: [adminEmail],
       subject: "Nová objednávka",
       html: adminEmailHtml,
