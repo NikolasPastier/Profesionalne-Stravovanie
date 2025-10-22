@@ -125,17 +125,12 @@ const handler = async (req: Request): Promise<Response> => {
               </table>
 
               <p style="margin: 0 0 20px; font-size: 16px; color: #4b5563; line-height: 1.6;">
-                Prosím, pripravte sa na prevzatie vašej objednávky a hotovosť v celej sume objednávky v uvedenom časovom okne. Náš vodič vám zavolá pred doručením.
+                Prosím, pripravte sa na prevzatie vašej objednávky a pripravte si hotovosť v celej sume objednávky v uvedenom časovom okne. Náš vodič vám zavolá pred doručením.
               </p>
-
-         
-           
-
               <p style="margin: 0; font-size: 16px; color: #1f2937; line-height: 1.6; text-align: center;">
                 Ďakujeme za vašu dôveru a prajeme dobrú chuť! 🍽️
               </p>
-            </td>
-          </tr>
+          
 
           <!-- Footer -->
           <tr>
