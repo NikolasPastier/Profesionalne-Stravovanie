@@ -224,15 +224,73 @@ const Dashboard = () => {
   };
   const updateOrderStatus = async (orderId: string, newStatus: string) => {
     try {
+      // If status is being changed to "ready", send notification email to customer
+      if (newStatus === "ready") {
+        try {
+          // Fetch the order details
+          const { data: orderData, error: orderError } = await supabase
+            .from("orders")
+            .select("*")
+            .eq("id", orderId)
+            .single();
+
+          if (orderError) {
+            console.error("Error fetching order for email:", orderError);
+          } else if (orderData) {
+            // Fetch user profile separately
+            const { data: profile } = await supabase
+              .from("user_profiles")
+              .select("name, email")
+              .eq("user_id", orderData.user_id)
+              .maybeSingle();
+
+            // Get customer email and name (prefer order fields, fallback to profile)
+            const customerEmail = orderData.email || profile?.email;
+            const customerName = orderData.name || profile?.name || "Zákazník";
+
+            if (customerEmail) {
+              // Call the edge function to send the email (non-blocking)
+              const { error: emailError } = await supabase.functions.invoke(
+                'send-order-ready-email',
+                {
+                  body: {
+                    orderId: orderId,
+                    customerName: customerName,
+                    customerEmail: customerEmail,
+                    deliveryDate: orderData.delivery_date,
+                  },
+                }
+              );
+
+              if (emailError) {
+                console.error("Error sending ready email:", emailError);
+              } else {
+                console.log("Order ready email sent successfully");
+              }
+            }
+          }
+        } catch (emailError) {
+          // Log email errors but don't block the status update
+          console.error("Error in email notification:", emailError);
+        }
+      }
+
+      // Update the order status in the database
       const {
         error
       } = await supabase.from("orders").update({
         status: newStatus
       }).eq("id", orderId);
       if (error) throw error;
+
+      // Show success message
+      const successMessage = newStatus === "ready"
+        ? "Stav objednávky bol aktualizovaný a zákazník bol upovedomený emailom"
+        : "Stav objednávky bol aktualizovaný";
+
       toast({
         title: "Úspech",
-        description: "Stav objednávky bol aktualizovaný"
+        description: successMessage
       });
       loadOrders();
     } catch (error: any) {
