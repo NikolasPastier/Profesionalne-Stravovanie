@@ -25,13 +25,13 @@ const handler = async (req: Request): Promise<Response> => {
     console.log("Processing order ready email request");
 
     const fromEmail = Deno.env.get("FROM_EMAIL");
-    
+
     if (!fromEmail) {
       console.error("FROM_EMAIL not configured");
-      return new Response(
-        JSON.stringify({ error: "Sender email not configured" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return new Response(JSON.stringify({ error: "Sender email not configured" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     const { orderId, customerName, customerEmail, deliveryDate }: OrderReadyEmailRequest = await req.json();
@@ -46,7 +46,7 @@ const handler = async (req: Request): Promise<Response> => {
       weekday: "long",
       year: "numeric",
       month: "long",
-      day: "numeric"
+      day: "numeric",
     });
 
     // Create the email HTML
@@ -125,26 +125,11 @@ const handler = async (req: Request): Promise<Response> => {
               </table>
 
               <p style="margin: 0 0 20px; font-size: 16px; color: #4b5563; line-height: 1.6;">
-                Prosím, pripravte sa na prevzatie vašej objednávky v uvedenom časovom okne. Náš vodič vám zavolá pred doručením.
+                Prosím, pripravte sa na prevzatie vašej objednávky a hotovosť v celej sume objednávky v uvedenom časovom okne. Náš vodič vám zavolá pred doručením.
               </p>
 
-              <p style="margin: 0 0 30px; font-size: 16px; color: #4b5563; line-height: 1.6;">
-                Ak máte akékoľvek otázky alebo potrebujete pomoc, neváhajte nás kontaktovať.
-              </p>
-
-              <!-- Contact info -->
-              <table role="presentation" style="width: 100%; border-collapse: collapse; background-color: #f9fafb; border-radius: 8px; margin-bottom: 20px;">
-                <tr>
-                  <td style="padding: 20px; text-align: center;">
-                    <p style="margin: 0 0 8px; color: #6b7280; font-size: 14px;">
-                      Kontakt na podporu
-                    </p>
-                    <p style="margin: 0; color: #10b981; font-size: 16px; font-weight: 600;">
-                      ${fromEmail.split('<')[1]?.replace('>', '') || fromEmail}
-                    </p>
-                  </td>
-                </tr>
-              </table>
+         
+           
 
               <p style="margin: 0; font-size: 16px; color: #1f2937; line-height: 1.6; text-align: center;">
                 Ďakujeme za vašu dôveru a prajeme dobrú chuť! 🍽️
@@ -190,13 +175,10 @@ const handler = async (req: Request): Promise<Response> => {
     });
   } catch (error: any) {
     console.error("Error in send-order-ready-email function:", error);
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      {
-        status: 500,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
-      }
-    );
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500,
+      headers: { "Content-Type": "application/json", ...corsHeaders },
+    });
   }
 };
 
