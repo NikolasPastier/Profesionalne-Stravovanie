@@ -153,7 +153,9 @@ const handler = async (req: Request): Promise<Response> => {
               </table>
             </div>
             
-             <!-- Footer -->
+         
+          </div>
+              <!-- Footer -->
           <tr>
             <td style="background-color: #f9fafb; padding: 30px; text-align: center; border-top: 1px solid #e5e7eb;">
               <p style="margin: 0 0 8px; color: #6b7280; font-size: 14px;">
@@ -164,7 +166,6 @@ const handler = async (req: Request): Promise<Response> => {
               </p>
             </td>
           </tr>
-          </div>
         </body>
       </html>
     `;
