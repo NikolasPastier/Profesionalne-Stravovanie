@@ -158,7 +158,7 @@ const handler = async (req: Request): Promise<Response> => {
     `;
 
     const emailResponse = await resend.emails.send({
-      from: fromEmail,
+      from: `Profesionálne Stravovanie <${fromEmail}>`,
       to: [customerEmail],
       subject: `🎉 Vaša objednávka #${orderIdShort} je pripravená!`,
       html: emailHtml,
