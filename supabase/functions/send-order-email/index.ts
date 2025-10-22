@@ -63,27 +63,30 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Create order items HTML
     const orderItemsHtml = orderData.orderItems
-      .map(
-        (item) => {
-          let itemHtml = `
+      .map((item) => {
+        let itemHtml = `
         <tr>
           <td style="padding: 8px; border-bottom: 1px solid #eee;">${item.name}${item.size ? ` (${item.size})` : ""}</td>
           <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: center;">${item.quantity}</td>
           <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right;">${item.price.toFixed(2)} €</td>
         </tr>`;
-          
-          // Add detailed days and meals if available
-          if (item.days && item.days.length > 0) {
-            const categoryLabels: Record<string, string> = {
-              'breakfast': 'Raňajky',
-              'lunch': 'Obed',
-              'dinner': 'Večera'
-            };
-            
-            const daysHtml = item.days.map(day => {
-              const mealsHtml = day.meals.map(meal => 
-                `<div style="margin-left: 15px; color: #666;">• ${categoryLabels[meal.category] || meal.category}: ${meal.name}</div>`
-              ).join('');
+
+        // Add detailed days and meals if available
+        if (item.days && item.days.length > 0) {
+          const categoryLabels: Record<string, string> = {
+            breakfast: "Raňajky",
+            lunch: "Obed",
+            dinner: "Večera",
+          };
+
+          const daysHtml = item.days
+            .map((day) => {
+              const mealsHtml = day.meals
+                .map(
+                  (meal) =>
+                    `<div style="margin-left: 15px; color: #666;">• ${categoryLabels[meal.category] || meal.category}: ${meal.name}</div>`,
+                )
+                .join("");
               return `
         <tr>
           <td colspan="3" style="padding: 4px 8px 8px 20px; border-bottom: 1px solid #f0f0f0;">
@@ -91,14 +94,14 @@ const handler = async (req: Request): Promise<Response> => {
             ${mealsHtml}
           </td>
         </tr>`;
-            }).join('');
-            
-            itemHtml += daysHtml;
-          }
-          
-          return itemHtml;
+            })
+            .join("");
+
+          itemHtml += daysHtml;
         }
-      )
+
+        return itemHtml;
+      })
       .join("");
 
     // Customer confirmation email
@@ -150,8 +153,17 @@ const handler = async (req: Request): Promise<Response> => {
               </table>
             </div>
             
-            <p style="margin-top: 30px; color: #666;">Ak máte akékoľvek otázky, neváhajte nás kontaktovať.</p>
-            <p style="color: #666;">S pozdravom,<br>Váš tím, Profesionálne Stravovanie.</p>
+             <!-- Footer -->
+          <tr>
+            <td style="background-color: #f9fafb; padding: 30px; text-align: center; border-top: 1px solid #e5e7eb;">
+              <p style="margin: 0 0 8px; color: #6b7280; font-size: 14px;">
+                VIP Krabičky
+              </p>
+              <p style="margin: 0; color: #9ca3af; font-size: 12px;">
+                Zdravé jedlo priamo k vám domov
+              </p>
+            </td>
+          </tr>
           </div>
         </body>
       </html>
