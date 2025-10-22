@@ -417,7 +417,7 @@ const Menu = () => {
                         />
                         <Label htmlFor="vegetarian" className="flex-1 cursor-pointer">
                           <div className="font-bold text-primary">Vegetariánske menu</div>
-                          <div className="text-sm text-muted-foreground">€16.99/deň - Bez mäsa, čerstvé ingrediencie</div>
+                          <div className="text-sm text-muted-foreground">€16.99/deň (Klasické: €14.99/deň) - Bez mäsa, čerstvé ingrediencie</div>
                         </Label>
                       </div>
                     )}
@@ -537,7 +537,7 @@ const Menu = () => {
                             />
                             <Label htmlFor="day-vegetarian" className="flex-1 cursor-pointer">
                               <div className="font-bold text-primary text-sm">Vegetariánske menu</div>
-                              <div className="text-xs text-muted-foreground">€16.99/deň - Bez mäsa, čerstvé ingrediencie</div>
+                              <div className="text-xs text-muted-foreground">€16.99/deň (Klasické: €14.99/deň) - Bez mäsa, čerstvé ingrediencie</div>
                             </Label>
                           </div>
                         )}

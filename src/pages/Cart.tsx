@@ -140,7 +140,7 @@ const Cart = () => {
       for (const item of cartItems) {
         // Calculate price based on size and vegetarian option
         const isVegetarian = item.isVegetarian || false;
-        const dayPrice = isVegetarian ? 16.99 : 6.99;
+        const dayPrice = isVegetarian ? 16.99 : 14.99;
         
         // For weekly menu, calculate price based on actual number of selected days
         const numberOfDays = item.type === 'week' ? (item.selectedDays?.length || item.menu?.items?.length || 5) : 1;
@@ -219,7 +219,7 @@ const Cart = () => {
       try {
         const orderItems = cartItems.map(item => {
           const isVegetarian = item.isVegetarian || false;
-          const dayPrice = isVegetarian ? 16.99 : 6.99;
+          const dayPrice = isVegetarian ? 16.99 : 14.99;
           const numberOfDays = item.type === 'week' ? (item.selectedDays?.length || item.menu?.items?.length || 5) : 1;
           const price = item.type === 'week' ? (dayPrice * numberOfDays) : dayPrice;
           
@@ -474,7 +474,7 @@ const Cart = () => {
 
   const subtotalPrice = cartItems.reduce((sum, item) => {
     const isVegetarian = item.isVegetarian || false;
-    const dayPrice = isVegetarian ? 16.99 : 6.99;
+    const dayPrice = isVegetarian ? 16.99 : 14.99;
     
     if (item.type === 'week') {
       const numberOfDays = item.selectedDays?.length || item.menu?.items?.length || 5;
