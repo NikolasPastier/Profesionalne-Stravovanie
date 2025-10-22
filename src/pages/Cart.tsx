@@ -223,12 +223,22 @@ const Cart = () => {
           const numberOfDays = item.type === 'week' ? (item.selectedDays?.length || item.menu?.items?.length || 5) : 1;
           const price = item.type === 'week' ? (dayPrice * numberOfDays) : dayPrice;
           
-          return {
+          const orderItem: any = {
             name: item.type === 'week' ? 'Týždenné menu' : `Menu - ${item.day}`,
             size: item.size,
             quantity: 1,
             price: price
           };
+          
+          // Add detailed days and meals for weekly orders
+          if (item.type === 'week' && item.menu?.items) {
+            orderItem.days = item.menu.items.map((day: any) => ({
+              day: day.day,
+              meals: day.meals || []
+            }));
+          }
+          
+          return orderItem;
         });
 
         await supabase.functions.invoke('send-order-email', {

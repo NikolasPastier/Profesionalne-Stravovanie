@@ -17,6 +17,13 @@ interface OrderEmailRequest {
     size?: string;
     quantity: number;
     price: number;
+    days?: Array<{
+      day: string;
+      meals: Array<{
+        category: string;
+        name: string;
+      }>;
+    }>;
   }>;
   totalPrice: number;
   deliveryFee: number;
@@ -56,13 +63,40 @@ const handler = async (req: Request): Promise<Response> => {
     // Create order items HTML
     const orderItemsHtml = orderData.orderItems
       .map(
-        (item) => `
+        (item) => {
+          let itemHtml = `
         <tr>
           <td style="padding: 8px; border-bottom: 1px solid #eee;">${item.name}${item.size ? ` (${item.size})` : ""}</td>
           <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: center;">${item.quantity}</td>
           <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right;">${item.price.toFixed(2)} €</td>
-        </tr>
-      `,
+        </tr>`;
+          
+          // Add detailed days and meals if available
+          if (item.days && item.days.length > 0) {
+            const categoryLabels: Record<string, string> = {
+              'breakfast': 'Raňajky',
+              'lunch': 'Obed',
+              'dinner': 'Večera'
+            };
+            
+            const daysHtml = item.days.map(day => {
+              const mealsHtml = day.meals.map(meal => 
+                `<div style="margin-left: 15px; color: #666;">• ${categoryLabels[meal.category] || meal.category}: ${meal.name}</div>`
+              ).join('');
+              return `
+        <tr>
+          <td colspan="3" style="padding: 4px 8px 8px 20px; border-bottom: 1px solid #f0f0f0;">
+            <div style="font-weight: 600; color: #667eea; margin-bottom: 4px;">${day.day}</div>
+            ${mealsHtml}
+          </td>
+        </tr>`;
+            }).join('');
+            
+            itemHtml += daysHtml;
+          }
+          
+          return itemHtml;
+        }
       )
       .join("");
 
