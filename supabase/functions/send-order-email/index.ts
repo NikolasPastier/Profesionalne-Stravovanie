@@ -36,21 +36,21 @@ const handler = async (req: Request): Promise<Response> => {
 
     const adminEmail = Deno.env.get("ADMIN_EMAIL");
     const fromEmail = Deno.env.get("FROM_EMAIL");
-    
+
     if (!adminEmail) {
       console.error("ADMIN_EMAIL not configured");
-      return new Response(
-        JSON.stringify({ error: "Admin email not configured" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return new Response(JSON.stringify({ error: "Admin email not configured" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     if (!fromEmail) {
       console.error("FROM_EMAIL not configured");
-      return new Response(
-        JSON.stringify({ error: "Sender email not configured" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return new Response(JSON.stringify({ error: "Sender email not configured" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     // Create order items HTML
@@ -62,7 +62,7 @@ const handler = async (req: Request): Promise<Response> => {
           <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: center;">${item.quantity}</td>
           <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right;">${item.price.toFixed(2)} €</td>
         </tr>
-      `
+      `,
       )
       .join("");
 
@@ -115,7 +115,7 @@ const handler = async (req: Request): Promise<Response> => {
             </div>
             
             <p style="margin-top: 30px; color: #666;">Ak máte akékoľvek otázky, neváhajte nás kontaktovať.</p>
-            <p style="color: #666;">S pozdravom,<br>Váš tím</p>
+            <p style="color: #666;">S pozdravom,<br>Váš tím, Profesionálne Stravovanie.</p>
           </div>
         </body>
       </html>
@@ -197,25 +197,22 @@ const handler = async (req: Request): Promise<Response> => {
     console.log("Admin email sent successfully");
 
     return new Response(
-      JSON.stringify({ 
-        success: true, 
+      JSON.stringify({
+        success: true,
         customerEmail: customerEmailResponse,
-        adminEmail: adminEmailResponse 
+        adminEmail: adminEmailResponse,
       }),
       {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
+      },
     );
   } catch (error: any) {
     console.error("Error in send-order-email function:", error);
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
-    );
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 };
 
