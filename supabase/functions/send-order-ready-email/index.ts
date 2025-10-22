@@ -37,12 +37,16 @@ const handler = async (req: Request): Promise<Response> => {
     const { orderId, customerName, customerEmail, deliveryDate }: OrderReadyEmailRequest = await req.json();
 
     console.log("Sending order ready email to:", customerEmail);
+    console.log("Delivery date received:", deliveryDate);
 
     // Format the order ID for display (first 8 characters)
     const orderIdShort = orderId.slice(0, 8);
 
-    // Format the delivery date
-    const formattedDate = new Date(deliveryDate).toLocaleDateString("sk-SK", {
+    // Format the delivery date - parse as local date (YYYY-MM-DD)
+    const [year, month, day] = deliveryDate.split('-').map(Number);
+    const dateObj = new Date(year, month - 1, day);
+    
+    const formattedDate = dateObj.toLocaleDateString("sk-SK", {
       weekday: "long",
       year: "numeric",
       month: "long",
