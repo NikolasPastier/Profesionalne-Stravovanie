@@ -83,6 +83,19 @@ const handler = async (req: Request): Promise<Response> => {
       day: "numeric",
     });
     
+    // Determine delivery time based on address
+    const address = deliveryAddress.toLowerCase();
+    const bratislavaRegion = ['trnava', 'sereď', 'sered', 'bratislava', 'pezinok', 'senec', 'malacky', 'dunajská streda'];
+    
+    let deliveryTime = '17:00 - 19:00'; // Default for Nitra and surroundings
+    
+    // Check if address contains any Bratislava region city
+    if (bratislavaRegion.some(city => address.includes(city))) {
+      deliveryTime = '19:00 - 21:00';
+    }
+    
+    console.log(`Delivery address: ${deliveryAddress}, Delivery time: ${deliveryTime}`);
+    
     // Create items list HTML with meal categories
     const itemsHtml = items.map(dayItem => `
       <div style="margin-bottom: 24px; padding: 16px; background-color: #f9fafb; border-radius: 8px;">
@@ -296,7 +309,7 @@ const handler = async (req: Request): Promise<Response> => {
                       Čas doručenia
                     </p>
                     <p style="margin: 0; color: #ffffff; font-size: 28px; font-weight: bold;">
-                      18:00 - 21:00
+                      ${deliveryTime}
                     </p>
                   </td>
                 </tr>
