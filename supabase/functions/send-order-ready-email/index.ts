@@ -13,6 +13,23 @@ interface OrderReadyEmailRequest {
   customerName: string;
   customerEmail: string;
   deliveryDate: string;
+  items: Array<{
+    day: string;
+    meals: Array<{
+      name: string;
+      category: string;
+    }>;
+  }>;
+  menuSize: string;
+  calories: number;
+  deliveryType: string;
+  totalPrice: number;
+  deliveryFee: number;
+  deliveryAddress: string;
+  phone: string;
+  note?: string;
+  allergies?: string[];
+  dislikes?: string[];
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -34,7 +51,23 @@ const handler = async (req: Request): Promise<Response> => {
       });
     }
 
-    const { orderId, customerName, customerEmail, deliveryDate }: OrderReadyEmailRequest = await req.json();
+    const { 
+      orderId, 
+      customerName, 
+      customerEmail, 
+      deliveryDate,
+      items,
+      menuSize,
+      calories,
+      deliveryType,
+      totalPrice,
+      deliveryFee,
+      deliveryAddress,
+      phone,
+      note,
+      allergies = [],
+      dislikes = []
+    }: OrderReadyEmailRequest = await req.json();
 
     console.log("Sending order ready email to:", customerEmail);
     console.log("Delivery date received:", deliveryDate);
@@ -42,16 +75,56 @@ const handler = async (req: Request): Promise<Response> => {
     // Format the order ID for display (first 8 characters)
     const orderIdShort = orderId.slice(0, 8);
 
-    // Format the delivery date - parse as local date (YYYY-MM-DD)
-    const [year, month, day] = deliveryDate.split('-').map(Number);
-    const dateObj = new Date(year, month - 1, day);
-    
-    const formattedDate = dateObj.toLocaleDateString("sk-SK", {
+    // Use current date as the date when order is ready (when admin changes status to ready)
+    const readyDate = new Date().toLocaleDateString("sk-SK", {
       weekday: "long",
       year: "numeric",
       month: "long",
       day: "numeric",
     });
+    
+    // Create items list HTML with meal categories
+    const itemsHtml = items.map(dayItem => `
+      <div style="margin-bottom: 24px; padding: 16px; background-color: #f9fafb; border-radius: 8px;">
+        <h3 style="color: #10b981; margin: 0 0 12px; font-size: 18px; font-weight: 600;">${dayItem.day}</h3>
+        <div style="margin-left: 12px;">
+          ${dayItem.meals.map(meal => {
+            const categoryLabel = meal.category === 'breakfast' ? '🍳 Raňajky' : 
+                                 meal.category === 'lunch' ? '🍽️ Obed' : 
+                                 '🌙 Večera';
+            return `
+              <div style="margin-bottom: 8px;">
+                <div style="font-size: 12px; color: #6b7280; margin-bottom: 2px;">${categoryLabel}</div>
+                <div style="color: #1f2937; font-size: 14px;">${meal.name}</div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </div>
+    `).join('');
+    
+    // Create preferences section if there are any
+    const preferencesHtml = (allergies.length > 0 || dislikes.length > 0) ? `
+      <table role="presentation" style="width: 100%; border-collapse: collapse; margin-top: 24px; background-color: #fef3c7; border-radius: 8px; overflow: hidden;">
+        <tr>
+          <td style="padding: 20px;">
+            <h3 style="margin: 0 0 12px; color: #92400e; font-size: 16px; font-weight: 600;">⚠️ Osobné preferencie</h3>
+            ${allergies.length > 0 ? `
+              <div style="margin-bottom: 8px;">
+                <strong style="color: #92400e; font-size: 14px;">Alergie:</strong>
+                <span style="color: #78350f; font-size: 14px; margin-left: 8px;">${allergies.join(', ')}</span>
+              </div>
+            ` : ''}
+            ${dislikes.length > 0 ? `
+              <div>
+                <strong style="color: #92400e; font-size: 14px;">Neobľúbené jedlá:</strong>
+                <span style="color: #78350f; font-size: 14px; margin-left: 8px;">${dislikes.join(', ')}</span>
+              </div>
+            ` : ''}
+          </td>
+        </tr>
+      </table>
+    ` : '';
 
     // Create the email HTML
     const emailHtml = `
@@ -88,25 +161,126 @@ const handler = async (req: Request): Promise<Response> => {
                 S radosťou vám oznamujeme, že vaša objednávka je pripravená a čoskoro sa k vám vydá na cestu! 🚗
               </p>
 
-              <!-- Order details box -->
-              <table role="presentation" style="width: 100%; border-collapse: collapse; background-color: #f9fafb; border-radius: 8px; margin-bottom: 30px;">
+              <!-- Order number and date -->
+              <table role="presentation" style="width: 100%; border-collapse: collapse; background-color: #f0fdf4; border-radius: 8px; margin-bottom: 24px; border: 2px solid #10b981;">
                 <tr>
-                  <td style="padding: 24px;">
+                  <td style="padding: 20px;">
                     <table role="presentation" style="width: 100%; border-collapse: collapse;">
                       <tr>
                         <td style="padding: 8px 0;">
-                          <span style="color: #6b7280; font-size: 14px;">Číslo objednávky:</span>
+                          <span style="color: #065f46; font-size: 14px; font-weight: 600;">Číslo objednávky:</span>
                         </td>
                         <td align="right" style="padding: 8px 0;">
-                          <strong style="color: #1f2937; font-size: 14px;">#${orderIdShort}</strong>
+                          <strong style="color: #047857; font-size: 16px;">#${orderIdShort}</strong>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 8px 0; border-top: 1px solid #d1fae5;">
+                          <span style="color: #065f46; font-size: 14px; font-weight: 600;">Dátum doručenia:</span>
+                        </td>
+                        <td align="right" style="padding: 8px 0; border-top: 1px solid #d1fae5;">
+                          <strong style="color: #047857; font-size: 14px;">${readyDate}</strong>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Order details -->
+              <table role="presentation" style="width: 100%; border-collapse: collapse; background-color: #f9fafb; border-radius: 8px; margin-bottom: 24px;">
+                <tr>
+                  <td style="padding: 24px;">
+                    <h2 style="margin: 0 0 20px; color: #1f2937; font-size: 20px; font-weight: 600;">Detaily objednávky</h2>
+                    
+                    <!-- Order summary -->
+                    <table role="presentation" style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+                      <tr>
+                        <td style="padding: 8px 0;">
+                          <span style="color: #6b7280; font-size: 14px;">Typ menu:</span>
+                        </td>
+                        <td align="right" style="padding: 8px 0;">
+                          <strong style="color: #1f2937; font-size: 14px;">${menuSize}</strong>
                         </td>
                       </tr>
                       <tr>
                         <td style="padding: 8px 0; border-top: 1px solid #e5e7eb;">
-                          <span style="color: #6b7280; font-size: 14px;">Dátum doručenia:</span>
+                          <span style="color: #6b7280; font-size: 14px;">Kalórie:</span>
                         </td>
                         <td align="right" style="padding: 8px 0; border-top: 1px solid #e5e7eb;">
-                          <strong style="color: #1f2937; font-size: 14px;">${formattedDate}</strong>
+                          <strong style="color: #1f2937; font-size: 14px;">${calories} kcal</strong>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 8px 0; border-top: 1px solid #e5e7eb;">
+                          <span style="color: #6b7280; font-size: 14px;">Typ doručenia:</span>
+                        </td>
+                        <td align="right" style="padding: 8px 0; border-top: 1px solid #e5e7eb;">
+                          <strong style="color: #1f2937; font-size: 14px;">${deliveryType === 'weekly' ? 'Týždenné menu' : 'Jednorazové'}</strong>
+                        </td>
+                      </tr>
+                    </table>
+
+                    <h3 style="margin: 24px 0 12px; color: #1f2937; font-size: 18px; font-weight: 600;">Obsah objednávky</h3>
+                    <div style="margin-bottom: 16px;">
+                      ${itemsHtml}
+                    </div>
+                    
+                    ${preferencesHtml}
+
+                    <!-- Delivery info -->
+                    <h3 style="margin: 24px 0 12px; color: #1f2937; font-size: 18px; font-weight: 600;">Doručenie</h3>
+                    <table role="presentation" style="width: 100%; border-collapse: collapse; background-color: #ffffff; border-radius: 8px; padding: 16px; margin-bottom: 20px;">
+                      <tr>
+                        <td style="padding: 8px 0;">
+                          <span style="color: #6b7280; font-size: 14px;">Adresa:</span>
+                        </td>
+                        <td align="right" style="padding: 8px 0;">
+                          <strong style="color: #1f2937; font-size: 14px;">${deliveryAddress}</strong>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 8px 0; border-top: 1px solid #e5e7eb;">
+                          <span style="color: #6b7280; font-size: 14px;">Telefón:</span>
+                        </td>
+                        <td align="right" style="padding: 8px 0; border-top: 1px solid #e5e7eb;">
+                          <strong style="color: #1f2937; font-size: 14px;">${phone}</strong>
+                        </td>
+                      </tr>
+                      ${note ? `
+                        <tr>
+                          <td colspan="2" style="padding: 12px 0; border-top: 1px solid #e5e7eb;">
+                            <span style="color: #6b7280; font-size: 14px; display: block; margin-bottom: 4px;">Poznámka:</span>
+                            <p style="margin: 0; color: #1f2937; font-size: 14px; background-color: #fef3c7; padding: 8px; border-radius: 4px;">${note}</p>
+                          </td>
+                        </tr>
+                      ` : ''}
+                    </table>
+
+                    <!-- Price summary -->
+                    <table role="presentation" style="width: 100%; border-collapse: collapse; background-color: #ffffff; border-radius: 8px;">
+                      <tr>
+                        <td style="padding: 12px 16px; border-bottom: 1px solid #e5e7eb;">
+                          <span style="color: #6b7280; font-size: 14px;">Cena menu:</span>
+                        </td>
+                        <td align="right" style="padding: 12px 16px; border-bottom: 1px solid #e5e7eb;">
+                          <strong style="color: #1f2937; font-size: 14px;">${(totalPrice - deliveryFee).toFixed(2)} €</strong>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 12px 16px; border-bottom: 1px solid #e5e7eb;">
+                          <span style="color: #6b7280; font-size: 14px;">Doprava:</span>
+                        </td>
+                        <td align="right" style="padding: 12px 16px; border-bottom: 1px solid #e5e7eb;">
+                          <strong style="color: #1f2937; font-size: 14px;">${deliveryFee.toFixed(2)} €</strong>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 16px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 8px;">
+                          <span style="color: #ffffff; font-size: 18px; font-weight: bold;">SPOLU:</span>
+                        </td>
+                        <td align="right" style="padding: 16px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 8px;">
+                          <strong style="color: #ffffff; font-size: 22px;">${totalPrice.toFixed(2)} €</strong>
                         </td>
                       </tr>
                     </table>

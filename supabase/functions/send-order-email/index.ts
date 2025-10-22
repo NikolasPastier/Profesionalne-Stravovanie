@@ -31,6 +31,12 @@ interface OrderEmailRequest {
   deliveryDate?: string;
   orderDate?: string;
   phone: string;
+  note?: string;
+  allergies?: string[];
+  dislikes?: string[];
+  menuSize?: string;
+  calories?: number;
+  deliveryType?: string;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -60,6 +66,23 @@ const handler = async (req: Request): Promise<Response> => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    // Get current date for order
+    const currentDate = new Date().toLocaleDateString("sk-SK", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+
+    // Create preferences section
+    const preferencesSection = (orderData.allergies?.length || orderData.dislikes?.length) ? `
+      <div style="background: #fef3c7; padding: 15px; border-radius: 8px; margin: 20px 0;">
+        <h3 style="color: #92400e; margin: 0 0 10px;">⚠️ Osobné preferencie</h3>
+        ${orderData.allergies?.length ? `<p style="margin: 5px 0;"><strong>Alergie:</strong> ${orderData.allergies.join(', ')}</p>` : ''}
+        ${orderData.dislikes?.length ? `<p style="margin: 5px 0;"><strong>Neobľúbené jedlá:</strong> ${orderData.dislikes.join(', ')}</p>` : ''}
+      </div>
+    ` : '';
 
     // Create order items HTML
     const orderItemsHtml = orderData.orderItems
@@ -121,13 +144,18 @@ const handler = async (req: Request): Promise<Response> => {
             <p style="font-size: 16px;">Dobrý deň ${orderData.customerName},</p>
             <p>Vaša objednávka bola úspešne prijatá a je v procese spracovania.</p>
             
+            <div style="background: #f0fdf4; padding: 20px; border-radius: 8px; margin: 20px 0; border: 2px solid #10b981;">
+              <p><strong>Číslo objednávky:</strong> #${orderData.orderId.slice(0, 8)}</p>
+              <p><strong>Dátum objednávky:</strong> ${currentDate}</p>
+            </div>
+
             <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0;">
               <h2 style="color: #667eea; margin-top: 0;">Detaily objednávky</h2>
-              <p><strong>Číslo objednávky:</strong> ${orderData.orderId}</p>
-              ${orderData.orderDate ? `<p><strong>Dátum objednávky:</strong> ${orderData.orderDate}</p>` : ""}
-              <p><strong>Adresa doručenia:</strong> ${orderData.deliveryAddress}</p>
-              ${orderData.deliveryDate ? `<p><strong>Dátum doručenia:</strong> ${orderData.deliveryDate}</p>` : ""}
-              <p><strong>Telefón:</strong> ${orderData.phone}</p>
+              ${orderData.menuSize ? `<p><strong>Typ menu:</strong> ${orderData.menuSize}</p>` : ''}
+              ${orderData.calories ? `<p><strong>Kalórie:</strong> ${orderData.calories} kcal</p>` : ''}
+              ${orderData.deliveryType ? `<p><strong>Typ doručenia:</strong> ${orderData.deliveryType === 'weekly' ? 'Týždenné menu' : 'Jednorazové'}</p>` : ''}
+              
+              <h3 style="color: #667eea; margin: 20px 0 10px;">Obsah objednávky</h3>
               
               <table style="width: 100%; margin-top: 20px; border-collapse: collapse;">
                 <thead>
@@ -151,6 +179,13 @@ const handler = async (req: Request): Promise<Response> => {
                   </tr>
                 </tbody>
               </table>
+
+              ${preferencesSection}
+
+              <h3 style="color: #667eea; margin: 20px 0 10px;">Doručenie</h3>
+              <p><strong>Adresa:</strong> ${orderData.deliveryAddress}</p>
+              <p><strong>Telefón:</strong> ${orderData.phone}</p>
+              ${orderData.note ? `<p><strong>Poznámka:</strong> ${orderData.note}</p>` : ''}
             </div>
             
          
@@ -186,17 +221,18 @@ const handler = async (req: Request): Promise<Response> => {
           <div style="background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px;">
             <p style="font-size: 16px;">Bola prijatá nová objednávka:</p>
             
+            <div style="background: #fef3c7; padding: 20px; border-radius: 8px; margin: 20px 0; border: 2px solid #f59e0b;">
+              <p><strong>Číslo objednávky:</strong> #${orderData.orderId.slice(0, 8)}</p>
+              <p><strong>Dátum objednávky:</strong> ${currentDate}</p>
+            </div>
+
             <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0;">
-              <h2 style="color: #f5576c; margin-top: 0;">Informácie o zákazníkovi</h2>
-              <p><strong>Meno:</strong> ${orderData.customerName}</p>
-              <p><strong>Email:</strong> ${orderData.customerEmail}</p>
-              <p><strong>Telefón:</strong> ${orderData.phone}</p>
-              <p><strong>Adresa:</strong> ${orderData.deliveryAddress}</p>
-              ${orderData.deliveryDate ? `<p><strong>Dátum doručenia:</strong> ${orderData.deliveryDate}</p>` : ""}
+              <h2 style="color: #f5576c; margin-top: 0;">Detaily objednávky</h2>
+              ${orderData.menuSize ? `<p><strong>Typ menu:</strong> ${orderData.menuSize}</p>` : ''}
+              ${orderData.calories ? `<p><strong>Kalórie:</strong> ${orderData.calories} kcal</p>` : ''}
+              ${orderData.deliveryType ? `<p><strong>Typ doručenia:</strong> ${orderData.deliveryType === 'weekly' ? 'Týždenné menu' : 'Jednorazové'}</p>` : ''}
               
-              <h2 style="color: #f5576c; margin-top: 30px;">Detaily objednávky</h2>
-              <p><strong>Číslo objednávky:</strong> ${orderData.orderId}</p>
-              ${orderData.orderDate ? `<p><strong>Dátum objednávky:</strong> ${orderData.orderDate}</p>` : ""}
+              <h3 style="color: #f5576c; margin: 20px 0 10px;">Obsah objednávky</h3>
               
               <table style="width: 100%; margin-top: 20px; border-collapse: collapse;">
                 <thead>
@@ -220,6 +256,15 @@ const handler = async (req: Request): Promise<Response> => {
                   </tr>
                 </tbody>
               </table>
+
+              ${preferencesSection}
+
+              <h3 style="color: #f5576c; margin: 20px 0 10px;">Kontakt zákazníka</h3>
+              <p><strong>Meno:</strong> ${orderData.customerName}</p>
+              <p><strong>Email:</strong> ${orderData.customerEmail}</p>
+              <p><strong>Telefón:</strong> ${orderData.phone}</p>
+              <p><strong>Adresa:</strong> ${orderData.deliveryAddress}</p>
+              ${orderData.note ? `<p><strong>Poznámka:</strong> ${orderData.note}</p>` : ''}
             </div>
           </div>
         </body>
