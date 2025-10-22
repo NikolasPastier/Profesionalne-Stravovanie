@@ -35,11 +35,20 @@ const handler = async (req: Request): Promise<Response> => {
     console.log("Processing order email request");
 
     const adminEmail = Deno.env.get("ADMIN_EMAIL");
+    const fromEmail = Deno.env.get("FROM_EMAIL");
     
     if (!adminEmail) {
       console.error("ADMIN_EMAIL not configured");
       return new Response(
         JSON.stringify({ error: "Admin email not configured" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (!fromEmail) {
+      console.error("FROM_EMAIL not configured");
+      return new Response(
+        JSON.stringify({ error: "Sender email not configured" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -169,7 +178,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Send customer confirmation email
     const customerEmailResponse = await resend.emails.send({
-      from: "Objednávky <onboarding@resend.dev>",
+      from: fromEmail,
       to: [orderData.customerEmail],
       subject: `Potvrdenie objednávky #${orderData.orderId.slice(0, 8)}`,
       html: customerEmailHtml,
@@ -179,7 +188,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Send admin notification email
     const adminEmailResponse = await resend.emails.send({
-      from: "Objednávky <onboarding@resend.dev>",
+      from: fromEmail,
       to: [adminEmail],
       subject: "Nová objednávka",
       html: adminEmailHtml,
