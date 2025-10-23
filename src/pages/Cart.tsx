@@ -552,7 +552,7 @@ const Cart = () => {
                     <span className="font-bold text-xl text-primary">
                       €{(() => {
                         const isVegetarian = item.isVegetarian || false;
-                        const dayPrice = isVegetarian ? 16.99 : 6.99;
+                        const dayPrice = isVegetarian ? 16.99 : 14.99;
                         
                         if (item.type === 'week') {
                           const numberOfDays = item.selectedDays?.length || item.menu?.items?.length || 5;
