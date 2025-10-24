@@ -18,7 +18,6 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
-
 interface MenuItem {
   id: string;
   name: string;
@@ -32,14 +31,12 @@ interface MenuItem {
   allergens: string[];
   image_url: string;
 }
-
 interface WeeklyMenu {
   id: string;
   start_date: string;
   end_date: string;
   items: any;
 }
-
 const Menu = () => {
   const [currentMenu, setCurrentMenu] = useState<WeeklyMenu | null>(null);
   const [menuHistory, setMenuHistory] = useState<WeeklyMenu[]>([]);
@@ -51,6 +48,14 @@ const Menu = () => {
   const [selectedMenuContext, setSelectedMenuContext] = useState<WeeklyMenu | null>(null);
   const [mealDetails, setMealDetails] = useState<Record<string, MenuItem>>({});
   const [mealDetailsByName, setMealDetailsByName] = useState<Record<string, MenuItem>>({});
+  const [customCalories, setCustomCalories] = useState("");
+  const [customProteins, setCustomProteins] = useState("");
+  const [customCarbs, setCustomCarbs] = useState("");
+  const [customFats, setCustomFats] = useState("");
+  const [customDayCalories, setCustomDayCalories] = useState("");
+  const [customDayProteins, setCustomDayProteins] = useState("");
+  const [customDayCarbs, setCustomDayCarbs] = useState("");
+  const [customDayFats, setCustomDayFats] = useState("");
   const [selectedDays, setSelectedDays] = useState<string[]>([]);
   const [isVegetarian, setIsVegetarian] = useState(false);
   const [isDayVegetarian, setIsDayVegetarian] = useState(false);
@@ -65,7 +70,6 @@ const Menu = () => {
       .replace(/^🥤\s*/, "")
       .trim();
   };
-
   const categoryFromString = (label: string) => {
     if (label?.startsWith("🍳"))
       return {
@@ -87,7 +91,6 @@ const Menu = () => {
       label: "Jedlo",
     };
   };
-
   // Helper to check if a day is in the past or today
   const isDayBeforeOrToday = (dayName: string, menuStartDate: string) => {
     const dayMap: Record<string, number> = {
@@ -142,12 +145,15 @@ const Menu = () => {
       label: "XXL+ (3500+ kcal)",
       description: "Profesionálni športovci",
     },
+    {
+      value: "CUSTOM",
+      label: "Na mieru",
+      description: "Vlastný počet kalórií a makroživín",
+    },
   ];
-
   useEffect(() => {
     fetchMenus();
   }, []);
-
   useEffect(() => {
     // Set only future weekdays as selected by default when menu loads
     if (currentMenu?.items && Array.isArray(currentMenu.items)) {
@@ -158,7 +164,6 @@ const Menu = () => {
       setSelectedDays(availableDays);
     }
   }, [currentMenu]);
-
   const fetchMenus = async () => {
     const { data, error } = await supabase.from("weekly_menus").select("*").order("created_at", {
       ascending: false,
@@ -185,7 +190,6 @@ const Menu = () => {
       }
     }
   };
-
   const handleAddToCart = () => {
     if (selectedDays.length === 0) {
       toast.error("Prosím vyberte aspoň jeden deň");
@@ -202,7 +206,12 @@ const Menu = () => {
       toast.error("Prosím vyberte veľkosť menu");
       return;
     }
-
+    if (selectedSize === "CUSTOM") {
+      if (!customCalories || !customProteins || !customCarbs || !customFats) {
+        toast.error("Prosím vyplňte všetky hodnoty pre vlastné menu");
+        return;
+      }
+    }
     if (!currentMenu) {
       toast.error("Žiadne menu nie je k dispozícii");
       return;
@@ -217,6 +226,14 @@ const Menu = () => {
       isVegetarian: isVegetarian,
       menu: { ...currentMenu, items: filteredItems },
       selectedDays: selectedDays,
+      ...(selectedSize === "CUSTOM" && {
+        customNutrition: {
+          calories: parseInt(customCalories),
+          proteins: parseInt(customProteins),
+          carbs: parseInt(customCarbs),
+          fats: parseInt(customFats),
+        },
+      }),
     };
     localStorage.setItem("cart", JSON.stringify([cartItem]));
     window.dispatchEvent(new Event("cartUpdated"));
@@ -224,13 +241,15 @@ const Menu = () => {
     setIsDialogOpen(false);
     setSelectedSize("");
     setIsVegetarian(false);
+    setCustomCalories("");
+    setCustomProteins("");
+    setCustomCarbs("");
+    setCustomFats("");
     navigate("/cart");
   };
-
   const toggleDay = (day: string) => {
     setSelectedDays((prev) => (prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day]));
   };
-
   const toggleAllDays = () => {
     if (currentMenu?.items && Array.isArray(currentMenu.items)) {
       const availableDays = currentMenu.items
@@ -244,47 +263,6 @@ const Menu = () => {
       }
     }
   };
-
-  const handleAddDayToCart = () => {
-    if (!selectedDaySize) {
-      toast.error("Prosím vyberte veľkosť menu");
-      return;
-    }
-
-    // Check if selected day is in the past or today
-    if (selectedDay && selectedMenuContext && isDayBeforeOrToday(selectedDay.day, selectedMenuContext.start_date)) {
-      toast.error("Nemôžete objednať dni v minulosti alebo dnešný deň");
-      return;
-    }
-
-    if (!selectedDay || !selectedMenuContext) {
-      toast.error("Chyba pri pridávaní do košíka");
-      return;
-    }
-
-    // Get existing cart or create new
-    const existingCart = localStorage.getItem("cart");
-    const cart = existingCart ? JSON.parse(existingCart) : [];
-
-    // Add day to cart
-    const dayItem = {
-      type: "day",
-      menuId: selectedMenuContext.id,
-      size: selectedDaySize,
-      isVegetarian: isDayVegetarian,
-      day: selectedDay.day,
-      meals: selectedDay.meals,
-      weekRange: `${new Date(selectedMenuContext.start_date).toLocaleDateString("sk-SK")} - ${new Date(selectedMenuContext.end_date).toLocaleDateString("sk-SK")}`,
-    };
-    cart.push(dayItem);
-    localStorage.setItem("cart", JSON.stringify(cart));
-    window.dispatchEvent(new Event("cartUpdated"));
-    toast.success(`${selectedDay.day} pridaný do košíka!`);
-    setIsDayDetailOpen(false);
-    setSelectedDaySize("");
-    setIsDayVegetarian(false);
-  };
-
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
@@ -443,6 +421,58 @@ const Menu = () => {
                         </RadioGroup>
                       </div>
 
+                      {selectedSize === "CUSTOM" && (
+                        <div className="space-y-4 mt-4 p-4 border border-accent/30 rounded-lg bg-accent/5">
+                          <h4 className="font-semibold text-foreground">Zadajte vlastné hodnoty:</h4>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <Label htmlFor="custom-calories">Kalórie (kcal)</Label>
+                              <Input
+                                id="custom-calories"
+                                type="number"
+                                placeholder="napr. 2200"
+                                value={customCalories}
+                                onChange={(e) => setCustomCalories(e.target.value)}
+                                className="bg-background"
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="custom-proteins">Bielkoviny (g)</Label>
+                              <Input
+                                id="custom-proteins"
+                                type="number"
+                                placeholder="napr. 150"
+                                value={customProteins}
+                                onChange={(e) => setCustomProteins(e.target.value)}
+                                className="bg-background"
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="custom-carbs">Sacharidy (g)</Label>
+                              <Input
+                                id="custom-carbs"
+                                type="number"
+                                placeholder="napr. 200"
+                                value={customCarbs}
+                                onChange={(e) => setCustomCarbs(e.target.value)}
+                                className="bg-background"
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="custom-fats">Tuky (g)</Label>
+                              <Input
+                                id="custom-fats"
+                                type="number"
+                                placeholder="napr. 70"
+                                value={customFats}
+                                onChange={(e) => setCustomFats(e.target.value)}
+                                className="bg-background"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
                       <Button
                         onClick={handleAddToCart}
                         className="w-full bg-accent text-accent-foreground hover:glow-gold-strong transition-smooth"
@@ -530,58 +560,6 @@ const Menu = () => {
                           );
                         })}
                     </div>
-
-                    {/* Size selection and add to cart - only for current menu */}
-                    {selectedMenuContext?.id === currentMenu?.id && (
-                      <div className="mt-6 pt-6 border-t border-border space-y-4">
-                        {/* Vegetarian Option */}
-                        {selectedDaySize && (
-                          <div className="flex items-center space-x-3 p-3 border border-accent/30 rounded-lg bg-accent/5">
-                            <Checkbox
-                              id="day-vegetarian"
-                              checked={isDayVegetarian}
-                              onCheckedChange={(checked) => setIsDayVegetarian(checked as boolean)}
-                            />
-                            <Label htmlFor="day-vegetarian" className="flex-1 cursor-pointer">
-                              <div className="font-bold text-primary text-sm">Vegetariánske menu</div>
-                              <div className="text-xs text-muted-foreground">
-                                €16.99/deň (Klasické: €14.99/deň) - Bez mäsa, čerstvé ingrediencie
-                              </div>
-                            </Label>
-                          </div>
-                        )}
-
-                        <h4 className="font-bold text-lg text-foreground">Vyberte veľkosť</h4>
-                        <RadioGroup value={selectedDaySize} onValueChange={setSelectedDaySize}>
-                          {menuSizes.map((size) => (
-                            <div key={size.value} className="flex items-center space-x-3 card-premium p-3">
-                              <RadioGroupItem value={size.value} id={`day-${size.value}`} />
-                              <Label htmlFor={`day-${size.value}`} className="flex-1 cursor-pointer">
-                                <div className="font-bold text-primary text-sm">{size.label}</div>
-                                <div className="text-xs text-muted-foreground">{size.description}</div>
-                              </Label>
-                            </div>
-                          ))}
-                        </RadioGroup>
-
-                        <div className="flex gap-3">
-                          <Button
-                            onClick={handleAddDayToCart}
-                            className="flex-1 bg-accent text-accent-foreground hover:glow-gold-strong transition-smooth"
-                            disabled={!selectedDaySize}
-                          >
-                            Pridať do košíka
-                          </Button>
-                          <Button
-                            onClick={() => navigate("/cart")}
-                            variant="outline"
-                            className="border-accent text-accent hover:bg-accent/10"
-                          >
-                            Zobraziť košík
-                          </Button>
-                        </div>
-                      </div>
-                    )}
                   </DialogContent>
                 </Dialog>
               </CardContent>
@@ -664,5 +642,4 @@ const Menu = () => {
     </div>
   );
 };
-
 export default Menu;
