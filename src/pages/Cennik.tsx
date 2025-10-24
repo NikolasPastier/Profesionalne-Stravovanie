@@ -49,7 +49,7 @@ const Cennik = () => {
     {
       size: "XXL+",
       calories: "3500+ kcal",
-      price: "€14.99",
+      price: "€16.99",
       description: "Profesionálni športovci",
       features: ["Pre profesionálov", "Maximálny obsah bielkovín", "Čerstvé suroviny", "Doručenie priamo k dverám"],
     },
@@ -69,7 +69,7 @@ const Cennik = () => {
           <CardHeader className="text-center">
             <CardTitle className="text-4xl font-display text-gradient-gold mb-4">Cenník</CardTitle>
             <div className="mt-4">
-              <span className="text-练习 font-bold text-primary">€14.99</span>
+              <span className="text-5xl font-bold text-primary">€14.99</span>
               <span className="text-xl text-muted-foreground">/deň</span>
             </div>
           </CardHeader>
@@ -89,8 +89,10 @@ const Cennik = () => {
                       </span>
                     </div>
                   )}
-                  <h3 className="text-2xl font-display text-gradient-gold mb-2">{tier.size}</h3>
-                  <p className="text-primary text-lg font-bold mb-1">{tier.calories}</p>
+                  <div className="flex items-baseline gap-2 mb-2">
+                    <h3 className="text-2xl font-display text-gradient-gold">{tier.size}</h3>
+                    <p className="text-primary text-lg font-bold">{tier.calories}</p>
+                  </div>
                   <p className="text-primary text-lg font-bold mb-1">{tier.price}/deň</p>
                   <p className="text-sm text-muted-foreground mb-4">{tier.description}</p>
                   <ul className="space-y-2">
