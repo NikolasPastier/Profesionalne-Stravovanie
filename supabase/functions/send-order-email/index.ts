@@ -102,7 +102,7 @@ const handler = async (req: Request): Promise<Response> => {
       calorieMap[orderData.menuSize || ""] || (orderData.calories ? orderData.calories.toString() : "0");
     const vegetarianText = orderData.vegetarian ? " (Vegetariánska verzia)" : "";
 
-    // Create order items HTML
+    // Create order items HTML with new layout
     const orderItemsHtml = orderData.orderItems
       .map((item) => {
         let itemHtml = `
@@ -112,7 +112,7 @@ const handler = async (req: Request): Promise<Response> => {
           <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right;">${item.price.toFixed(2)} €</td>
         </tr>`;
 
-        // Add detailed days, meals, and calories if available
+        // Add detailed days and meals with category labels
         if (item.days && item.days.length > 0) {
           const categoryLabels: Record<string, string> = {
             breakfast: "Raňajky",
@@ -122,16 +122,33 @@ const handler = async (req: Request): Promise<Response> => {
 
           const daysHtml = item.days
             .map((day) => {
-              const mealsHtml = day.meals
+              const mealsByCategory = day.meals.reduce(
+                (acc, meal) => {
+                  const category = categoryLabels[meal.category] || meal.category;
+                  if (!acc[category]) acc[category] = [];
+                  acc[category].push(meal.name);
+                  return acc;
+                },
+                {} as Record<string, string[]>,
+              );
+
+              const mealsHtml = Object.entries(mealsByCategory)
                 .map(
-                  (meal) =>
-                    `<div style="margin-left: 15px; color: #666;">• ${categoryLabels[meal.category] || meal.category}: ${meal.name}</div>`,
+                  ([category, meals]) => `
+                  <div style="margin-top: 10px;">
+                    <strong style="color: #d4a017;">${category}:</strong>
+                    <ul style="list-style-type: disc; padding-left: 20px; margin: 5px 0 0 0;">
+                      ${meals.map((meal) => `<li style="margin-left: 20px; color: white;">${meal}</li>`).join("")}
+                    </ul>
+                  </div>
+                `,
                 )
                 .join("");
+
               return `
         <tr>
-          <td colspan="3" style="padding: 4px 8px 8px 20px; border-bottom: 1px solid #f0f0f0;">
-            <div style="font-weight: 600; color: #667eea; margin-bottom: 4px;">${day.day} (${menuCalories} kcal)</div>
+          <td colspan="3" style="padding: 15px; background: #1a1a1a; color: white; border-bottom: 1px solid #333;">
+            <h3 style="color: #d4a017; margin: 0 0 10px;">${day.day}</h3>
             ${mealsHtml}
           </td>
         </tr>`;
