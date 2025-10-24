@@ -1,17 +1,14 @@
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { User, LogOut, Menu as MenuIcon, ShoppingCart, Moon, Sun } from "lucide-react";
+import { User, LogOut, Menu as MenuIcon, ShoppingCart } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Switch } from "@/components/ui/switch";
-import { useTheme } from "@/components/ThemeProvider";
 import logo from "@/assets/logo.svg";
 export const Navigation = () => {
   const [user, setUser] = useState<any>(null);
   const [cartCount, setCartCount] = useState(0);
   const navigate = useNavigate();
-  const { theme, setTheme } = useTheme();
   
   useEffect(() => {
     supabase.auth.getSession().then(({
@@ -103,15 +100,6 @@ export const Navigation = () => {
             )}
           </Button>
 
-          <div className="flex items-center gap-2">
-            <Sun className="h-4 w-4" />
-            <Switch 
-              checked={theme === "dark"} 
-              onCheckedChange={(checked) => setTheme(checked ? "dark" : "light")}
-            />
-            <Moon className="h-4 w-4" />
-          </div>
-
           {user ? <div className="flex items-center gap-3">
               <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")} className="gap-2">
                 <User className="h-4 w-4" />
@@ -150,15 +138,6 @@ export const Navigation = () => {
                   </span>
                 )}
               </Button>
-
-              <div className="flex items-center gap-2 py-2">
-                <Sun className="h-4 w-4" />
-                <Switch 
-                  checked={theme === "dark"} 
-                  onCheckedChange={(checked) => setTheme(checked ? "dark" : "light")}
-                />
-                <Moon className="h-4 w-4" />
-              </div>
 
               {user ? <>
                   <Button variant="ghost" onClick={() => navigate("/dashboard")} className="gap-2 justify-start">
