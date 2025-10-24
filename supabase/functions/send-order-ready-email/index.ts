@@ -32,6 +32,37 @@ interface OrderReadyEmailRequest {
   dislikes?: string[];
 }
 
+// Helper function to get the delivery date (day before the meal day)
+function getDeliveryDateForMealDay(mealDay: string, orderDate: Date): string {
+  const daysOfWeek = ["Pondelok", "Utorok", "Streda", "Štvrtok", "Piatok"];
+  const dayIndex = daysOfWeek.indexOf(mealDay);
+
+  if (dayIndex === -1) return ""; // Invalid day
+
+  // Create a date object for the current week's Monday
+  const today = new Date(orderDate);
+  const dayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+  const daysSinceMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+  const monday = new Date(today);
+  monday.setDate(today.getDate() - daysSinceMonday);
+
+  // Calculate the meal date (current week's meal day)
+  const mealDate = new Date(monday);
+  mealDate.setDate(monday.getDate() + dayIndex);
+
+  // Delivery is the day before the meal day
+  const deliveryDate = new Date(mealDate);
+  deliveryDate.setDate(mealDate.getDate() - 1);
+
+  // Format the delivery date
+  return deliveryDate.toLocaleDateString("sk-SK", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+}
+
 const handler = async (req: Request): Promise<Response> => {
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
@@ -51,10 +82,10 @@ const handler = async (req: Request): Promise<Response> => {
       });
     }
 
-    const { 
-      orderId, 
-      customerName, 
-      customerEmail, 
+    const {
+      orderId,
+      customerName,
+      customerEmail,
       deliveryDate,
       items,
       menuSize,
@@ -66,7 +97,7 @@ const handler = async (req: Request): Promise<Response> => {
       phone,
       note,
       allergies = [],
-      dislikes = []
+      dislikes = [],
     }: OrderReadyEmailRequest = await req.json();
 
     console.log("Sending order ready email to:", customerEmail);
@@ -75,69 +106,92 @@ const handler = async (req: Request): Promise<Response> => {
     // Format the order ID for display (first 8 characters)
     const orderIdShort = orderId.slice(0, 8);
 
-    // Use current date as the date when order is ready (when admin changes status to ready)
-    const readyDate = new Date().toLocaleDateString("sk-SK", {
-      weekday: "long",
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-    
+    // Use current date as the reference for order creation
+    const orderCreationDate = new Date();
+
     // Determine delivery time based on address
     const address = deliveryAddress.toLowerCase();
-    const bratislavaRegion = ['trnava', 'sereď', 'sered', 'bratislava', 'pezinok', 'senec', 'malacky', 'dunajská streda'];
-    
-    let deliveryTime = '17:00 - 19:00'; // Default for Nitra and surroundings
-    
+    const bratislavaRegion = [
+      "trnava",
+      "sereď",
+      "sered",
+      "bratislava",
+      "pezinok",
+      "senec",
+      "malacky",
+      "dunajská streda",
+    ];
+
+    let deliveryTime = "17:00 - 19:00"; // Default for Nitra and surroundings
+
     // Check if address contains any Bratislava region city
-    if (bratislavaRegion.some(city => address.includes(city))) {
-      deliveryTime = '19:00 - 21:00';
+    if (bratislavaRegion.some((city) => address.includes(city))) {
+      deliveryTime = "19:00 - 21:00";
     }
-    
+
     console.log(`Delivery address: ${deliveryAddress}, Delivery time: ${deliveryTime}`);
-    
-    // Create items list HTML with meal categories
-    const itemsHtml = items.map(dayItem => `
+
+    // Create items list HTML with meal categories and delivery dates
+    const itemsHtml = items
+      .map((dayItem) => {
+        const deliveryDateFormatted = getDeliveryDateForMealDay(dayItem.day, orderCreationDate);
+        return `
       <div style="margin-bottom: 24px; padding: 16px; background-color: #f9fafb; border-radius: 8px;">
-        <h3 style="color: #10b981; margin: 0 0 12px; font-size: 18px; font-weight: 600;">${dayItem.day}</h3>
+        <h3 style="color: #10b981; margin: 0 0 12px; font-size: 18px; font-weight: 600;">
+          ${dayItem.day} (Doručenie: ${deliveryDateFormatted})
+        </h3>
         <div style="margin-left: 12px;">
-          ${dayItem.meals.map(meal => {
-            const categoryLabel = meal.category === 'breakfast' ? '🍳 Raňajky' : 
-                                 meal.category === 'lunch' ? '🍽️ Obed' : 
-                                 '🌙 Večera';
-            return `
+          ${dayItem.meals
+            .map((meal) => {
+              const categoryLabel =
+                meal.category === "breakfast" ? "🍳 Raňajky" : meal.category === "lunch" ? "🍽️ Obed" : "🌙 Večera";
+              return `
               <div style="margin-bottom: 8px;">
                 <div style="font-size: 12px; color: #6b7280; margin-bottom: 2px;">${categoryLabel}</div>
                 <div style="color: #1f2937; font-size: 14px;">${meal.name}</div>
               </div>
             `;
-          }).join('')}
+            })
+            .join("")}
         </div>
       </div>
-    `).join('');
-    
+    `;
+      })
+      .join("");
+
     // Create preferences section if there are any
-    const preferencesHtml = (allergies.length > 0 || dislikes.length > 0) ? `
+    const preferencesHtml =
+      allergies.length > 0 || dislikes.length > 0
+        ? `
       <table role="presentation" style="width: 100%; border-collapse: collapse; margin-top: 24px; background-color: #fef3c7; border-radius: 8px; overflow: hidden;">
         <tr>
           <td style="padding: 20px;">
             <h3 style="margin: 0 0 12px; color: #92400e; font-size: 16px; font-weight: 600;">⚠️ Osobné preferencie</h3>
-            ${allergies.length > 0 ? `
+            ${
+              allergies.length > 0
+                ? `
               <div style="margin-bottom: 8px;">
                 <strong style="color: #92400e; font-size: 14px;">Alergie:</strong>
-                <span style="color: #78350f; font-size: 14px; margin-left: 8px;">${allergies.join(', ')}</span>
+                <span style="color: #78350f; font-size: 14px; margin-left: 8px;">${allergies.join(", ")}</span>
               </div>
-            ` : ''}
-            ${dislikes.length > 0 ? `
+            `
+                : ""
+            }
+            ${
+              dislikes.length > 0
+                ? `
               <div>
                 <strong style="color: #92400e; font-size: 14px;">Neobľúbené jedlá:</strong>
-                <span style="color: #78350f; font-size: 14px; margin-left: 8px;">${dislikes.join(', ')}</span>
+                <span style="color: #78350f; font-size: 14px; margin-left: 8px;">${dislikes.join(", ")}</span>
               </div>
-            ` : ''}
+            `
+                : ""
+            }
           </td>
         </tr>
       </table>
-    ` : '';
+    `
+        : "";
 
     // Create the email HTML
     const emailHtml = `
@@ -187,14 +241,6 @@ const handler = async (req: Request): Promise<Response> => {
                           <strong style="color: #047857; font-size: 16px;">#${orderIdShort}</strong>
                         </td>
                       </tr>
-                      <tr>
-                        <td style="padding: 8px 0; border-top: 1px solid #d1fae5;">
-                          <span style="color: #065f46; font-size: 14px; font-weight: 600;">Dátum doručenia:</span>
-                        </td>
-                        <td align="right" style="padding: 8px 0; border-top: 1px solid #d1fae5;">
-                          <strong style="color: #047857; font-size: 14px;">${readyDate}</strong>
-                        </td>
-                      </tr>
                     </table>
                   </td>
                 </tr>
@@ -229,7 +275,7 @@ const handler = async (req: Request): Promise<Response> => {
                           <span style="color: #6b7280; font-size: 14px;">Typ doručenia:</span>
                         </td>
                         <td align="right" style="padding: 8px 0; border-top: 1px solid #e5e7eb;">
-                          <strong style="color: #1f2937; font-size: 14px;">${deliveryType === 'weekly' ? 'Týždenné menu' : 'Jednorazové'}</strong>
+                          <strong style="color: #1f2937; font-size: 14px;">${deliveryType === "weekly" ? "Týždenné menu" : "Jednorazové"}</strong>
                         </td>
                       </tr>
                     </table>
@@ -260,14 +306,18 @@ const handler = async (req: Request): Promise<Response> => {
                           <strong style="color: #1f2937; font-size: 14px;">${phone}</strong>
                         </td>
                       </tr>
-                      ${note ? `
+                      ${
+                        note
+                          ? `
                         <tr>
                           <td colspan="2" style="padding: 12px 0; border-top: 1px solid #e5e7eb;">
                             <span style="color: #6b7280; font-size: 14px; display: block; margin-bottom: 4px;">Poznámka:</span>
                             <p style="margin: 0; color: #1f2937; font-size: 14px; background-color: #fef3c7; padding: 8px; border-radius: 4px;">${note}</p>
                           </td>
                         </tr>
-                      ` : ''}
+                      `
+                          : ""
+                      }
                     </table>
 
                     <!-- Price summary -->
