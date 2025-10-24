@@ -187,20 +187,7 @@ const handler = async (req: Request): Promise<Response> => {
               <p><strong>Telefón:</strong> ${orderData.phone}</p>
               ${orderData.note ? `<p><strong>Poznámka:</strong> ${orderData.note}</p>` : ''}
             </div>
-            
-         
           </div>
-              <!-- Footer -->
-          <tr>
-            <td style="background-color: #f9fafb; padding: 30px; text-align: center; border-top: 1px solid #e5e7eb;">
-              <p style="margin: 0 0 8px; color: #6b7280; font-size: 14px;">
-                VIP Krabičky
-              </p>
-              <p style="margin: 0; color: #9ca3af; font-size: 12px;">
-                Zdravé jedlo priamo k vám domov
-              </p>
-            </td>
-          </tr>
         </body>
       </html>
     `;
