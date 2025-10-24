@@ -37,6 +37,7 @@ interface OrderEmailRequest {
   menuSize?: string;
   calories?: number;
   deliveryType?: string;
+  vegetarian?: boolean;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -76,13 +77,30 @@ const handler = async (req: Request): Promise<Response> => {
     });
 
     // Create preferences section
-    const preferencesSection = (orderData.allergies?.length || orderData.dislikes?.length) ? `
+    const preferencesSection =
+      orderData.allergies?.length || orderData.dislikes?.length
+        ? `
       <div style="background: #fef3c7; padding: 15px; border-radius: 8px; margin: 20px 0;">
         <h3 style="color: #92400e; margin: 0 0 10px;">⚠️ Osobné preferencie</h3>
-        ${orderData.allergies?.length ? `<p style="margin: 5px 0;"><strong>Alergie:</strong> ${orderData.allergies.join(', ')}</p>` : ''}
-        ${orderData.dislikes?.length ? `<p style="margin: 5px 0;"><strong>Neobľúbené jedlá:</strong> ${orderData.dislikes.join(', ')}</p>` : ''}
+        ${orderData.allergies?.length ? `<p style="margin: 5px 0;"><strong>Alergie:</strong> ${orderData.allergies.join(", ")}</p>` : ""}
+        ${orderData.dislikes?.length ? `<p style="margin: 5px 0;"><strong>Neobľúbené jedlá:</strong> ${orderData.dislikes.join(", ")}</p>` : ""}
       </div>
-    ` : '';
+    `
+        : "";
+
+    // Calorie mapping based on menu size
+    const calorieMap: Record<string, string> = {
+      S: "1600",
+      M: "2000",
+      L: "2500",
+      XL: "3000",
+      "XXL+": "3500+",
+    };
+
+    // Determine calories display
+    const menuCalories =
+      calorieMap[orderData.menuSize || ""] || (orderData.calories ? orderData.calories.toString() : "0");
+    const vegetarianText = orderData.vegetarian ? " (Vegetariánska verzia)" : "";
 
     // Create order items HTML
     const orderItemsHtml = orderData.orderItems
@@ -94,7 +112,7 @@ const handler = async (req: Request): Promise<Response> => {
           <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right;">${item.price.toFixed(2)} €</td>
         </tr>`;
 
-        // Add detailed days and meals if available
+        // Add detailed days, meals, and calories if available
         if (item.days && item.days.length > 0) {
           const categoryLabels: Record<string, string> = {
             breakfast: "Raňajky",
@@ -113,7 +131,7 @@ const handler = async (req: Request): Promise<Response> => {
               return `
         <tr>
           <td colspan="3" style="padding: 4px 8px 8px 20px; border-bottom: 1px solid #f0f0f0;">
-            <div style="font-weight: 600; color: #667eea; margin-bottom: 4px;">${day.day}</div>
+            <div style="font-weight: 600; color: #667eea; margin-bottom: 4px;">${day.day} (${menuCalories} kcal)</div>
             ${mealsHtml}
           </td>
         </tr>`;
@@ -151,9 +169,8 @@ const handler = async (req: Request): Promise<Response> => {
 
             <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0;">
               <h2 style="color: #667eea; margin-top: 0;">Detaily objednávky</h2>
-              ${orderData.menuSize ? `<p><strong>Typ menu:</strong> ${orderData.menuSize}</p>` : ''}
-              ${orderData.calories ? `<p><strong>Kalórie:</strong> ${orderData.calories} kcal</p>` : ''}
-              ${orderData.deliveryType ? `<p><strong>Typ doručenia:</strong> ${orderData.deliveryType === 'weekly' ? 'Týždenné menu' : 'Jednorazové'}</p>` : ''}
+              ${orderData.menuSize ? `<p><strong>Typ menu:</strong> ${orderData.menuSize} (${menuCalories} kcal)${vegetarianText}</p>` : ""}
+              ${orderData.deliveryType ? `<p><strong>Typ doručenia:</strong> ${orderData.deliveryType === "weekly" ? "Týždenné menu" : "Jednorazové"}</p>` : ""}
               
               <h3 style="color: #667eea; margin: 20px 0 10px;">Obsah objednávky</h3>
               
@@ -185,7 +202,7 @@ const handler = async (req: Request): Promise<Response> => {
               <h3 style="color: #667eea; margin: 20px 0 10px;">Doručenie</h3>
               <p><strong>Adresa:</strong> ${orderData.deliveryAddress}</p>
               <p><strong>Telefón:</strong> ${orderData.phone}</p>
-              ${orderData.note ? `<p><strong>Poznámka:</strong> ${orderData.note}</p>` : ''}
+              ${orderData.note ? `<p><strong>Poznámka:</strong> ${orderData.note}</p>` : ""}
             </div>
           </div>
         </body>
@@ -215,9 +232,8 @@ const handler = async (req: Request): Promise<Response> => {
 
             <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0;">
               <h2 style="color: #f5576c; margin-top: 0;">Detaily objednávky</h2>
-              ${orderData.menuSize ? `<p><strong>Typ menu:</strong> ${orderData.menuSize}</p>` : ''}
-              ${orderData.calories ? `<p><strong>Kalórie:</strong> ${orderData.calories} kcal</p>` : ''}
-              ${orderData.deliveryType ? `<p><strong>Typ doručenia:</strong> ${orderData.deliveryType === 'weekly' ? 'Týždenné menu' : 'Jednorazové'}</p>` : ''}
+              ${orderData.menuSize ? `<p><strong>Typ menu:</strong> ${orderData.menuSize} (${menuCalories} kcal)${vegetarianText}</p>` : ""}
+              ${orderData.deliveryType ? `<p><strong>Typ doručenia:</strong> ${orderData.deliveryType === "weekly" ? "Týždenné menu" : "Jednorazové"}</p>` : ""}
               
               <h3 style="color: #f5576c; margin: 20px 0 10px;">Obsah objednávky</h3>
               
@@ -251,7 +267,7 @@ const handler = async (req: Request): Promise<Response> => {
               <p><strong>Email:</strong> ${orderData.customerEmail}</p>
               <p><strong>Telefón:</strong> ${orderData.phone}</p>
               <p><strong>Adresa:</strong> ${orderData.deliveryAddress}</p>
-              ${orderData.note ? `<p><strong>Poznámka:</strong> ${orderData.note}</p>` : ''}
+              ${orderData.note ? `<p><strong>Poznámka:</strong> ${orderData.note}</p>` : ""}
             </div>
           </div>
         </body>
