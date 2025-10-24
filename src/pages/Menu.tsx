@@ -2,7 +2,14 @@ import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -11,6 +18,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+
 interface MenuItem {
   id: string;
   name: string;
@@ -24,12 +32,14 @@ interface MenuItem {
   allergens: string[];
   image_url: string;
 }
+
 interface WeeklyMenu {
   id: string;
   start_date: string;
   end_date: string;
   items: any;
 }
+
 const Menu = () => {
   const [currentMenu, setCurrentMenu] = useState<WeeklyMenu | null>(null);
   const [menuHistory, setMenuHistory] = useState<WeeklyMenu[]>([]);
@@ -41,14 +51,6 @@ const Menu = () => {
   const [selectedMenuContext, setSelectedMenuContext] = useState<WeeklyMenu | null>(null);
   const [mealDetails, setMealDetails] = useState<Record<string, MenuItem>>({});
   const [mealDetailsByName, setMealDetailsByName] = useState<Record<string, MenuItem>>({});
-  const [customCalories, setCustomCalories] = useState("");
-  const [customProteins, setCustomProteins] = useState("");
-  const [customCarbs, setCustomCarbs] = useState("");
-  const [customFats, setCustomFats] = useState("");
-  const [customDayCalories, setCustomDayCalories] = useState("");
-  const [customDayProteins, setCustomDayProteins] = useState("");
-  const [customDayCarbs, setCustomDayCarbs] = useState("");
-  const [customDayFats, setCustomDayFats] = useState("");
   const [selectedDays, setSelectedDays] = useState<string[]>([]);
   const [isVegetarian, setIsVegetarian] = useState(false);
   const [isDayVegetarian, setIsDayVegetarian] = useState(false);
@@ -57,98 +59,109 @@ const Menu = () => {
   // Helpers to support legacy weekly_menus that store meal names as strings with emojis
   const cleanMealString = (label: string) => {
     if (!label) return "";
-    return label.replace(/^🍳\s*/, '').replace(/^🍽️\s*/, '').replace(/^🥤\s*/, '').trim();
+    return label
+      .replace(/^🍳\s*/, "")
+      .replace(/^🍽️\s*/, "")
+      .replace(/^🥤\s*/, "")
+      .trim();
   };
+
   const categoryFromString = (label: string) => {
-    if (label?.startsWith('🍳')) return {
-      emoji: '🍳',
-      label: 'Raňajky'
-    };
-    if (label?.startsWith('🍽️')) return {
-      emoji: '🍽️',
-      label: 'Obed'
-    };
-    if (label?.startsWith('🥤')) return {
-      emoji: '🥤',
-      label: 'Večera'
-    };
+    if (label?.startsWith("🍳"))
+      return {
+        emoji: "🍳",
+        label: "Raňajky",
+      };
+    if (label?.startsWith("🍽️"))
+      return {
+        emoji: "🍽️",
+        label: "Obed",
+      };
+    if (label?.startsWith("🥤"))
+      return {
+        emoji: "🥤",
+        label: "Večera",
+      };
     return {
-      emoji: '🍽️',
-      label: 'Jedlo'
+      emoji: "🍽️",
+      label: "Jedlo",
     };
   };
+
   // Helper to check if a day is in the past or today
   const isDayBeforeOrToday = (dayName: string, menuStartDate: string) => {
     const dayMap: Record<string, number> = {
-      "Pondelok": 1,
-      "Utorok": 2,
-      "Streda": 3,
-      "Štvrtok": 4,
-      "Piatok": 5
+      Pondelok: 1,
+      Utorok: 2,
+      Streda: 3,
+      Štvrtok: 4,
+      Piatok: 5,
     };
-    
+
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    
+
     const menuStart = new Date(menuStartDate);
     menuStart.setHours(0, 0, 0, 0);
-    
+
     // Calculate which day of the week this day falls on
     const dayIndex = dayMap[dayName];
     if (!dayIndex) return true; // If unknown day, disable it
-    
+
     // Calculate the actual date for this day (Monday = 1, Friday = 5)
     const dayDate = new Date(menuStart);
     dayDate.setDate(menuStart.getDate() + (dayIndex - 1));
-    
+
     // Return true if this day is today or before today
     return dayDate <= today;
   };
 
-  const menuSizes = [{
-    value: "S",
-    label: "S (1600 kcal)",
-    description: "Ženy, redukcia tuku"
-  }, {
-    value: "M",
-    label: "M (2000 kcal)",
-    description: "Udržanie hmotnosti"
-  }, {
-    value: "L",
-    label: "L (2500 kcal)",
-    description: "Muži, aktívny životný štýl"
-  }, {
-    value: "XL",
-    label: "XL (3000 kcal)",
-    description: "Vyššia fyzická aktivita"
-  }, {
-    value: "XXL",
-    label: "XXL+ (3500+ kcal)",
-    description: "Profesionálni športovci"
-  }, {
-    value: "CUSTOM",
-    label: "Na mieru",
-    description: "Vlastný počet kalórií a makroživín"
-  }];
+  const menuSizes = [
+    {
+      value: "S",
+      label: "S (1600 kcal)",
+      description: "Ženy, redukcia tuku",
+    },
+    {
+      value: "M",
+      label: "M (2000 kcal)",
+      description: "Udržanie hmotnosti",
+    },
+    {
+      value: "L",
+      label: "L (2500 kcal)",
+      description: "Muži, aktívny životný štýl",
+    },
+    {
+      value: "XL",
+      label: "XL (3000 kcal)",
+      description: "Vyššia fyzická aktivita",
+    },
+    {
+      value: "XXL",
+      label: "XXL+ (3500+ kcal)",
+      description: "Profesionálni športovci",
+    },
+  ];
+
   useEffect(() => {
     fetchMenus();
   }, []);
+
   useEffect(() => {
     // Set only future weekdays as selected by default when menu loads
     if (currentMenu?.items && Array.isArray(currentMenu.items)) {
       const availableDays = currentMenu.items
-        .filter((day: any) => ["Pondelok","Utorok","Streda","Štvrtok","Piatok"].includes(day.day))
+        .filter((day: any) => ["Pondelok", "Utorok", "Streda", "Štvrtok", "Piatok"].includes(day.day))
         .filter((day: any) => !isDayBeforeOrToday(day.day, currentMenu.start_date))
         .map((day: any) => day.day);
       setSelectedDays(availableDays);
     }
   }, [currentMenu]);
+
   const fetchMenus = async () => {
-    const {
-      data,
-      error
-    } = await supabase.from("weekly_menus").select("*").order("created_at", {
-      ascending: false
+    const { data, error } = await supabase.from("weekly_menus").select("*").order("created_at", {
+      ascending: false,
     });
     if (error) {
       toast.error("Chyba pri načítaní menu");
@@ -159,10 +172,7 @@ const Menu = () => {
       setMenuHistory(data.slice(1));
 
       // Fetch meal details for both new (object with id) and legacy (string with emoji) menus
-      const {
-        data: mealsData,
-        error: mealsError
-      } = await supabase.from("menu_items").select("*");
+      const { data: mealsData, error: mealsError } = await supabase.from("menu_items").select("*");
       if (!mealsError && mealsData) {
         const byId: Record<string, MenuItem> = {};
         const byName: Record<string, MenuItem> = {};
@@ -175,28 +185,24 @@ const Menu = () => {
       }
     }
   };
+
   const handleAddToCart = () => {
     if (selectedDays.length === 0) {
       toast.error("Prosím vyberte aspoň jeden deň");
       return;
     }
-    
+
     // Check if any selected day is in the past or today
-    if (currentMenu && selectedDays.some(day => isDayBeforeOrToday(day, currentMenu.start_date))) {
+    if (currentMenu && selectedDays.some((day) => isDayBeforeOrToday(day, currentMenu.start_date))) {
       toast.error("Nemôžete objednať dni v minulosti alebo dnešný deň");
       return;
     }
-    
+
     if (!selectedSize) {
       toast.error("Prosím vyberte veľkosť menu");
       return;
     }
-    if (selectedSize === "CUSTOM") {
-      if (!customCalories || !customProteins || !customCarbs || !customFats) {
-        toast.error("Prosím vyplňte všetky hodnoty pre vlastné menu");
-        return;
-      }
-    }
+
     if (!currentMenu) {
       toast.error("Žiadne menu nie je k dispozícii");
       return;
@@ -205,20 +211,12 @@ const Menu = () => {
     // Store in localStorage for now - selected weekdays only
     const filteredItems = (currentMenu.items || []).filter((day: any) => selectedDays.includes(day.day));
     const cartItem = {
-      type: 'week',
+      type: "week",
       menuId: currentMenu.id,
       size: selectedSize,
       isVegetarian: isVegetarian,
       menu: { ...currentMenu, items: filteredItems },
       selectedDays: selectedDays,
-      ...(selectedSize === "CUSTOM" && {
-        customNutrition: {
-          calories: parseInt(customCalories),
-          proteins: parseInt(customProteins),
-          carbs: parseInt(customCarbs),
-          fats: parseInt(customFats)
-        }
-      })
     };
     localStorage.setItem("cart", JSON.stringify([cartItem]));
     window.dispatchEvent(new Event("cartUpdated"));
@@ -226,19 +224,17 @@ const Menu = () => {
     setIsDialogOpen(false);
     setSelectedSize("");
     setIsVegetarian(false);
-    setCustomCalories("");
-    setCustomProteins("");
-    setCustomCarbs("");
-    setCustomFats("");
     navigate("/cart");
   };
+
   const toggleDay = (day: string) => {
-    setSelectedDays(prev => prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day]);
+    setSelectedDays((prev) => (prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day]));
   };
+
   const toggleAllDays = () => {
     if (currentMenu?.items && Array.isArray(currentMenu.items)) {
       const availableDays = currentMenu.items
-        .filter((day: any) => ["Pondelok","Utorok","Streda","Štvrtok","Piatok"].includes(day.day))
+        .filter((day: any) => ["Pondelok", "Utorok", "Streda", "Štvrtok", "Piatok"].includes(day.day))
         .filter((day: any) => !isDayBeforeOrToday(day.day, currentMenu.start_date))
         .map((day: any) => day.day);
       if (selectedDays.length === availableDays.length) {
@@ -248,24 +244,19 @@ const Menu = () => {
       }
     }
   };
+
   const handleAddDayToCart = () => {
     if (!selectedDaySize) {
       toast.error("Prosím vyberte veľkosť menu");
       return;
     }
-    
+
     // Check if selected day is in the past or today
     if (selectedDay && selectedMenuContext && isDayBeforeOrToday(selectedDay.day, selectedMenuContext.start_date)) {
       toast.error("Nemôžete objednať dni v minulosti alebo dnešný deň");
       return;
     }
-    
-    if (selectedDaySize === "CUSTOM") {
-      if (!customDayCalories || !customDayProteins || !customDayCarbs || !customDayFats) {
-        toast.error("Prosím vyplňte všetky hodnoty pre vlastné menu");
-        return;
-      }
-    }
+
     if (!selectedDay || !selectedMenuContext) {
       toast.error("Chyba pri pridávaní do košíka");
       return;
@@ -277,21 +268,13 @@ const Menu = () => {
 
     // Add day to cart
     const dayItem = {
-      type: 'day',
+      type: "day",
       menuId: selectedMenuContext.id,
       size: selectedDaySize,
       isVegetarian: isDayVegetarian,
       day: selectedDay.day,
       meals: selectedDay.meals,
       weekRange: `${new Date(selectedMenuContext.start_date).toLocaleDateString("sk-SK")} - ${new Date(selectedMenuContext.end_date).toLocaleDateString("sk-SK")}`,
-      ...(selectedDaySize === "CUSTOM" && {
-        customNutrition: {
-          calories: parseInt(customDayCalories),
-          proteins: parseInt(customDayProteins),
-          carbs: parseInt(customDayCarbs),
-          fats: parseInt(customDayFats)
-        }
-      })
     };
     cart.push(dayItem);
     localStorage.setItem("cart", JSON.stringify(cart));
@@ -300,67 +283,77 @@ const Menu = () => {
     setIsDayDetailOpen(false);
     setSelectedDaySize("");
     setIsDayVegetarian(false);
-    setCustomDayCalories("");
-    setCustomDayProteins("");
-    setCustomDayCarbs("");
-    setCustomDayFats("");
   };
-  return <div className="min-h-screen bg-background">
+
+  return (
+    <div className="min-h-screen bg-background">
       <Navigation />
 
       <div className="container mx-auto px-4 pt-32 pb-20">
-        
-
         {/* Current Menu */}
         <section className="mb-20">
-          
-
-        {currentMenu ? <Card className="card-premium mx-4 md:mx-[150px]">
-            <CardHeader>
-              <CardTitle className="text-2xl text-gradient-gold text-center">
-                Menu na týždeň {new Date(currentMenu.start_date).toLocaleDateString("sk-SK")} - {new Date(currentMenu.end_date).toLocaleDateString("sk-SK")}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="px-4 md:px-6">
-              <div className="grid grid-cols-1 gap-6 max-w-2xl mx-auto">
-                {currentMenu.items && Array.isArray(currentMenu.items) && currentMenu.items.filter((d: any) => ["Pondelok","Utorok","Streda","Štvrtok","Piatok"].includes(d.day)).map((day: any, idx: number) => {
-                  const isPastDay = isDayBeforeOrToday(day.day, currentMenu.start_date);
-                  return <div 
-                    key={idx} 
-                    className={`border border-border rounded-lg p-4 bg-card/50 transition-smooth ${
-                      isPastDay 
-                        ? 'opacity-50 cursor-not-allowed' 
-                        : 'cursor-pointer hover:bg-card/70 hover:border-accent/50 hover:glow-gold'
-                    }`}
-                    onClick={() => {
-                      if (!isPastDay) {
-                        setSelectedDay(day);
-                        setSelectedMenuContext(currentMenu);
-                        setIsDayDetailOpen(true);
-                      }
-                    }}
-                  >
-                    <h3 className="font-display text-xl font-bold mb-3 text-accent border-b border-accent pb-2">
-                      {day.day}
-                    </h3>
-                    <div className="space-y-3">
-                      {day.meals && day.meals.map((meal: any, mealIdx: number) => {
-                    const mealName = typeof meal === 'string' ? cleanMealString(meal) : meal.name;
-                    const categoryLabel = meal.category === 'breakfast' ? 'Raňajky' : meal.category === 'lunch' ? 'Obed' : meal.category === 'dinner' ? 'Večera' : 'Jedlo';
-                    return <div key={mealIdx} className="bg-card/30 rounded-md p-3 border border-border/50">
-                            <div className="text-xs font-semibold text-accent/80 mb-1">{categoryLabel}</div>
-                            <p className="text-foreground text-sm font-medium leading-relaxed">
-                              {mealName}
+          {currentMenu ? (
+            <Card className="card-premium mx-4 md:mx-[150px]">
+              <CardHeader>
+                <CardTitle className="text-2xl text-gradient-gold text-center">
+                  Menu na týždeň {new Date(currentMenu.start_date).toLocaleDateString("sk-SK")} -{" "}
+                  {new Date(currentMenu.end_date).toLocaleDateString("sk-SK")}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="px-4 md:px-6">
+                <div className="grid grid-cols-1 gap-6 max-w-2xl mx-auto">
+                  {currentMenu.items &&
+                    Array.isArray(currentMenu.items) &&
+                    currentMenu.items
+                      .filter((d: any) => ["Pondelok", "Utorok", "Streda", "Štvrtok", "Piatok"].includes(d.day))
+                      .map((day: any, idx: number) => {
+                        const isPastDay = isDayBeforeOrToday(day.day, currentMenu.start_date);
+                        return (
+                          <div
+                            key={idx}
+                            className={`border border-border rounded-lg p-4 bg-card/50 transition-smooth ${
+                              isPastDay
+                                ? "opacity-50 cursor-not-allowed"
+                                : "cursor-pointer hover:bg-card/70 hover:border-accent/50 hover:glow-gold"
+                            }`}
+                            onClick={() => {
+                              if (!isPastDay) {
+                                setSelectedDay(day);
+                                setSelectedMenuContext(currentMenu);
+                                setIsDayDetailOpen(true);
+                              }
+                            }}
+                          >
+                            <h3 className="font-display text-xl font-bold mb-3 text-accent border-b border-accent pb-2">
+                              {day.day}
+                            </h3>
+                            <div className="space-y-3">
+                              {day.meals &&
+                                day.meals.map((meal: any, mealIdx: number) => {
+                                  const mealName = typeof meal === "string" ? cleanMealString(meal) : meal.name;
+                                  const categoryLabel =
+                                    meal.category === "breakfast"
+                                      ? "Raňajky"
+                                      : meal.category === "lunch"
+                                        ? "Obed"
+                                        : meal.category === "dinner"
+                                          ? "Večera"
+                                          : "Jedlo";
+                                  return (
+                                    <div key={mealIdx} className="bg-card/30 rounded-md p-3 border border-border/50">
+                                      <div className="text-xs font-semibold text-accent/80 mb-1">{categoryLabel}</div>
+                                      <p className="text-foreground text-sm font-medium leading-relaxed">{mealName}</p>
+                                    </div>
+                                  );
+                                })}
+                            </div>
+                            <p className="text-xs text-muted-foreground mt-3 italic">
+                              {isPastDay ? "Tento deň už nie je dostupný ⏱️" : "Kliknite pre detaily →"}
                             </p>
-                          </div>;
-                  })}
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-3 italic">
-                      {isPastDay ? 'Tento deň už nie je dostupný ⏱️' : 'Kliknite pre detaily →'}
-                    </p>
-                  </div>;
-                })}
-              </div>
+                          </div>
+                        );
+                      })}
+                </div>
                 <div className="flex justify-center">
                   <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                     <DialogTrigger asChild>
@@ -368,277 +361,308 @@ const Menu = () => {
                         Objednať toto menu 🍱
                       </Button>
                     </DialogTrigger>
-                  <DialogContent className="bg-background max-h-[85vh] overflow-y-auto">
-                    <DialogHeader>
-                      <DialogTitle className="text-gradient-gold">Vyberte dni a veľkosť menu</DialogTitle>
-                      <DialogDescription>
-                        Vyberte dni ktoré chcete objednať a veľkosť menu
-                      </DialogDescription>
-                    </DialogHeader>
+                    <DialogContent className="bg-background max-h-[85vh] overflow-y-auto">
+                      <DialogHeader>
+                        <DialogTitle className="text-gradient-gold">Vyberte dni a veľkosť menu</DialogTitle>
+                        <DialogDescription>Vyberte dni ktoré chcete objednať a veľkosť menu</DialogDescription>
+                      </DialogHeader>
 
-                    {/* Days Selection */}
-                    <div className="space-y-4 p-4 border border-accent/30 rounded-lg bg-accent/5">
-                      <div className="flex items-center justify-between">
-                        <h4 className="font-semibold text-foreground">Dni v týždni</h4>
-                        <Button type="button" variant="outline" size="sm" onClick={toggleAllDays} className="text-xs">
-                          {selectedDays.length === (currentMenu?.items?.filter((d: any) => ["Pondelok","Utorok","Streda","Štvrtok","Piatok"].includes(d.day) && !isDayBeforeOrToday(d.day, currentMenu.start_date)).length || 0) ? "Zrušiť všetky" : "Vybrať všetky"}
-                        </Button>
-                      </div>
-                      <div className="grid grid-cols-2 gap-3">
-                         {currentMenu?.items && Array.isArray(currentMenu.items) && currentMenu.items
-                          .filter((day: any) => ["Pondelok","Utorok","Streda","Štvrtok","Piatok"].includes(day.day))
-                          .map((day: any) => {
-                            const isPastDay = isDayBeforeOrToday(day.day, currentMenu.start_date);
-                            return <div key={day.day} className="flex items-center space-x-2">
-                             <Checkbox 
-                               id={`day-${day.day}`} 
-                               checked={selectedDays.includes(day.day)} 
-                               onCheckedChange={() => toggleDay(day.day)}
-                               disabled={isPastDay}
-                             />
-                             <Label 
-                               htmlFor={`day-${day.day}`} 
-                               className={`text-sm font-medium leading-none ${isPastDay ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-                             >
-                               {day.day} {isPastDay ? '(nedostupný)' : ''}
-                             </Label>
-                           </div>;
-                          })}
-                      </div>
-                    </div>
-
-                    {/* Vegetarian Option */}
-                    {selectedSize && (
-                      <div className="flex items-center space-x-3 p-4 border border-accent/30 rounded-lg bg-accent/5">
-                        <Checkbox 
-                          id="vegetarian" 
-                          checked={isVegetarian} 
-                          onCheckedChange={(checked) => setIsVegetarian(checked as boolean)}
-                        />
-                        <Label htmlFor="vegetarian" className="flex-1 cursor-pointer">
-                          <div className="font-bold text-primary">Vegetariánske menu</div>
-                          <div className="text-sm text-muted-foreground">€16.99/deň (Klasické: €14.99/deň) - Bez mäsa, čerstvé ingrediencie</div>
-                        </Label>
-                      </div>
-                    )}
-
-                    <div className="pt-2 space-y-4">
-                      <h4 className="font-semibold text-foreground mb-3">Veľkosť menu</h4>
-                      <RadioGroup value={selectedSize} onValueChange={setSelectedSize}>
-                      {menuSizes.map(size => <div key={size.value} className="flex items-center space-x-3 card-premium p-4">
-                          <RadioGroupItem value={size.value} id={size.value} />
-                          <Label htmlFor={size.value} className="flex-1 cursor-pointer">
-                            <div className="font-bold text-primary">{size.label}</div>
-                            <div className="text-sm text-muted-foreground">{size.description}</div>
-                          </Label>
-                        </div>)}
-                      </RadioGroup>
-                    </div>
-                    
-                    {selectedSize === "CUSTOM" && <div className="space-y-4 mt-4 p-4 border border-accent/30 rounded-lg bg-accent/5">
-                        <h4 className="font-semibold text-foreground">Zadajte vlastné hodnoty:</h4>
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <Label htmlFor="custom-calories">Kalórie (kcal)</Label>
-                            <Input id="custom-calories" type="number" placeholder="napr. 2200" value={customCalories} onChange={e => setCustomCalories(e.target.value)} className="bg-background" />
-                          </div>
-                          <div className="space-y-2">
-                            <Label htmlFor="custom-proteins">Bielkoviny (g)</Label>
-                            <Input id="custom-proteins" type="number" placeholder="napr. 150" value={customProteins} onChange={e => setCustomProteins(e.target.value)} className="bg-background" />
-                          </div>
-                          <div className="space-y-2">
-                            <Label htmlFor="custom-carbs">Sacharidy (g)</Label>
-                            <Input id="custom-carbs" type="number" placeholder="napr. 200" value={customCarbs} onChange={e => setCustomCarbs(e.target.value)} className="bg-background" />
-                          </div>
-                          <div className="space-y-2">
-                            <Label htmlFor="custom-fats">Tuky (g)</Label>
-                            <Input id="custom-fats" type="number" placeholder="napr. 70" value={customFats} onChange={e => setCustomFats(e.target.value)} className="bg-background" />
-                          </div>
+                      {/* Days Selection */}
+                      <div className="space-y-4 p-4 border border-accent/30 rounded-lg bg-accent/5">
+                        <div className="flex items-center justify-between">
+                          <h4 className="font-semibold text-foreground">Dni v týždni</h4>
+                          <Button type="button" variant="outline" size="sm" onClick={toggleAllDays} className="text-xs">
+                            {selectedDays.length ===
+                            (currentMenu?.items?.filter(
+                              (d: any) =>
+                                ["Pondelok", "Utorok", "Streda", "Štvrtok", "Piatok"].includes(d.day) &&
+                                !isDayBeforeOrToday(d.day, currentMenu.start_date),
+                            ).length || 0)
+                              ? "Zrušiť všetky"
+                              : "Vybrať všetky"}
+                          </Button>
                         </div>
-                      </div>}
+                        <div className="grid grid-cols-2 gap-3">
+                          {currentMenu?.items &&
+                            Array.isArray(currentMenu.items) &&
+                            currentMenu.items
+                              .filter((day: any) =>
+                                ["Pondelok", "Utorok", "Streda", "Štvrtok", "Piatok"].includes(day.day),
+                              )
+                              .map((day: any) => {
+                                const isPastDay = isDayBeforeOrToday(day.day, currentMenu.start_date);
+                                return (
+                                  <div key={day.day} className="flex items-center space-x-2">
+                                    <Checkbox
+                                      id={`day-${day.day}`}
+                                      checked={selectedDays.includes(day.day)}
+                                      onCheckedChange={() => toggleDay(day.day)}
+                                      disabled={isPastDay}
+                                    />
+                                    <Label
+                                      htmlFor={`day-${day.day}`}
+                                      className={`text-sm font-medium leading-none ${isPastDay ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
+                                    >
+                                      {day.day} {isPastDay ? "(nedostupný)" : ""}
+                                    </Label>
+                                  </div>
+                                );
+                              })}
+                        </div>
+                      </div>
 
-                    <Button onClick={handleAddToCart} className="w-full bg-accent text-accent-foreground hover:glow-gold-strong transition-smooth" disabled={!selectedSize || selectedDays.length === 0}>
-                      Pokračovať do košíka
-                    </Button>
-                  </DialogContent>
-                </Dialog>
+                      {/* Vegetarian Option */}
+                      {selectedSize && (
+                        <div className="flex items-center space-x-3 p-4 border border-accent/30 rounded-lg bg-accent/5">
+                          <Checkbox
+                            id="vegetarian"
+                            checked={isVegetarian}
+                            onCheckedChange={(checked) => setIsVegetarian(checked as boolean)}
+                          />
+                          <Label htmlFor="vegetarian" className="flex-1 cursor-pointer">
+                            <div className="font-bold text-primary">Vegetariánske menu</div>
+                            <div className="text-sm text-muted-foreground">
+                              €16.99/deň (Klasické: €14.99/deň) - Bez mäsa, čerstvé ingrediencie
+                            </div>
+                          </Label>
+                        </div>
+                      )}
+
+                      <div className="pt-2 space-y-4">
+                        <h4 className="font-semibold text-foreground mb-3">Veľkosť menu</h4>
+                        <RadioGroup value={selectedSize} onValueChange={setSelectedSize}>
+                          {menuSizes.map((size) => (
+                            <div key={size.value} className="flex items-center space-x-3 card-premium p-4">
+                              <RadioGroupItem value={size.value} id={size.value} />
+                              <Label htmlFor={size.value} className="flex-1 cursor-pointer">
+                                <div className="font-bold text-primary">{size.label}</div>
+                                <div className="text-sm text-muted-foreground">{size.description}</div>
+                              </Label>
+                            </div>
+                          ))}
+                        </RadioGroup>
+                      </div>
+
+                      <Button
+                        onClick={handleAddToCart}
+                        className="w-full bg-accent text-accent-foreground hover:glow-gold-strong transition-smooth"
+                        disabled={!selectedSize || selectedDays.length === 0}
+                      >
+                        Pokračovať do košíka
+                      </Button>
+                    </DialogContent>
+                  </Dialog>
                 </div>
 
                 {/* Day Detail Modal */}
                 <Dialog open={isDayDetailOpen} onOpenChange={setIsDayDetailOpen}>
                   <DialogContent className="bg-background max-w-2xl max-h-[80vh] overflow-y-auto">
                     <DialogHeader>
-                      <DialogTitle className="text-gradient-gold text-2xl">
-                        {selectedDay?.day}
-                      </DialogTitle>
-                      <DialogDescription>
-                        Kompletný prehľad jedál a nutričných hodnôt
-                      </DialogDescription>
+                      <DialogTitle className="text-gradient-gold text-2xl">{selectedDay?.day}</DialogTitle>
+                      <DialogDescription>Kompletný prehľad jedál a nutričných hodnôt</DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4 mt-4">
-                      {selectedDay?.meals && selectedDay.meals.map((meal: any, idx: number) => {
-                    const cleanName = typeof meal === 'string' ? cleanMealString(meal) : meal.name || '';
-                    const mealData = typeof meal === 'object' && meal.id ? mealDetails[meal.id] : mealDetailsByName[cleanName] || null;
-                    const mealName = typeof meal === 'string' ? cleanName : mealData?.name || meal.name || `Jedlo ${idx + 1}`;
-                    const {
-                      emoji: categoryEmoji,
-                      label: categoryLabel
-                    } = typeof meal === 'string' ? categoryFromString(meal) : meal.category === 'breakfast' ? {
-                      emoji: '🍳',
-                      label: 'Raňajky'
-                    } : meal.category === 'lunch' ? {
-                      emoji: '🍽️',
-                      label: 'Obed'
-                    } : {
-                      emoji: '🥤',
-                      label: 'Večera'
-                    };
-                    return <div key={idx} className="card-premium p-4 space-y-3">
-                            <div className="flex items-start justify-between">
-                              <div className="flex-1">
-                                <div className="mb-2">
-                                  <span className="text-xs bg-accent/20 text-accent px-3 py-1.5 rounded-full font-semibold">
-                                    {categoryLabel}
-                                  </span>
+                      {selectedDay?.meals &&
+                        selectedDay.meals.map((meal: any, idx: number) => {
+                          const cleanName = typeof meal === "string" ? cleanMealString(meal) : meal.name || "";
+                          const mealData =
+                            typeof meal === "object" && meal.id
+                              ? mealDetails[meal.id]
+                              : mealDetailsByName[cleanName] || null;
+                          const mealName =
+                            typeof meal === "string" ? cleanName : mealData?.name || meal.name || `Jedlo ${idx + 1}`;
+                          const { emoji: categoryEmoji, label: categoryLabel } =
+                            typeof meal === "string"
+                              ? categoryFromString(meal)
+                              : meal.category === "breakfast"
+                                ? {
+                                    emoji: "🍳",
+                                    label: "Raňajky",
+                                  }
+                                : meal.category === "lunch"
+                                  ? {
+                                      emoji: "🍽️",
+                                      label: "Obed",
+                                    }
+                                  : {
+                                      emoji: "🥤",
+                                      label: "Večera",
+                                    };
+                          return (
+                            <div key={idx} className="card-premium p-4 space-y-3">
+                              <div className="flex items-start justify-between">
+                                <div className="flex-1">
+                                  <div className="mb-2">
+                                    <span className="text-xs bg-accent/20 text-accent px-3 py-1.5 rounded-full font-semibold">
+                                      {categoryLabel}
+                                    </span>
+                                  </div>
+                                  <h4 className="font-bold text-lg text-primary leading-relaxed">{mealName}</h4>
                                 </div>
-                                <h4 className="font-bold text-lg text-primary leading-relaxed">
-                                  {mealName}
-                                </h4>
                               </div>
-                            </div>
-                            
-                            {mealData && <>
-                                {mealData.description && <p className="text-sm text-muted-foreground leading-relaxed">
-                                    {mealData.description}
-                                  </p>}
-                                
-                                {mealData.allergens && mealData.allergens.length > 0 && <div className="pt-3 border-t border-border">
-                                    <div className="text-xs font-semibold text-foreground mb-2">⚠️ Alergény:</div>
-                                    <div className="flex flex-wrap gap-2">
-                                      {mealData.allergens.map((allergen: string, aIdx: number) => <span key={aIdx} className="text-xs bg-destructive/20 text-destructive px-3 py-1.5 rounded-full font-medium">
-                                          {allergen}
-                                        </span>)}
+
+                              {mealData && (
+                                <>
+                                  {mealData.description && (
+                                    <p className="text-sm text-muted-foreground leading-relaxed">
+                                      {mealData.description}
+                                    </p>
+                                  )}
+
+                                  {mealData.allergens && mealData.allergens.length > 0 && (
+                                    <div className="pt-3 border-t border-border">
+                                      <div className="text-xs font-semibold text-foreground mb-2">⚠️ Alergény:</div>
+                                      <div className="flex flex-wrap gap-2">
+                                        {mealData.allergens.map((allergen: string, aIdx: number) => (
+                                          <span
+                                            key={aIdx}
+                                            className="text-xs bg-destructive/20 text-destructive px-3 py-1.5 rounded-full font-medium"
+                                          >
+                                            {allergen}
+                                          </span>
+                                        ))}
+                                      </div>
                                     </div>
-                                  </div>}
-                              </>}
-                          </div>;
-                  })}
+                                  )}
+                                </>
+                              )}
+                            </div>
+                          );
+                        })}
                     </div>
-                    
+
                     {/* Size selection and add to cart - only for current menu */}
-                    {selectedMenuContext?.id === currentMenu?.id && <div className="mt-6 pt-6 border-t border-border space-y-4">
+                    {selectedMenuContext?.id === currentMenu?.id && (
+                      <div className="mt-6 pt-6 border-t border-border space-y-4">
                         {/* Vegetarian Option */}
                         {selectedDaySize && (
                           <div className="flex items-center space-x-3 p-3 border border-accent/30 rounded-lg bg-accent/5">
-                            <Checkbox 
-                              id="day-vegetarian" 
-                              checked={isDayVegetarian} 
+                            <Checkbox
+                              id="day-vegetarian"
+                              checked={isDayVegetarian}
                               onCheckedChange={(checked) => setIsDayVegetarian(checked as boolean)}
                             />
                             <Label htmlFor="day-vegetarian" className="flex-1 cursor-pointer">
                               <div className="font-bold text-primary text-sm">Vegetariánske menu</div>
-                              <div className="text-xs text-muted-foreground">€16.99/deň (Klasické: €14.99/deň) - Bez mäsa, čerstvé ingrediencie</div>
+                              <div className="text-xs text-muted-foreground">
+                                €16.99/deň (Klasické: €14.99/deň) - Bez mäsa, čerstvé ingrediencie
+                              </div>
                             </Label>
                           </div>
                         )}
-                        
+
                         <h4 className="font-bold text-lg text-foreground">Vyberte veľkosť</h4>
                         <RadioGroup value={selectedDaySize} onValueChange={setSelectedDaySize}>
-                          {menuSizes.map(size => <div key={size.value} className="flex items-center space-x-3 card-premium p-3">
+                          {menuSizes.map((size) => (
+                            <div key={size.value} className="flex items-center space-x-3 card-premium p-3">
                               <RadioGroupItem value={size.value} id={`day-${size.value}`} />
                               <Label htmlFor={`day-${size.value}`} className="flex-1 cursor-pointer">
                                 <div className="font-bold text-primary text-sm">{size.label}</div>
                                 <div className="text-xs text-muted-foreground">{size.description}</div>
                               </Label>
-                            </div>)}
-                        </RadioGroup>
-                        
-                        {selectedDaySize === "CUSTOM" && <div className="space-y-4 mt-4 p-4 border border-accent/30 rounded-lg bg-accent/5">
-                            <h4 className="font-semibold text-foreground text-sm">Zadajte vlastné hodnoty:</h4>
-                            <div className="grid grid-cols-2 gap-3">
-                              <div className="space-y-2">
-                                <Label htmlFor="custom-day-calories" className="text-xs">Kalórie (kcal)</Label>
-                                <Input id="custom-day-calories" type="number" placeholder="napr. 2200" value={customDayCalories} onChange={e => setCustomDayCalories(e.target.value)} className="bg-background h-9" />
-                              </div>
-                              <div className="space-y-2">
-                                <Label htmlFor="custom-day-proteins" className="text-xs">Bielkoviny (g)</Label>
-                                <Input id="custom-day-proteins" type="number" placeholder="napr. 150" value={customDayProteins} onChange={e => setCustomDayProteins(e.target.value)} className="bg-background h-9" />
-                              </div>
-                              <div className="space-y-2">
-                                <Label htmlFor="custom-day-carbs" className="text-xs">Sacharidy (g)</Label>
-                                <Input id="custom-day-carbs" type="number" placeholder="napr. 200" value={customDayCarbs} onChange={e => setCustomDayCarbs(e.target.value)} className="bg-background h-9" />
-                              </div>
-                              <div className="space-y-2">
-                                <Label htmlFor="custom-day-fats" className="text-xs">Tuky (g)</Label>
-                                <Input id="custom-day-fats" type="number" placeholder="napr. 70" value={customDayFats} onChange={e => setCustomDayFats(e.target.value)} className="bg-background h-9" />
-                              </div>
                             </div>
-                          </div>}
+                          ))}
+                        </RadioGroup>
 
                         <div className="flex gap-3">
-                          <Button onClick={handleAddDayToCart} className="flex-1 bg-accent text-accent-foreground hover:glow-gold-strong transition-smooth" disabled={!selectedDaySize}>
+                          <Button
+                            onClick={handleAddDayToCart}
+                            className="flex-1 bg-accent text-accent-foreground hover:glow-gold-strong transition-smooth"
+                            disabled={!selectedDaySize}
+                          >
                             Pridať do košíka
                           </Button>
-                          <Button onClick={() => navigate("/cart")} variant="outline" className="border-accent text-accent hover:bg-accent/10">
+                          <Button
+                            onClick={() => navigate("/cart")}
+                            variant="outline"
+                            className="border-accent text-accent hover:bg-accent/10"
+                          >
                             Zobraziť košík
                           </Button>
                         </div>
-                      </div>}
+                      </div>
+                    )}
                   </DialogContent>
                 </Dialog>
               </CardContent>
-            </Card> : <p className="text-center text-muted-foreground text-lg">
-              Žiadne aktuálne menu zatiaľ nebolo pridané.
-            </p>}
+            </Card>
+          ) : (
+            <p className="text-center text-muted-foreground text-lg">Žiadne aktuálne menu zatiaľ nebolo pridané.</p>
+          )}
         </section>
 
         {/* Menu History */}
-        {menuHistory.length > 0 && <section>
-            <h2 className="font-display text-3xl font-bold mb-8 text-primary">
-              História menu
-            </h2>
+        {menuHistory.length > 0 && (
+          <section>
+            <h2 className="font-display text-3xl font-bold mb-8 text-primary">História menu</h2>
             <div className="grid gap-6 grid-cols-1 max-w-2xl mx-auto">
-              {menuHistory.map(menu => <Card key={menu.id} className="card-premium">
+              {menuHistory.map((menu) => (
+                <Card key={menu.id} className="card-premium">
                   <CardHeader>
                     <CardTitle className="text-lg text-accent">
-                      {new Date(menu.start_date).toLocaleDateString("sk-SK")} - {new Date(menu.end_date).toLocaleDateString("sk-SK")}
+                      {new Date(menu.start_date).toLocaleDateString("sk-SK")} -{" "}
+                      {new Date(menu.end_date).toLocaleDateString("sk-SK")}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="grid grid-cols-1 gap-3">
-                      {menu.items && Array.isArray(menu.items) && menu.items
-                        .filter((day: any) => ["Pondelok","Utorok","Streda","Štvrtok","Piatok"].includes(day.day))
-                        .map((day: any, idx: number) => <div key={idx} className="border border-border rounded-lg p-3 bg-card/30 cursor-pointer hover:bg-card/60 hover:border-accent/50 transition-smooth" onClick={() => {
-                  setSelectedDay(day);
-                  setSelectedMenuContext(menu);
-                  setIsDayDetailOpen(true);
-                }}>
-                          <h4 className="font-semibold text-sm text-primary mb-2">{day.day}</h4>
-                          <div className="space-y-2">
-                            {day.meals && day.meals.slice(0, 3).map((meal: any, mealIdx: number) => {
-                      const mealName = typeof meal === 'string' ? cleanMealString(meal) : meal.name;
-                      const categoryLabel = meal.category === 'breakfast' ? 'Raňajky' : meal.category === 'lunch' ? 'Obed' : meal.category === 'dinner' ? 'Večera' : 'Jedlo';
-                      return <div key={mealIdx} className="bg-card/30 rounded-md p-2 border border-border/50">
-                                  <div className="text-xs font-semibold text-accent/80 mb-0.5">{categoryLabel}</div>
-                                  <p className="text-xs text-foreground">{mealName}</p>
-                                </div>;
-                    })}
-                            {day.meals && day.meals.length > 3 && <p className="text-xs text-muted-foreground italic">
-                                +{day.meals.length - 3} ďalších jedál
-                              </p>}
-                          </div>
-                          <p className="text-xs text-muted-foreground mt-2 italic">
-                            Kliknite pre detaily →
-                          </p>
-                        </div>)}
+                      {menu.items &&
+                        Array.isArray(menu.items) &&
+                        menu.items
+                          .filter((day: any) => ["Pondelok", "Utorok", "Streda", "Štvrtok", "Piatok"].includes(day.day))
+                          .map((day: any, idx: number) => (
+                            <div
+                              key={idx}
+                              className="border border-border rounded-lg p-3 bg-card/30 cursor-pointer hover:bg-card/60 hover:border-accent/50 transition-smooth"
+                              onClick={() => {
+                                setSelectedDay(day);
+                                setSelectedMenuContext(menu);
+                                setIsDayDetailOpen(true);
+                              }}
+                            >
+                              <h4 className="font-semibold text-sm text-primary mb-2">{day.day}</h4>
+                              <div className="space-y-2">
+                                {day.meals &&
+                                  day.meals.slice(0, 3).map((meal: any, mealIdx: number) => {
+                                    const mealName = typeof meal === "string" ? cleanMealString(meal) : meal.name;
+                                    const categoryLabel =
+                                      meal.category === "breakfast"
+                                        ? "Raňajky"
+                                        : meal.category === "lunch"
+                                          ? "Obed"
+                                          : meal.category === "dinner"
+                                            ? "Večera"
+                                            : "Jedlo";
+                                    return (
+                                      <div key={mealIdx} className="bg-card/30 rounded-md p-2 border border-border/50">
+                                        <div className="text-xs font-semibold text-accent/80 mb-0.5">
+                                          {categoryLabel}
+                                        </div>
+                                        <p className="text-xs text-foreground">{mealName}</p>
+                                      </div>
+                                    );
+                                  })}
+                                {day.meals && day.meals.length > 3 && (
+                                  <p className="text-xs text-muted-foreground italic">
+                                    +{day.meals.length - 3} ďalších jedál
+                                  </p>
+                                )}
+                              </div>
+                              <p className="text-xs text-muted-foreground mt-2 italic">Kliknite pre detaily →</p>
+                            </div>
+                          ))}
                     </div>
                   </CardContent>
-                </Card>)}
+                </Card>
+              ))}
             </div>
-          </section>}
+          </section>
+        )}
       </div>
 
       <Footer />
-    </div>;
+    </div>
+  );
 };
+
 export default Menu;
