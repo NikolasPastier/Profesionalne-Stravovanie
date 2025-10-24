@@ -36,10 +36,10 @@ const Doprava = () => {
                   <div className="space-y-2">
                   <p className="text-sm text-muted-foreground mb-3">Smer smerom k Bratislave:</p>
                   <div className="space-y-1">
-                    <p className="text-sm"><span className="font-semibold text-primary">Sereď:</span> €4.00</p>
-                    <p className="text-sm"><span className="font-semibold text-primary">Trnava:</span> €5.00</p>
+                    
+                    
                     <p className="text-sm"><span className="font-semibold text-primary">Bratislava:</span> €6.00</p>
-                    <p className="text-sm text-muted-foreground mt-2">Iné vzdialenosti: dohodou</p>
+                    
                   </div>
                 </div>
               </div>
