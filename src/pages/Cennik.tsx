@@ -5,10 +5,12 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { Check } from "lucide-react";
 import { useScrollAnimation } from "@/hooks/use-scroll-animation";
+
 const Cennik = () => {
   const navigate = useNavigate();
   const pricingRef = useScrollAnimation();
   const weeklyRef = useScrollAnimation();
+
   const pricingTiers = [
     {
       size: "S",
@@ -47,11 +49,12 @@ const Cennik = () => {
     {
       size: "XXL+",
       calories: "3500+ kcal",
-      price: "€16.99",
+      price: "€14.99",
       description: "Profesionálni športovci",
       features: ["Pre profesionálov", "Maximálny obsah bielkovín", "Čerstvé suroviny", "Doručenie priamo k dverám"],
     },
   ];
+
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
@@ -59,12 +62,14 @@ const Cennik = () => {
       <div className="container mx-auto px-4 pt-32 pb-20">
         <Card
           ref={pricingRef.ref}
-          className={`card-premium max-w-5xl mx-auto mb-16 transition-all duration-700 ${pricingRef.isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}
+          className={`card-premium max-w-5xl mx-auto mb-16 transition-all duration-700 ${
+            pricingRef.isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
+          }`}
         >
           <CardHeader className="text-center">
             <CardTitle className="text-4xl font-display text-gradient-gold mb-4">Cenník</CardTitle>
             <div className="mt-4">
-              <span className="text-5xl font-bold text-primary">€14.99</span>
+              <span className="text-练习 font-bold text-primary">€14.99</span>
               <span className="text-xl text-muted-foreground">/deň</span>
             </div>
           </CardHeader>
@@ -73,7 +78,9 @@ const Cennik = () => {
               {pricingTiers.map((tier, idx) => (
                 <div
                   key={idx}
-                  className={`border rounded-lg p-6 hover:scale-105 transition-transform duration-300 ${tier.popular ? "border-primary border-2 bg-primary/5" : "border-primary/20"}`}
+                  className={`border rounded-lg p-6 hover:scale-105 transition-transform duration-300 ${
+                    tier.popular ? "border-primary border-2 bg-primary/5" : "border-primary/20"
+                  }`}
                 >
                   {tier.popular && (
                     <div className="mb-3">
@@ -84,6 +91,7 @@ const Cennik = () => {
                   )}
                   <h3 className="text-2xl font-display text-gradient-gold mb-2">{tier.size}</h3>
                   <p className="text-primary text-lg font-bold mb-1">{tier.calories}</p>
+                  <p className="text-primary text-lg font-bold mb-1">{tier.price}/deň</p>
                   <p className="text-sm text-muted-foreground mb-4">{tier.description}</p>
                   <ul className="space-y-2">
                     {tier.features.slice(0, 3).map((feature, featureIdx) => (
@@ -147,4 +155,5 @@ const Cennik = () => {
     </div>
   );
 };
+
 export default Cennik;
