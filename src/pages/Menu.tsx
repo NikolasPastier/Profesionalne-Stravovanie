@@ -145,11 +145,6 @@ const Menu = () => {
       label: "XXL+ (3500+ kcal)",
       description: "Profesionálni športovci",
     },
-    {
-      value: "CUSTOM",
-      label: "Na mieru",
-      description: "Vlastný počet kalórií a makroživín",
-    },
   ];
   useEffect(() => {
     fetchMenus();
@@ -206,12 +201,6 @@ const Menu = () => {
       toast.error("Prosím vyberte veľkosť menu");
       return;
     }
-    if (selectedSize === "CUSTOM") {
-      if (!customCalories || !customProteins || !customCarbs || !customFats) {
-        toast.error("Prosím vyplňte všetky hodnoty pre vlastné menu");
-        return;
-      }
-    }
     if (!currentMenu) {
       toast.error("Žiadne menu nie je k dispozícii");
       return;
@@ -226,14 +215,6 @@ const Menu = () => {
       isVegetarian: isVegetarian,
       menu: { ...currentMenu, items: filteredItems },
       selectedDays: selectedDays,
-      ...(selectedSize === "CUSTOM" && {
-        customNutrition: {
-          calories: parseInt(customCalories),
-          proteins: parseInt(customProteins),
-          carbs: parseInt(customCarbs),
-          fats: parseInt(customFats),
-        },
-      }),
     };
     localStorage.setItem("cart", JSON.stringify([cartItem]));
     window.dispatchEvent(new Event("cartUpdated"));
@@ -420,58 +401,6 @@ const Menu = () => {
                           ))}
                         </RadioGroup>
                       </div>
-
-                      {selectedSize === "CUSTOM" && (
-                        <div className="space-y-4 mt-4 p-4 border border-accent/30 rounded-lg bg-accent/5">
-                          <h4 className="font-semibold text-foreground">Zadajte vlastné hodnoty:</h4>
-                          <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                              <Label htmlFor="custom-calories">Kalórie (kcal)</Label>
-                              <Input
-                                id="custom-calories"
-                                type="number"
-                                placeholder="napr. 2200"
-                                value={customCalories}
-                                onChange={(e) => setCustomCalories(e.target.value)}
-                                className="bg-background"
-                              />
-                            </div>
-                            <div className="space-y-2">
-                              <Label htmlFor="custom-proteins">Bielkoviny (g)</Label>
-                              <Input
-                                id="custom-proteins"
-                                type="number"
-                                placeholder="napr. 150"
-                                value={customProteins}
-                                onChange={(e) => setCustomProteins(e.target.value)}
-                                className="bg-background"
-                              />
-                            </div>
-                            <div className="space-y-2">
-                              <Label htmlFor="custom-carbs">Sacharidy (g)</Label>
-                              <Input
-                                id="custom-carbs"
-                                type="number"
-                                placeholder="napr. 200"
-                                value={customCarbs}
-                                onChange={(e) => setCustomCarbs(e.target.value)}
-                                className="bg-background"
-                              />
-                            </div>
-                            <div className="space-y-2">
-                              <Label htmlFor="custom-fats">Tuky (g)</Label>
-                              <Input
-                                id="custom-fats"
-                                type="number"
-                                placeholder="napr. 70"
-                                value={customFats}
-                                onChange={(e) => setCustomFats(e.target.value)}
-                                className="bg-background"
-                              />
-                            </div>
-                          </div>
-                        </div>
-                      )}
 
                       <Button
                         onClick={handleAddToCart}
