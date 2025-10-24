@@ -1,6 +1,6 @@
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { Check } from "lucide-react";
@@ -10,7 +10,6 @@ import { useState } from "react";
 const Cennik = () => {
   const navigate = useNavigate();
   const pricingRef = useScrollAnimation();
-  const weeklyRef = useScrollAnimation();
   const [deliveryArea, setDeliveryArea] = useState("Nitra");
 
   const pricingTiers = [
@@ -50,7 +49,7 @@ const Cennik = () => {
     {
       size: "XXL+",
       calories: "3500+ kcal",
-      price: deliveryArea === "Nitra" ? "€16.99" : "€22.99",
+      price: deliveryArea === "Nitra" ? "€16.99" : "€20.99",
       description: "Profesionálni športovci",
       features: ["Pre profesionálov", "Maximálny obsah bielkovín", "Čerstvé suroviny", "Doručenie priamo k dverám"],
     },
@@ -91,10 +90,6 @@ const Cennik = () => {
                 Smer Bratislava a okolie
               </Button>
             </div>
-            <div className="mt-4">
-              <span className="text-5xl font-bold text-primary">{deliveryArea === "Nitra" ? "€14.99" : "€20.99"}</span>
-              <span className="text-xl text-muted-foreground">/deň</span>
-            </div>
           </CardHeader>
           <CardContent>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
@@ -133,25 +128,6 @@ const Cennik = () => {
                   <li className="flex items-start gap-2">
                     <Check className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
                     <span className="text-xs">Vyvážené rastlinné bielkoviny</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <Check className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
-                    <span className="text-xs">Čerstvé suroviny</span>
-                  </li>
-                </ul>
-              </div>
-              <div className="border border-primary/20 rounded-lg p-6 hover:scale-105 transition-transform duration-300">
-                <h3 className="text-2xl font-display text-gradient-gold mb-2">Na mieru</h3>
-                <p className="text-primary text-lg font-bold mb-1">Vlastný počet kalórií</p>
-                <p className="text-sm text-muted-foreground mb-4">Prispôsobené vašim potrebám</p>
-                <ul className="space-y-2">
-                  <li className="flex items-start gap-2">
-                    <Check className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
-                    <span className="text-xs">Vlastný počet kalórií</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <Check className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
-                    <span className="text-xs">Vlastné makroživiny</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <Check className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
