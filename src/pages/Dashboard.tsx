@@ -17,8 +17,24 @@ import { User, Package, Mail, Lock, Trash2, MapPin, UtensilsCrossed, Calendar, U
 import { MenuManagement } from "@/components/admin/MenuManagement";
 import { WeeklyMenuManagement } from "@/components/admin/WeeklyMenuManagement";
 import { UserStatistics } from "@/components/admin/UserStatistics";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { DashboardOverview } from "@/components/dashboard/DashboardOverview";
 
 interface UserProfile {
@@ -33,7 +49,7 @@ interface UserProfile {
   dislikes?: string[];
   favorite_foods?: string[];
   health_issues?: string;
-  gender?: 'male' | 'female';
+  gender?: "male" | "female";
   goal_weight?: number;
   created_at?: string;
 }
@@ -116,7 +132,7 @@ const Dashboard = () => {
     preferences: "",
     dislikes: "",
     favorite_foods: "",
-    health_issues: ""
+    health_issues: "",
   });
 
   useEffect(() => {
@@ -125,7 +141,9 @@ const Dashboard = () => {
 
   const checkUserAndLoadProfile = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) {
         navigate("/auth");
         return;
@@ -134,11 +152,11 @@ const Dashboard = () => {
       // Check if user is admin using server-side security definer function
       const { data: userRole, error: roleError } = await supabase.rpc("get_current_user_role");
       const adminStatus = userRole === "admin";
-      
+
       if (roleError) {
         console.error("Error checking user role:", roleError);
       }
-      
+
       setIsAdmin(adminStatus);
       if (adminStatus) {
         // Load admin data
@@ -146,11 +164,7 @@ const Dashboard = () => {
         await loadNotifications();
       } else {
         // Load regular user profile
-        const { data, error } = await supabase
-          .from("user_profiles")
-          .select("*")
-          .eq("user_id", user.id)
-          .single();
+        const { data, error } = await supabase.from("user_profiles").select("*").eq("user_id", user.id).single();
         if (error) {
           if (error.code === "PGRST116") {
             navigate("/onboarding");
@@ -169,7 +183,7 @@ const Dashboard = () => {
       toast({
         title: "Chyba",
         description: error.message,
-        variant: "destructive"
+        variant: "destructive",
       });
     } finally {
       setLoading(false);
@@ -178,10 +192,7 @@ const Dashboard = () => {
 
   const loadOrders = async () => {
     try {
-      const { data, error } = await supabase
-        .from("orders")
-        .select("*")
-        .order("created_at", { ascending: false });
+      const { data, error } = await supabase.from("orders").select("*").order("created_at", { ascending: false });
       if (error) throw error;
 
       // Load user profiles separately
@@ -198,17 +209,17 @@ const Dashboard = () => {
               name: "N/A",
               email: "N/A",
               allergies: [],
-              dislikes: []
-            }
+              dislikes: [],
+            },
           };
-        })
+        }),
       );
       setOrders(ordersWithProfiles);
     } catch (error: any) {
       toast({
         title: "Chyba pri načítaní objednávok",
         description: error.message,
-        variant: "destructive"
+        variant: "destructive",
       });
     }
   };
@@ -257,17 +268,14 @@ const Dashboard = () => {
 
             if (customerEmail) {
               // Call the edge function to send the email (non-blocking)
-              const { error: emailError } = await supabase.functions.invoke(
-                'send-order-ready-email',
-                {
-                  body: {
-                    orderId: orderId,
-                    customerName: customerName,
-                    customerEmail: customerEmail,
-                    deliveryDate: orderData.delivery_date,
-                  },
-                }
-              );
+              const { error: emailError } = await supabase.functions.invoke("send-order-ready-email", {
+                body: {
+                  orderId: orderId,
+                  customerName: customerName,
+                  customerEmail: customerEmail,
+                  deliveryDate: orderData.delivery_date,
+                },
+              });
 
               if (emailError) {
                 console.error("Error sending ready email:", emailError);
@@ -283,37 +291,32 @@ const Dashboard = () => {
       }
 
       // Update the order status in the database
-      const { error } = await supabase
-        .from("orders")
-        .update({ status: newStatus })
-        .eq("id", orderId);
+      const { error } = await supabase.from("orders").update({ status: newStatus }).eq("id", orderId);
       if (error) throw error;
 
       // Show success message
-      const successMessage = newStatus === "ready"
-        ? "Stav objednávky bol aktualizovaný a zákazník bol upovedomený emailom"
-        : "Stav objednávky bol aktualizovaný";
+      const successMessage =
+        newStatus === "ready"
+          ? "Stav objednávky bol aktualizovaný a zákazník bol upovedomený emailom"
+          : "Stav objednávky bol aktualizovaný";
 
       toast({
         title: "Úspech",
-        description: successMessage
+        description: successMessage,
       });
       loadOrders();
     } catch (error: any) {
       toast({
         title: "Chyba",
         description: error.message,
-        variant: "destructive"
+        variant: "destructive",
       });
     }
   };
 
   const markNotificationAsSeen = async (notificationId: string) => {
     try {
-      const { error } = await supabase
-        .from("admin_notifications")
-        .update({ seen: true })
-        .eq("id", notificationId);
+      const { error } = await supabase.from("admin_notifications").update({ seen: true }).eq("id", notificationId);
       if (error) throw error;
       loadNotifications();
     } catch (error: any) {
@@ -349,7 +352,7 @@ const Dashboard = () => {
       in_progress: "Pripravuje sa",
       ready: "Pripravené",
       delivered: "Doručené",
-      cancelled: "Zrušené"
+      cancelled: "Zrušené",
     };
     return labels[status] || status;
   };
@@ -408,7 +411,7 @@ const Dashboard = () => {
       toast({
         title: "Chyba",
         description: "Zadajte nový email",
-        variant: "destructive"
+        variant: "destructive",
       });
       return;
     }
@@ -417,7 +420,7 @@ const Dashboard = () => {
       if (error) throw error;
       toast({
         title: "Úspech",
-        description: "Email bol úspešne zmenený. Skontrolujte váš email pre potvrdenie."
+        description: "Email bol úspešne zmenený. Skontrolujte váš email pre potvrdenie.",
       });
       setIsEmailDialogOpen(false);
       setNewEmail("");
@@ -425,7 +428,7 @@ const Dashboard = () => {
       toast({
         title: "Chyba",
         description: error.message,
-        variant: "destructive"
+        variant: "destructive",
       });
     }
   };
@@ -435,7 +438,7 @@ const Dashboard = () => {
       toast({
         title: "Chyba",
         description: "Vyplňte všetky polia",
-        variant: "destructive"
+        variant: "destructive",
       });
       return;
     }
@@ -443,7 +446,7 @@ const Dashboard = () => {
       toast({
         title: "Chyba",
         description: "Heslá sa nezhodujú",
-        variant: "destructive"
+        variant: "destructive",
       });
       return;
     }
@@ -452,7 +455,7 @@ const Dashboard = () => {
       toast({
         title: "Chyba",
         description: "Heslo musí mať aspoň 8 znakov",
-        variant: "destructive"
+        variant: "destructive",
       });
       return;
     }
@@ -460,7 +463,7 @@ const Dashboard = () => {
       toast({
         title: "Chyba",
         description: "Heslo musí obsahovať aspoň jedno veľké písmeno",
-        variant: "destructive"
+        variant: "destructive",
       });
       return;
     }
@@ -468,7 +471,7 @@ const Dashboard = () => {
       toast({
         title: "Chyba",
         description: "Heslo musí obsahovať aspoň jedno malé písmeno",
-        variant: "destructive"
+        variant: "destructive",
       });
       return;
     }
@@ -476,7 +479,7 @@ const Dashboard = () => {
       toast({
         title: "Chyba",
         description: "Heslo musí obsahovať aspoň jedno číslo",
-        variant: "destructive"
+        variant: "destructive",
       });
       return;
     }
@@ -485,7 +488,7 @@ const Dashboard = () => {
       if (error) throw error;
       toast({
         title: "Úspech",
-        description: "Heslo bolo úspešne zmenené"
+        description: "Heslo bolo úspešne zmenené",
       });
       setIsPasswordDialogOpen(false);
       setNewPassword("");
@@ -494,7 +497,7 @@ const Dashboard = () => {
       toast({
         title: "Chyba",
         description: error.message,
-        variant: "destructive"
+        variant: "destructive",
       });
     }
   };
@@ -502,20 +505,22 @@ const Dashboard = () => {
   const handleAccountDelete = async () => {
     try {
       setIsDeleteDialogOpen(false);
-      
+
       // Get current session for authorization
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       if (!session) {
         toast({
           title: "Chyba",
           description: "Musíte byť prihlásený",
-          variant: "destructive"
+          variant: "destructive",
         });
         return;
       }
 
       // Call edge function to delete account and all related data
-      const { data, error } = await supabase.functions.invoke('delete-user-account', {
+      const { data, error } = await supabase.functions.invoke("delete-user-account", {
         headers: {
           Authorization: `Bearer ${session.access_token}`,
         },
@@ -526,14 +531,14 @@ const Dashboard = () => {
         toast({
           title: "Chyba",
           description: "Nepodarilo sa vymazať účet. Skúste to prosím znova.",
-          variant: "destructive"
+          variant: "destructive",
         });
         return;
       }
 
       toast({
         title: "Účet vymazaný",
-        description: "Váš účet a všetky údaje boli úspešne vymazané"
+        description: "Váš účet a všetky údaje boli úspešne vymazané",
       });
 
       // Sign out and redirect
@@ -544,7 +549,7 @@ const Dashboard = () => {
       toast({
         title: "Chyba",
         description: "Nepodarilo sa vymazať účet",
-        variant: "destructive"
+        variant: "destructive",
       });
     }
   };
@@ -557,14 +562,14 @@ const Dashboard = () => {
       if (error) throw error;
       toast({
         title: "Úspech",
-        description: "Objednávka bola odstránená"
+        description: "Objednávka bola odstránená",
       });
       loadOrders();
     } catch (error: any) {
       toast({
         title: "Chyba",
         description: error.message,
-        variant: "destructive"
+        variant: "destructive",
       });
     }
   };
@@ -583,7 +588,7 @@ const Dashboard = () => {
       preferences: profile.preferences?.join(", ") || "",
       dislikes: (profile as any).dislikes?.join(", ") || "",
       favorite_foods: (profile as any).favorite_foods?.join(", ") || "",
-      health_issues: (profile as any).health_issues || ""
+      health_issues: (profile as any).health_issues || "",
     });
     setIsEditProfileOpen(true);
   };
@@ -637,11 +642,23 @@ const Dashboard = () => {
           goal_weight: editFormData.goal_weight ? parseFloat(editFormData.goal_weight) : null,
           goal: editFormData.goal,
           activity: editFormData.activity,
-          allergies: editFormData.allergies.split(",").map((a) => a.trim()).filter(Boolean),
-          preferences: editFormData.preferences.split(",").map((p) => p.trim()).filter(Boolean),
-          dislikes: editFormData.dislikes.split(",").map((d) => d.trim()).filter(Boolean),
-          favorite_foods: editFormData.favorite_foods.split(",").map((f) => f.trim()).filter(Boolean),
-          health_issues: editFormData.health_issues
+          allergies: editFormData.allergies
+            .split(",")
+            .map((a) => a.trim())
+            .filter(Boolean),
+          preferences: editFormData.preferences
+            .split(",")
+            .map((p) => p.trim())
+            .filter(Boolean),
+          dislikes: editFormData.dislikes
+            .split(",")
+            .map((d) => d.trim())
+            .filter(Boolean),
+          favorite_foods: editFormData.favorite_foods
+            .split(",")
+            .map((f) => f.trim())
+            .filter(Boolean),
+          health_issues: editFormData.health_issues,
         })
         .eq("user_id", userId);
 
@@ -650,21 +667,19 @@ const Dashboard = () => {
       // Insert new weight into progress table if different from current weight
       const currentWeight = getCurrentWeight();
       if (weight !== currentWeight) {
-        const { error: progressError } = await supabase
-          .from("progress")
-          .insert({
-            user_id: userId,
-            weight,
-            date: new Date().toISOString().split("T")[0],
-            created_at: new Date().toISOString(),
-          });
+        const { error: progressError } = await supabase.from("progress").insert({
+          user_id: userId,
+          weight,
+          date: new Date().toISOString().split("T")[0],
+          created_at: new Date().toISOString(),
+        });
 
         if (progressError) throw progressError;
       }
 
       toast({
         title: "Úspech",
-        description: "Profil bol úspešne aktualizovaný"
+        description: "Profil bol úspešne aktualizovaný",
       });
       setIsEditProfileOpen(false);
       await checkUserAndLoadProfile();
@@ -672,7 +687,7 @@ const Dashboard = () => {
       toast({
         title: "Chyba",
         description: error.message,
-        variant: "destructive"
+        variant: "destructive",
       });
     }
   };
@@ -706,8 +721,11 @@ const Dashboard = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">
-                    {notifications.map(notification => (
-                      <div key={notification.id} className="flex justify-between items-center p-3 bg-background rounded-lg">
+                    {notifications.map((notification) => (
+                      <div
+                        key={notification.id}
+                        className="flex justify-between items-center p-3 bg-background rounded-lg"
+                      >
                         <span className="text-sm">Nová objednávka #{notification.order_id.slice(0, 8)}</span>
                         <Button size="sm" onClick={() => markNotificationAsSeen(notification.id)}>
                           Označiť ako prečítané
@@ -721,19 +739,31 @@ const Dashboard = () => {
 
             <Tabs defaultValue="orders" className="space-y-6">
               <TabsList className="flex flex-wrap w-full max-w-4xl gap-2 h-auto">
-                <TabsTrigger value="orders" className="w-1/2 md:w-auto flex-1 md:flex-none flex-col md:flex-row items-center justify-center gap-1 md:gap-2 py-3">
+                <TabsTrigger
+                  value="orders"
+                  className="w-1/2 md:w-auto flex-1 md:flex-none flex-col md:flex-row items-center justify-center gap-1 md:gap-2 py-3"
+                >
                   <Package className="h-4 w-4" />
                   <span className="text-xs md:text-sm">Objednávky</span>
                 </TabsTrigger>
-                <TabsTrigger value="dishes" className="w-1/2 md:w-auto flex-1 md:flex-none flex-col md:flex-row items-center justify-center gap-1 md:gap-2 py-3">
+                <TabsTrigger
+                  value="dishes"
+                  className="w-1/2 md:w-auto flex-1 md:flex-none flex-col md:flex-row items-center justify-center gap-1 md:gap-2 py-3"
+                >
                   <UtensilsCrossed className="h-4 w-4" />
                   <span className="text-xs md:text-sm">Správa jedál</span>
                 </TabsTrigger>
-                <TabsTrigger value="weekly-menu" className="w-1/2 md:w-auto flex-1 md:flex-none flex-col md:flex-row items-center justify-center gap-1 md:gap-2 py-3">
+                <TabsTrigger
+                  value="weekly-menu"
+                  className="w-1/2 md:w-auto flex-1 md:flex-none flex-col md:flex-row items-center justify-center gap-1 md:gap-2 py-3"
+                >
                   <Calendar className="h-4 w-4" />
                   <span className="text-xs md:text-sm">Menu</span>
                 </TabsTrigger>
-                <TabsTrigger value="users" className="w-1/2 md:w-auto flex-1 md:flex-none flex-col md:flex-row items-center justify-center gap-1 md:gap-2 py-3">
+                <TabsTrigger
+                  value="users"
+                  className="w-1/2 md:w-auto flex-1 md:flex-none flex-col md:flex-row items-center justify-center gap-1 md:gap-2 py-3"
+                >
                   <Users className="h-4 w-4" />
                   <span className="text-xs md:text-sm">Používatelia</span>
                 </TabsTrigger>
@@ -758,7 +788,7 @@ const Dashboard = () => {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {orders.map(order => (
+                        {orders.map((order) => (
                           <TableRow
                             key={order.id}
                             className="cursor-pointer hover:bg-muted/50"
@@ -775,11 +805,11 @@ const Dashboard = () => {
                             <TableCell>
                               <Badge className={getStatusColor(order.status)}>{getStatusLabel(order.status)}</Badge>
                             </TableCell>
-                            <TableCell onClick={e => e.stopPropagation()}>
+                            <TableCell onClick={(e) => e.stopPropagation()}>
                               <div className="flex items-center gap-2">
                                 <select
                                   value={order.status}
-                                  onChange={e => updateOrderStatus(order.id, e.target.value)}
+                                  onChange={(e) => updateOrderStatus(order.id, e.target.value)}
                                   className="border rounded px-2 py-1 text-sm bg-card"
                                 >
                                   <option value="pending">Čaká sa</option>
@@ -789,11 +819,7 @@ const Dashboard = () => {
                                   <option value="delivered">Doručené</option>
                                   <option value="cancelled">Zrušené</option>
                                 </select>
-                                <Button
-                                  variant="destructive"
-                                  size="sm"
-                                  onClick={e => handleDeleteOrder(order.id, e)}
-                                >
+                                <Button variant="destructive" size="sm" onClick={(e) => handleDeleteOrder(order.id, e)}>
                                   <Trash2 className="h-4 w-4" />
                                 </Button>
                               </div>
@@ -841,7 +867,9 @@ const Dashboard = () => {
                     </div>
                     <div>
                       <p className="text-sm text-muted-foreground">Email</p>
-                      <p className="font-medium">{selectedOrder.email || selectedOrder.user_profiles?.email || "N/A"}</p>
+                      <p className="font-medium">
+                        {selectedOrder.email || selectedOrder.user_profiles?.email || "N/A"}
+                      </p>
                     </div>
                     <div>
                       <p className="text-sm text-muted-foreground">Telefón</p>
@@ -859,8 +887,8 @@ const Dashboard = () => {
                 </div>
 
                 {/* Dietary Requirements */}
-                {(selectedOrder.user_profiles?.allergies && selectedOrder.user_profiles.allergies.length > 0) || 
-                 (selectedOrder.user_profiles?.dislikes && selectedOrder.user_profiles.dislikes.length > 0) ? (
+                {(selectedOrder.user_profiles?.allergies && selectedOrder.user_profiles.allergies.length > 0) ||
+                (selectedOrder.user_profiles?.dislikes && selectedOrder.user_profiles.dislikes.length > 0) ? (
                   <div className="space-y-4">
                     <h3 className="font-semibold text-lg border-b pb-2">Diétne požiadavky zákazníka</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -869,7 +897,9 @@ const Dashboard = () => {
                           <p className="text-sm text-muted-foreground mb-2">Alergény</p>
                           <div className="flex flex-wrap gap-2">
                             {selectedOrder.user_profiles.allergies.map((allergy, idx) => (
-                              <Badge key={idx} variant="destructive" className="text-xs">{allergy}</Badge>
+                              <Badge key={idx} variant="destructive" className="text-xs">
+                                {allergy}
+                              </Badge>
                             ))}
                           </div>
                         </div>
@@ -879,7 +909,9 @@ const Dashboard = () => {
                           <p className="text-sm text-muted-foreground mb-2">Nechce</p>
                           <div className="flex flex-wrap gap-2">
                             {selectedOrder.user_profiles.dislikes.map((dislike, idx) => (
-                              <Badge key={idx} variant="outline" className="text-xs">{dislike}</Badge>
+                              <Badge key={idx} variant="outline" className="text-xs">
+                                {dislike}
+                              </Badge>
                             ))}
                           </div>
                         </div>
@@ -910,15 +942,14 @@ const Dashboard = () => {
                         ) : (
                           <Badge variant="outline">Týždenné menu</Badge>
                         )}
-                        {selectedOrder.items?.some((day: any) => 
-                          day.meals?.some((meal: any) => 
-                            typeof meal === 'string' ? 
-                              meal.toLowerCase().includes('vegetarian') || meal.toLowerCase().includes('vegetariánsk') :
-                              meal.name?.toLowerCase().includes('vegetarian') || meal.name?.toLowerCase().includes('vegetariánsk')
-                          )
-                        ) && (
-                          <Badge className="bg-green-500 hover:bg-green-600">Vegetariánske</Badge>
-                        )}
+                        {selectedOrder.items?.some((day: any) =>
+                          day.meals?.some((meal: any) =>
+                            typeof meal === "string"
+                              ? meal.toLowerCase().includes("vegetarian") || meal.toLowerCase().includes("vegetariánsk")
+                              : meal.name?.toLowerCase().includes("vegetarian") ||
+                                meal.name?.toLowerCase().includes("vegetariánsk"),
+                          ),
+                        ) && <Badge className="bg-green-500 hover:bg-green-600">Vegetariánske</Badge>}
                       </div>
                     </div>
                     <div>
@@ -927,12 +958,16 @@ const Dashboard = () => {
                     </div>
                     <div>
                       <p className="text-sm text-muted-foreground">Stav</p>
-                      <Badge className={getStatusColor(selectedOrder.status)}>{getStatusLabel(selectedOrder.status)}</Badge>
+                      <Badge className={getStatusColor(selectedOrder.status)}>
+                        {getStatusLabel(selectedOrder.status)}
+                      </Badge>
                     </div>
                     {selectedOrder.delivery_date && (
                       <div>
                         <p className="text-sm text-muted-foreground">Dátum doručenia</p>
-                        <p className="font-medium">{new Date(selectedOrder.delivery_date).toLocaleDateString("sk-SK")}</p>
+                        <p className="font-medium">
+                          {new Date(selectedOrder.delivery_date).toLocaleDateString("sk-SK")}
+                        </p>
                       </div>
                     )}
                     <div>
@@ -946,20 +981,24 @@ const Dashboard = () => {
                 <div className="space-y-4">
                   <h3 className="font-semibold text-lg border-b pb-2">Obsah objednávky</h3>
                   <div className="space-y-3">
-                    {selectedOrder.items && Array.isArray(selectedOrder.items) && selectedOrder.items.map((day: any, idx: number) => (
-                      <div key={idx} className="border rounded-lg p-4 bg-muted/30">
-                        <h4 className="font-semibold mb-2 text-primary">{day.day}</h4>
-                        <div className="space-y-1">
-                          {day.meals && day.meals.length > 0 ? (
-                            day.meals.map((meal: any, mealIdx: number) => (
-                              <p key={mealIdx} className="text-sm">• {typeof meal === 'string' ? meal : meal.name}</p>
-                            ))
-                          ) : (
-                            <p className="text-sm text-muted-foreground italic">Žiadne jedlá</p>
-                          )}
+                    {selectedOrder.items &&
+                      Array.isArray(selectedOrder.items) &&
+                      selectedOrder.items.map((day: any, idx: number) => (
+                        <div key={idx} className="border rounded-lg p-4 bg-muted/30">
+                          <h4 className="font-semibold mb-2 text-primary">{day.day}</h4>
+                          <div className="space-y-1">
+                            {day.meals && day.meals.length > 0 ? (
+                              day.meals.map((meal: any, mealIdx: number) => (
+                                <p key={mealIdx} className="text-sm">
+                                  • {typeof meal === "string" ? meal : meal.name}
+                                </p>
+                              ))
+                            ) : (
+                              <p className="text-sm text-muted-foreground italic">Žiadne jedlá</p>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      ))}
                   </div>
                 </div>
 
@@ -974,7 +1013,9 @@ const Dashboard = () => {
             )}
 
             <DialogFooter>
-              <Button variant="outline" onClick={() => setIsOrderModalOpen(false)}>Zavrieť</Button>
+              <Button variant="outline" onClick={() => setIsOrderModalOpen(false)}>
+                Zavrieť
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -1000,10 +1041,15 @@ const Dashboard = () => {
 
           {/* Dashboard Overview - All Components in One */}
           <div className="mt-8">
-            <DashboardOverview profile={profile} userId={userId} progressData={progressData} onWeightAdded={async () => {
-              await loadProgressData(userId);
-              await checkUserAndLoadProfile();
-            }} />
+            <DashboardOverview
+              profile={profile}
+              userId={userId}
+              progressData={progressData}
+              onWeightAdded={async () => {
+                await loadProgressData(userId);
+                await checkUserAndLoadProfile();
+              }}
+            />
           </div>
 
           {/* Account Settings */}
@@ -1029,7 +1075,11 @@ const Dashboard = () => {
                 <Lock className="h-4 w-4 mr-2" />
                 Zmeniť heslo
               </Button>
-              <Button onClick={() => setIsDeleteDialogOpen(true)} variant="destructive" className="w-full justify-start">
+              <Button
+                onClick={() => setIsDeleteDialogOpen(true)}
+                variant="destructive"
+                className="w-full justify-start"
+              >
                 <Trash2 className="h-4 w-4 mr-2" />
                 Vymazať účet
               </Button>
@@ -1052,13 +1102,15 @@ const Dashboard = () => {
                 id="new-email"
                 type="email"
                 value={newEmail}
-                onChange={e => setNewEmail(e.target.value)}
+                onChange={(e) => setNewEmail(e.target.value)}
                 placeholder="novy@email.sk"
               />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEmailDialogOpen(false)}>Zrušiť</Button>
+            <Button variant="outline" onClick={() => setIsEmailDialogOpen(false)}>
+              Zrušiť
+            </Button>
             <Button onClick={handleEmailChange}>Zmeniť email</Button>
           </DialogFooter>
         </DialogContent>
@@ -1078,7 +1130,7 @@ const Dashboard = () => {
                 id="new-password"
                 type="password"
                 value={newPassword}
-                onChange={e => setNewPassword(e.target.value)}
+                onChange={(e) => setNewPassword(e.target.value)}
                 placeholder="••••••••"
               />
             </div>
@@ -1088,13 +1140,15 @@ const Dashboard = () => {
                 id="confirm-password"
                 type="password"
                 value={confirmPassword}
-                onChange={e => setConfirmPassword(e.target.value)}
+                onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="••••••••"
               />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsPasswordDialogOpen(false)}>Zrušiť</Button>
+            <Button variant="outline" onClick={() => setIsPasswordDialogOpen(false)}>
+              Zrušiť
+            </Button>
             <Button onClick={handlePasswordChange}>Zmeniť heslo</Button>
           </DialogFooter>
         </DialogContent>
@@ -1140,7 +1194,7 @@ const Dashboard = () => {
                     id="edit-age"
                     type="number"
                     value={editFormData.age}
-                    onChange={e => setEditFormData({ ...editFormData, age: e.target.value })}
+                    onChange={(e) => setEditFormData({ ...editFormData, age: e.target.value })}
                     placeholder="napr. 25"
                     min="13"
                     max="120"
@@ -1153,7 +1207,7 @@ const Dashboard = () => {
                     id="edit-height"
                     type="number"
                     value={editFormData.height}
-                    onChange={e => setEditFormData({ ...editFormData, height: e.target.value })}
+                    onChange={(e) => setEditFormData({ ...editFormData, height: e.target.value })}
                     placeholder="napr. 175"
                     min="100"
                     max="250"
@@ -1165,7 +1219,8 @@ const Dashboard = () => {
                     Aktuálna váha (kg) *
                     {progressData.length > 0 && (
                       <span className="text-xs text-muted-foreground ml-2 font-normal">
-                        (aktualizované {new Date(progressData[progressData.length - 1].date).toLocaleDateString("sk-SK")})
+                        (aktualizované{" "}
+                        {new Date(progressData[progressData.length - 1].date).toLocaleDateString("sk-SK")})
                       </span>
                     )}
                   </Label>
@@ -1174,21 +1229,22 @@ const Dashboard = () => {
                     type="number"
                     step="0.1"
                     value={editFormData.weight}
-                    onChange={e => setEditFormData({ ...editFormData, weight: e.target.value })}
+                    onChange={(e) => setEditFormData({ ...editFormData, weight: e.target.value })}
                     placeholder="napr. 70"
                     min="30"
                     max="300"
                   />
-                  <p className="text-xs text-muted-foreground">
-                    Zmena váhy ovplyvní vaše odporúčané veľkosti menu
-                  </p>
+                  <p className="text-xs text-muted-foreground">Zmena váhy ovplyvní vaše odporúčané veľkosti menu</p>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="edit-gender">Pohlavie *</Label>
-                  <Select value={editFormData.gender} onValueChange={value => setEditFormData({ ...editFormData, gender: value })}>
+                  <Select
+                    value={editFormData.gender}
+                    onValueChange={(value) => setEditFormData({ ...editFormData, gender: value })}
+                  >
                     <SelectTrigger id="edit-gender">
                       <SelectValue placeholder="Vyberte pohlavie" />
                     </SelectTrigger>
@@ -1207,7 +1263,7 @@ const Dashboard = () => {
                     type="number"
                     step="0.1"
                     value={editFormData.goal_weight}
-                    onChange={e => setEditFormData({ ...editFormData, goal_weight: e.target.value })}
+                    onChange={(e) => setEditFormData({ ...editFormData, goal_weight: e.target.value })}
                     placeholder="napr. 75"
                     min="30"
                     max="300"
@@ -1219,7 +1275,10 @@ const Dashboard = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="edit-goal">Cieľ *</Label>
-                  <Select value={editFormData.goal} onValueChange={value => setEditFormData({ ...editFormData, goal: value })}>
+                  <Select
+                    value={editFormData.goal}
+                    onValueChange={(value) => setEditFormData({ ...editFormData, goal: value })}
+                  >
                     <SelectTrigger id="edit-goal">
                       <SelectValue placeholder="Vyberte cieľ" />
                     </SelectTrigger>
@@ -1233,7 +1292,10 @@ const Dashboard = () => {
 
                 <div className="space-y-2">
                   <Label htmlFor="edit-activity">Úroveň aktivity *</Label>
-                  <Select value={editFormData.activity} onValueChange={value => setEditFormData({ ...editFormData, activity: value })}>
+                  <Select
+                    value={editFormData.activity}
+                    onValueChange={(value) => setEditFormData({ ...editFormData, activity: value })}
+                  >
                     <SelectTrigger id="edit-activity">
                       <SelectValue placeholder="Vyberte úroveň" />
                     </SelectTrigger>
@@ -1256,7 +1318,7 @@ const Dashboard = () => {
                 <Input
                   id="edit-allergies"
                   value={editFormData.allergies}
-                  onChange={e => setEditFormData({ ...editFormData, allergies: e.target.value })}
+                  onChange={(e) => setEditFormData({ ...editFormData, allergies: e.target.value })}
                   placeholder="napr. laktóza, gluten, orechy (oddelené čiarkou)"
                 />
                 <p className="text-xs text-muted-foreground">Oddeľte čiarkou</p>
@@ -1267,5 +1329,105 @@ const Dashboard = () => {
                 <Input
                   id="edit-preferences"
                   value={editFormData.preferences}
-                  onChange={e => setEditFormData({ ...editFormData, preferences: e.target.value })}
-                  placeholder="napr. vegetarián, vegan, bez cuk
+                  onChange={(e) => setEditFormData({ ...editFormData, preferences: e.target.value })}
+                  placeholder="napr. vegetarián, vegan, bez cukru"
+                />
+                <p className="text-xs text-muted-foreground">Oddeľte čiarkou</p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="edit-dislikes">Nemám rád</Label>
+                <Input
+                  id="edit-dislikes"
+                  value={editFormData.dislikes}
+                  onChange={(e) => setEditFormData({ ...editFormData, dislikes: e.target.value })}
+                  placeholder="napr. brokolica, ryby (oddelené čiarkou)"
+                />
+                <p className="text-xs text-muted-foreground">Oddeľte čiarkou</p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="edit-favorite-foods">Obľúbené jedlá</Label>
+                <Input
+                  id="edit-favorite-foods"
+                  value={editFormData.favorite_foods}
+                  onChange={(e) => setEditFormData({ ...editFormData, favorite_foods: e.target.value })}
+                  placeholder="napr. pizza, sushi (oddelené čiarkou)"
+                />
+                <p className="text-xs text-muted-foreground">Oddeľte čiarkou</p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="edit-health-issues">Zdravotné problémy</Label>
+                <Textarea
+                  id="edit-health-issues"
+                  value={editFormData.health_issues}
+                  onChange={(e) => setEditFormData({ ...editFormData, health_issues: e.target.value })}
+                  placeholder="napr. cukrovka, vysoký krvný tlak"
+                />
+                <p className="text-xs text-muted-foreground">Popíšte akékoľvek zdravotné problémy</p>
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditProfileOpen(false)}>
+              Zrušiť
+            </Button>
+            <Button onClick={handleSaveProfile}>Uložiť zmeny</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* All Orders Modal */}
+      <Dialog open={isAllOrdersModalOpen} onOpenChange={setIsAllOrdersModalOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Moje objednávky</DialogTitle>
+            <DialogDescription>Zoznam všetkých vašich objednávok</DialogDescription>
+          </DialogHeader>
+          <div className="mt-4">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Dátum</TableHead>
+                  <TableHead>Typ doručenia</TableHead>
+                  <TableHead>Suma</TableHead>
+                  <TableHead>Status</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {userOrders.map((order) => (
+                  <TableRow
+                    key={order.id}
+                    className="cursor-pointer hover:bg-muted/50"
+                    onClick={() => {
+                      setSelectedOrder(order);
+                      setIsOrderModalOpen(true);
+                    }}
+                  >
+                    <TableCell>{new Date(order.created_at).toLocaleDateString("sk-SK")}</TableCell>
+                    <TableCell>{order.delivery_type}</TableCell>
+                    <TableCell>{order.total_price}€</TableCell>
+                    <TableCell>
+                      <Badge className={getStatusColor(order.status)}>{getStatusLabel(order.status)}</Badge>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsAllOrdersModalOpen(false)}>
+              Zavrieť
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Footer />
+    </div>
+  );
+};
+
+export default Dashboard;
