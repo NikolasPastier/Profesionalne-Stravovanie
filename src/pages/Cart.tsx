@@ -112,8 +112,8 @@ const Cart = () => {
     });
   }, []);
 
-  // Calculate delivery fee based on address
-  const calculateDeliveryFee = (address: string) => {
+  // Calculate delivery fee based on address and number of days
+  const calculateDeliveryFee = (address: string, numberOfDays: number = 1) => {
     const lowerAddress = address
       .toLowerCase()
       .normalize("NFD")
@@ -141,36 +141,44 @@ const Cart = () => {
     ];
 
     if (nitraRegions.some((region) => lowerAddress.includes(region))) {
-      return { fee: 0.0, region: "nitra" };
+      return { fee: 0.0, region: "nitra", perDayFee: 0 };
     }
 
-    // Sereď - €4.00
+    // Sereď - €4.00 per day
     if (lowerAddress.includes("sered")) {
-      return { fee: 4.0, region: "sered" };
+      return { fee: 4.0 * numberOfDays, region: "sered", perDayFee: 4.0 };
     }
 
-    // Trnava - €5.00
+    // Trnava - €5.00 per day
     if (lowerAddress.includes("trnava")) {
-      return { fee: 5.0, region: "trnava" };
+      return { fee: 5.0 * numberOfDays, region: "trnava", perDayFee: 5.0 };
     }
 
-    // Bratislava - €6.00
+    // Bratislava - €6.00 per day
     if (lowerAddress.includes("bratislava")) {
-      return { fee: 6.0, region: "bratislava" };
+      return { fee: 6.0 * numberOfDays, region: "bratislava", perDayFee: 6.0 };
     }
 
-    // Iné vzdialenosti - dohodou
-    return { fee: 6, region: "other" };
+    // Iné vzdialenosti - dohodou (€6 per day)
+    return { fee: 6 * numberOfDays, region: "other", perDayFee: 6 };
   };
 
-  // Auto-detect delivery region when address changes
+  // Calculate total number of days across all cart items
+  const totalDays = cartItems.reduce((sum, item) => {
+    if (item.type === "week") {
+      return sum + (item.selectedDays?.length || item.menu?.items?.length || 5);
+    }
+    return sum + 1;
+  }, 0);
+
+  // Auto-detect delivery region when address or cart changes
   useEffect(() => {
     if (address.length >= 5) {
-      const { fee, region } = calculateDeliveryFee(address);
+      const { fee, region } = calculateDeliveryFee(address, totalDays);
       setDeliveryFee(fee);
       setDeliveryRegion(region);
     }
-  }, [address]);
+  }, [address, cartItems]);
 
   const createOrder = async (userId: string) => {
     try {
@@ -615,7 +623,9 @@ const Cart = () => {
                 </div>
                 {deliveryFee > 0 && (
                   <div className="flex justify-between items-center">
-                    <span className="text-base text-foreground">Doprava:</span>
+                    <span className="text-base text-foreground">
+                      Doprava {totalDays > 1 && `(${totalDays} dní × €${(deliveryFee / totalDays).toFixed(2)})`}:
+                    </span>
                     <span className="text-base font-semibold">€{deliveryFee.toFixed(2)}</span>
                   </div>
                 )}
@@ -707,7 +717,9 @@ const Cart = () => {
                     </div>
                     {deliveryFee > 0 && (
                       <div className="flex justify-between items-center">
-                        <span className="text-base">Doprava:</span>
+                        <span className="text-base">
+                          Doprava {totalDays > 1 && `(${totalDays} dní × €${(deliveryFee / totalDays).toFixed(2)})`}:
+                        </span>
                         <span className="text-base font-semibold">€{deliveryFee.toFixed(2)}</span>
                       </div>
                     )}
