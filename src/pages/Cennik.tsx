@@ -68,10 +68,10 @@ const Cennik = () => {
         >
           <CardHeader className="text-center">
             <CardTitle className="text-4xl font-display text-gradient-gold mb-4">Cenník</CardTitle>
-            <div className="flex justify-center gap-4 mb-4">
+            <div className="flex flex-col sm:flex-row justify-center gap-3 mb-4 w-full max-w-2xl mx-auto px-4">
               <Button
                 onClick={() => setDeliveryArea("Nitra")}
-                className={`px-6 py-2 text-sm font-medium ${
+                className={`px-4 sm:px-6 py-2 text-sm font-medium w-full sm:w-auto ${
                   deliveryArea === "Nitra"
                     ? "bg-primary text-primary-foreground"
                     : "bg-background border border-primary/20 text-primary hover:bg-primary/10"
@@ -81,7 +81,7 @@ const Cennik = () => {
               </Button>
               <Button
                 onClick={() => setDeliveryArea("Bratislava")}
-                className={`px-6 py-2 text-sm font-medium ${
+                className={`px-4 sm:px-6 py-2 text-sm font-medium w-full sm:w-auto ${
                   deliveryArea === "Bratislava"
                     ? "bg-primary text-primary-foreground"
                     : "bg-background border border-primary/20 text-primary hover:bg-primary/10"
