@@ -58,10 +58,9 @@ const Doprava = () => {
                   <Clock className="h-6 w-6 text-primary" />
                   <h3 className="text-xl font-display text-gradient-gold">Čas doručenia</h3>
                 </div>
-                <p className="text-sm text-muted-foreground">
-                  Každú Nedeľa - Štvrtok: Nitra a okolie 17:00 - 19:00                                                  
-                               Smer Bratislava 19:00 - 21:00
-                </p>
+                <p className="text-sm text-muted-foreground">Každú Nedeľa - Štvrtok: </p>
+                <p>Nitra a okolie 17:00 - 19:00</p>
+                <p>Smer Bratislava 19:00 - 21:00</p>
               </div>
             </div>
           </CardContent>
