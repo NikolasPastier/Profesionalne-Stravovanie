@@ -46,7 +46,7 @@ const handler = async (req: Request): Promise<Response> => {
 
   try {
     const orderData: OrderEmailRequest = await req.json();
-    console.log("Processing order email request:", orderData);
+    console.log("Processing order email request:", JSON.stringify(orderData, null, 2));
 
     const adminEmail = Deno.env.get("ADMIN_EMAIL");
     const fromEmail = Deno.env.get("FROM_EMAIL");
@@ -75,9 +75,13 @@ const handler = async (req: Request): Promise<Response> => {
       day: "numeric",
     });
 
-    // Format menuSize and calories
-    const formatMenuSize = (menuSize?: string): string => {
-      if (!menuSize) return "Nie je špecifikované";
+    // Format menuSize and calories with fallbacks
+    const menuSize = orderData.menuSize || "Nie je špecifikované";
+    const calories = orderData.calories ? `${orderData.calories} kcal` : "Nie je špecifikované";
+    const deliveryType = orderData.deliveryType || "Jednorazové";
+    const note = orderData.note || "Žiadna poznámka";
+
+    const formatMenuSize = (menuSize: string): string => {
       switch (menuSize.toLowerCase()) {
         case "vegetarian":
           return "Vegetariánske";
@@ -88,44 +92,49 @@ const handler = async (req: Request): Promise<Response> => {
       }
     };
 
-    const formatCalories = (calories?: number): string => {
-      return calories ? `${calories} kcal` : "Nie je špecifikované";
+    const formatCalories = (calories: string): string => {
+      return calories;
     };
 
-    // Calculate delivery dates
+    // Calculate delivery dates with validation and fallback
     const getDeliveryDates = (): string[] => {
       const deliveryDates = new Set<string>();
       if (orderData.deliveryDate) {
         const deliveryDate = new Date(orderData.deliveryDate);
-        deliveryDate.setDate(deliveryDate.getDate() - 1); // Evening before the ordered day
-        deliveryDates.add(
-          deliveryDate.toLocaleDateString("sk-SK", {
-            weekday: "long",
-            year: "numeric",
-            month: "long",
-            day: "numeric",
-          }),
-        );
+        if (!isNaN(deliveryDate.getTime())) {
+          deliveryDate.setDate(deliveryDate.getDate() - 1); // Evening before the ordered day
+          deliveryDates.add(
+            deliveryDate.toLocaleDateString("sk-SK", {
+              weekday: "long",
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            }),
+          );
+        }
       } else if (orderData.orderItems && orderData.orderItems.length > 0) {
         orderData.orderItems.forEach((item) => {
           if (item.days) {
             item.days.forEach((dayObj) => {
               const orderedDate = new Date(dayObj.day);
-              const deliveryDate = new Date(orderedDate);
-              deliveryDate.setDate(deliveryDate.getDate() - 1); // Evening before
-              deliveryDates.add(
-                deliveryDate.toLocaleDateString("sk-SK", {
-                  weekday: "long",
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                }),
-              );
+              if (!isNaN(orderedDate.getTime())) {
+                const deliveryDate = new Date(orderedDate);
+                deliveryDate.setDate(deliveryDate.getDate() - 1); // Evening before
+                deliveryDates.add(
+                  deliveryDate.toLocaleDateString("sk-SK", {
+                    weekday: "long",
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                  }),
+                );
+              }
             });
           }
         });
       }
-      return Array.from(deliveryDates);
+      const datesArray = Array.from(deliveryDates);
+      return datesArray.length > 0 ? datesArray : [currentDate]; // Fallback to current date if empty
     };
 
     // Get delivery time based on location
@@ -142,17 +151,16 @@ const handler = async (req: Request): Promise<Response> => {
     const deliveryDates = getDeliveryDates();
     const deliveryTime = getDeliveryTime(orderData.deliveryAddress);
 
-    // Create preferences section
-    const preferencesSection =
-      orderData.allergies?.length || orderData.dislikes?.length
-        ? `
-      <div style="background: #fef3c7; padding: 15px; border-radius: 8px; margin: 20px 0;">
+    // Create preferences section with fallbacks
+    const allergies = orderData.allergies?.length ? orderData.allergies : ["Žiadne"];
+    const dislikes = orderData.dislikes?.length ? orderData.dislikes : ["Žiadne"];
+    const preferencesSection = `
+      <div style="background: #fef3c7; padding: 15px; margin: 20px 0;">
         <h3 style="color: #92400e; margin: 0 0 10px;">⚠️ Osobné preferencie</h3>
-        ${orderData.allergies?.length ? `<p style="margin: 5px 0;"><strong>Alergie:</strong> ${orderData.allergies.join(", ")}</p>` : ""}
-        ${orderData.dislikes?.length ? `<p style="margin: 5px 0;"><strong>Neobľúbené jedlá:</strong> ${orderData.dislikes.join(", ")}</p>` : ""}
+        <p style="margin: 5px 0;"><strong>Alergie:</strong> ${allergies.join(", ")}</p>
+        <p style="margin: 5px 0;"><strong>Neobľúbené jedlá:</strong> ${dislikes.join(", ")}</p>
       </div>
-    `
-        : "";
+    `;
 
     // Create order items HTML
     const orderItemsHtml = orderData.orderItems
@@ -196,80 +204,91 @@ const handler = async (req: Request): Promise<Response> => {
       })
       .join("");
 
-    // Customer confirmation email
+    // Customer confirmation email with safer styling
     const customerEmailHtml = `
-  <!DOCTYPE html>
-  <html>
-    <head>
-      <meta charset="utf-8">
-      <title>Potvrdenie objednávky</title>
-    </head>
-    <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-      <div style="background: #667eea; padding: 30px; text-align: center;">
-        <h1 style="color: white; margin: 0;">Ďakujeme za objednávku!</h1>
-      </div>
-      <div style="background: #f9f9f9; padding: 30px;">
-        <p style="font-size: 16px;">Dobrý deň ${orderData.customerName},</p>
-        <p>Vaša objednávka bola úspešne prijatá a je v procese spracovania.</p>
-        <div style="background: #f0fdf4; padding: 20px; margin: 20px 0; border: 2px solid #10b981;">
-          <p><strong>Číslo objednávky:</strong> #${orderData.orderId.slice(0, 8)}</p>
-          <p><strong>Dátum objednávky:</strong> ${currentDate}</p>
-        </div>
-        <div style="background: white; padding: 20px; margin: 20px 0;">
-          <h2 style="color: #667eea; margin-top: 0;">Detaily objednávky</h2>
-          <p><strong>Typ menu:</strong> ${formatMenuSize(orderData.menuSize)}</p>
-          <p><strong>Kalórie:</strong> ${formatCalories(orderData.calories)}</p>
-          <p><strong>Typ doručenia:</strong> ${orderData.deliveryType === "weekly" ? "Týždenné menu" : "Jednorazové"}</p>
-          <h3 style="color: #667eea; margin: 20px 0 10px;">Obsah objednávky</h3>
-          <table style="width: 100%; margin-top: 20px; border-collapse: collapse;">
-            <thead>
-              <tr style="background: #f0f0f0;">
-                <th style="padding: 10px; text-align: left; border-bottom: 2px solid #667eea;">Položka</th>
-                <th style="padding: 10px; text-align: center; border-bottom: 2px solid #667eea;">Počet</th>
-                <th style="padding: 10px; text-align: right; border-bottom: 2px solid #667eea;">Cena</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${orderItemsHtml}
-              <tr>
-                <td style="padding: 8px; border-bottom: 1px solid #eee;">Doprava</td>
-                <td style="padding: 8px; border-bottom: 1px solid #eee;"></td>
-                <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right;">${orderData.deliveryFee.toFixed(2)} €</td>
-              </tr>
-              <tr>
-                <td style="padding: 12px; font-weight: bold; font-size: 18px;">SPOLU</td>
-                <td style="padding: 12px;"></td>
-                <td style="padding: 12px; text-align: right; font-weight: bold; font-size: 18px; color: #667eea;">${orderData.totalPrice.toFixed(2)} €</td>
-              </tr>
-            </tbody>
-          </table>
-          ${preferencesSection}
-          <h3 style="color: #667eea; margin: 20px 0 10px;">Doručenie</h3>
-          <p><strong>Adresa:</strong> ${orderData.deliveryAddress}</p>
-          <p><strong>Telefón:</strong> ${orderData.phone}</p>
-          <p><strong>Poznámka:</strong> ${note}</p>
-          <div style="background: #e6ffed; padding: 15px; margin: 15px 0; border: 2px solid #34d399;">
-            <h4 style="color: #065f46; margin: 0 0 10px;">Čas doručenia</h4>
-            ${deliveryDates
-              .map(
-                (date) => `
-                <p style="margin: 5px 0;"><strong>${date}</strong>, ${deliveryTime}</p>
-              `,
-              )
-              .join("")}
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <title>Potvrdenie objednávky</title>
+        </head>
+        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <div style="background: #667eea; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center;">
+            <h1 style="color: white; margin: 0;">Ďakujeme za objednávku!</h1>
           </div>
-          <p style="color: #1f2937;">Prosím, pripravte sa na prevzatie vašej objednávky a hotovosť v celej sume objednávky v uvedenom časovom okne. Náš vodič vám zavolá pred doručením. Ďakujeme za vašu dôveru a prajeme dobrú chuť! <span style="margin-left: 5px;">🍽️</span></p>
-        </div>
-        <div style="background-color: #f9fafb; padding: 30px; text-align: center; border-top: 1px solid #e5e7eb;">
-          <p style="margin: 0 0 8px; color: #6b7280; font-size: 14px;">VIP Krabičky</p>
-          <p style="margin: 0; color: #9ca3af; font-size: 12px;">Zdravé jedlo priamo k vám domov</p>
-        </div>
-      </div>
-    </body>
-  </html>
-`;
+          
+          <div style="background: #f9f9f9; padding: 30px;">
+            <p style="font-size: 16px;">Dobrý deň ${orderData.customerName},</p>
+            <p>Vaša objednávka bola úspešne prijatá a je v procese spracovania.</p>
+            
+            <div style="background: #f0fdf4; padding: 20px; margin: 20px 0; border: 2px solid #10b981;">
+              <p><strong>Číslo objednávky:</strong> #${orderData.orderId.slice(0, 8)}</p>
+              <p><strong>Dátum objednávky:</strong> ${currentDate}</p>
+            </div>
 
-    // Admin notification email
+            <div style="background: white; padding: 20px; margin: 20px 0;">
+              <h2 style="color: #667eea; margin-top: 0;">Detaily objednávky</h2>
+              <p><strong>Typ menu:</strong> ${formatMenuSize(menuSize)}</p>
+              <p><strong>Kalórie:</strong> ${formatCalories(calories)}</p>
+              <p><strong>Typ doručenia:</strong> ${deliveryType === "weekly" ? "Týždenné menu" : "Jednorazové"}</p>
+              
+              <h3 style="color: #667eea; margin: 20px 0 10px;">Obsah objednávky</h3>
+              
+              <table style="width: 100%; margin-top: 20px; border-collapse: collapse;">
+                <thead>
+                  <tr style="background: #f0f0f0;">
+                    <th style="padding: 10px; text-align: left; border-bottom: 2px solid #667eea;">Položka</th>
+                    <th style="padding: 10px; text-align: center; border-bottom: 2px solid #667eea;">Počet</th>
+                    <th style="padding: 10px; text-align: right; border-bottom: 2px solid #667eea;">Cena</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${orderItemsHtml}
+                  <tr>
+                    <td style="padding: 8px; border-bottom: 1px solid #eee;">Doprava</td>
+                    <td style="padding: 8px; border-bottom: 1px solid #eee;"></td>
+                    <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right;">${orderData.deliveryFee.toFixed(2)} €</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 12px; font-weight: bold; font-size: 18px;">SPOLU</td>
+                    <td style="padding: 12px;"></td>
+                    <td style="padding: 12px; text-align: right; font-weight: bold; font-size: 18px; color: #667eea;">${orderData.totalPrice.toFixed(2)} €</td>
+                  </tr>
+                </tbody>
+              </table>
+
+              ${preferencesSection}
+
+              <h3 style="color: #667eea; margin: 20px 0 10px;">Doručenie</h3>
+              <p><strong>Adresa:</strong> ${orderData.deliveryAddress}</p>
+              <p><strong>Telefón:</strong> ${orderData.phone}</p>
+              <p><strong>Poznámka:</strong> ${note}</p>
+              <div style="background: #e6ffed; padding: 15px; margin: 15px 0; border: 2px solid #34d399;">
+                <h4 style="color: #065f46; margin: 0 0 10px;">Čas doručenia</h4>
+                ${deliveryDates
+                  .map(
+                    (date) => `
+                    <p style="margin: 5px 0;"><strong>${date}</strong>, ${deliveryTime}</p>
+                  `,
+                  )
+                  .join("")}
+              </div>
+              <p style="color: #1f2937;">Prosím, pripravte sa na prevzatie vašej objednávky a hotovosť v celej sume objednávky v uvedenom časovom okne. Náš vodič vám zavolá pred doručením. Ďakujeme za vašu dôveru a prajeme dobrú chuť! <span style="margin-left: 5px;">🍽️</span></p>
+            </div>
+          </div>
+          <div style="background-color: #f9fafb; padding: 30px; text-align: center; border-top: 1px solid #e5e7eb;">
+            <p style="margin: 0 0 8px; color: #6b7280; font-size: 14px;">
+              VIP Krabičky
+            </p>
+            <p style="margin: 0; color: #9ca3af; font-size: 12px;">
+              Zdravé jedlo priamo k vám domov
+            </p>
+          </div>
+        </body>
+      </html>
+    `;
+
+    // Admin notification email with safer styling
     const adminEmailHtml = `
       <!DOCTYPE html>
       <html>
@@ -278,23 +297,23 @@ const handler = async (req: Request): Promise<Response> => {
           <title>Nová objednávka</title>
         </head>
         <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+          <div style="background: #f093fb; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); padding: 30px; text-align: center;">
             <h1 style="color: white; margin: 0;">🔔 Nová objednávka</h1>
           </div>
           
-          <div style="background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px;">
+          <div style="background: #f9f9f9; padding: 30px;">
             <p style="font-size: 16px;">Bola prijatá nová objednávka:</p>
             
-            <div style="background: #fef3c7; padding: 20px; border-radius: 8px; margin: 20px 0; border: 2px solid #f59e0b;">
+            <div style="background: #fef3c7; padding: 20px; margin: 20px 0; border: 2px solid #f59e0b;">
               <p><strong>Číslo objednávky:</strong> #${orderData.orderId.slice(0, 8)}</p>
               <p><strong>Dátum objednávky:</strong> ${currentDate}</p>
             </div>
 
-            <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <div style="background: white; padding: 20px; margin: 20px 0;">
               <h2 style="color: #f5576c; margin-top: 0;">Detaily objednávky</h2>
-              <p><strong>Typ menu:</strong> ${formatMenuSize(orderData.menuSize)}</p>
-              <p><strong>Kalórie:</strong> ${formatCalories(orderData.calories)}</p>
-              ${orderData.deliveryType ? `<p><strong>Typ doručenia:</strong> ${orderData.deliveryType === "weekly" ? "Týždenné menu" : "Jednorazové"}</p>` : ""}
+              <p><strong>Typ menu:</strong> ${formatMenuSize(menuSize)}</p>
+              <p><strong>Kalórie:</strong> ${formatCalories(calories)}</p>
+              <p><strong>Typ doručenia:</strong> ${deliveryType === "weekly" ? "Týždenné menu" : "Jednorazové"}</p>
               
               <h3 style="color: #f5576c; margin: 20px 0 10px;">Obsah objednávky</h3>
               
@@ -328,8 +347,16 @@ const handler = async (req: Request): Promise<Response> => {
               <p><strong>Email:</strong> ${orderData.customerEmail}</p>
               <p><strong>Telefón:</strong> ${orderData.phone}</p>
               <p><strong>Adresa:</strong> ${orderData.deliveryAddress}</p>
-              ${orderData.note ? `<p><strong>Poznámka:</strong> ${orderData.note}</p>` : ""}
+              <p><strong>Poznámka:</strong> ${note}</p>
             </div>
+          </div>
+          <div style="background-color: #f9fafb; padding: 30px; text-align: center; border-top: 1px solid #e5e7eb;">
+            <p style="margin: 0 0 8px; color: #6b7280; font-size: 14px;">
+              VIP Krabičky
+            </p>
+            <p style="margin: 0; color: #9ca3af; font-size: 12px;">
+              Zdravé jedlo priamo k vám domov
+            </p>
           </div>
         </body>
       </html>
@@ -343,7 +370,7 @@ const handler = async (req: Request): Promise<Response> => {
       html: customerEmailHtml,
     });
 
-    console.log("Customer email sent successfully");
+    console.log("Customer email response:", JSON.stringify(customerEmailResponse, null, 2));
 
     // Send admin notification email
     const adminEmailResponse = await resend.emails.send({
@@ -353,7 +380,7 @@ const handler = async (req: Request): Promise<Response> => {
       html: adminEmailHtml,
     });
 
-    console.log("Admin email sent successfully");
+    console.log("Admin email response:", JSON.stringify(adminEmailResponse, null, 2));
 
     return new Response(
       JSON.stringify({
