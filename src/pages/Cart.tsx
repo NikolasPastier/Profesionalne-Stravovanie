@@ -298,6 +298,11 @@ const Cart = () => {
           minute: "2-digit",
         });
 
+        // Get menu size and calories from first cart item
+        const firstItem = cartItems[0];
+        const menuSize = firstItem.isVegetarian ? "vegetarian" : "standard";
+        const calories = getCaloriesFromSize(firstItem.size, firstItem.customNutrition);
+
         await supabase.functions.invoke("send-order-email", {
           body: {
             orderId: userId,
@@ -310,6 +315,10 @@ const Cart = () => {
             deliveryDate: orderData.deliveryType === "delivery" ? "Na mieru" : undefined,
             orderDate: orderDate,
             phone: orderData.phone,
+            note: orderData.note,
+            menuSize: menuSize,
+            calories: calories,
+            deliveryType: orderData.deliveryType,
           },
         });
 
