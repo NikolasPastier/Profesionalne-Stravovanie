@@ -37,7 +37,6 @@ interface OrderEmailRequest {
   menuSize?: string;
   calories?: number;
   deliveryType?: string;
-  vegetarian?: boolean;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -47,7 +46,7 @@ const handler = async (req: Request): Promise<Response> => {
 
   try {
     const orderData: OrderEmailRequest = await req.json();
-    console.log("Processing order email request");
+    console.log("Processing order email request:", orderData);
 
     const adminEmail = Deno.env.get("ADMIN_EMAIL");
     const fromEmail = Deno.env.get("FROM_EMAIL");
@@ -76,6 +75,73 @@ const handler = async (req: Request): Promise<Response> => {
       day: "numeric",
     });
 
+    // Format menuSize and calories
+    const formatMenuSize = (menuSize?: string): string => {
+      if (!menuSize) return "Nie je špecifikované";
+      switch (menuSize.toLowerCase()) {
+        case "vegetarian":
+          return "Vegetariánske";
+        case "standard":
+          return "Štandardné";
+        default:
+          return menuSize;
+      }
+    };
+
+    const formatCalories = (calories?: number): string => {
+      return calories ? `${calories} kcal` : "Nie je špecifikované";
+    };
+
+    // Calculate delivery dates
+    const getDeliveryDates = (): string[] => {
+      const deliveryDates = new Set<string>();
+      if (orderData.deliveryDate) {
+        const deliveryDate = new Date(orderData.deliveryDate);
+        deliveryDate.setDate(deliveryDate.getDate() - 1); // Evening before the ordered day
+        deliveryDates.add(
+          deliveryDate.toLocaleDateString("sk-SK", {
+            weekday: "long",
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          }),
+        );
+      } else if (orderData.orderItems && orderData.orderItems.length > 0) {
+        orderData.orderItems.forEach((item) => {
+          if (item.days) {
+            item.days.forEach((dayObj) => {
+              const orderedDate = new Date(dayObj.day);
+              const deliveryDate = new Date(orderedDate);
+              deliveryDate.setDate(deliveryDate.getDate() - 1); // Evening before
+              deliveryDates.add(
+                deliveryDate.toLocaleDateString("sk-SK", {
+                  weekday: "long",
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                }),
+              );
+            });
+          }
+        });
+      }
+      return Array.from(deliveryDates);
+    };
+
+    // Get delivery time based on location
+    const getDeliveryTime = (address: string): string => {
+      const lowerAddress = address.toLowerCase();
+      if (lowerAddress.includes("nitra") || lowerAddress.includes("okolie")) {
+        return "17:00 - 19:00";
+      } else if (lowerAddress.includes("bratislava") || lowerAddress.includes("smer bratislava")) {
+        return "19:00 - 21:00";
+      }
+      return "18:00 - 21:00"; // Default time for other locations
+    };
+
+    const deliveryDates = getDeliveryDates();
+    const deliveryTime = getDeliveryTime(orderData.deliveryAddress);
+
     // Create preferences section
     const preferencesSection =
       orderData.allergies?.length || orderData.dislikes?.length
@@ -88,21 +154,7 @@ const handler = async (req: Request): Promise<Response> => {
     `
         : "";
 
-    // Calorie mapping based on menu size
-    const calorieMap: Record<string, string> = {
-      S: "1600",
-      M: "2000",
-      L: "2500",
-      XL: "3000",
-      "XXL+": "3500+",
-    };
-
-    // Determine calories display
-    const menuCalories =
-      calorieMap[orderData.menuSize || ""] || (orderData.calories ? orderData.calories.toString() : "0");
-    const vegetarianText = orderData.vegetarian ? " (Vegetariánska verzia)" : "";
-
-    // Create order items HTML with new layout
+    // Create order items HTML
     const orderItemsHtml = orderData.orderItems
       .map((item) => {
         let itemHtml = `
@@ -112,7 +164,6 @@ const handler = async (req: Request): Promise<Response> => {
           <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right;">${item.price.toFixed(2)} €</td>
         </tr>`;
 
-        // Add detailed days and meals with category labels
         if (item.days && item.days.length > 0) {
           const categoryLabels: Record<string, string> = {
             breakfast: "Raňajky",
@@ -122,33 +173,16 @@ const handler = async (req: Request): Promise<Response> => {
 
           const daysHtml = item.days
             .map((day) => {
-              const mealsByCategory = day.meals.reduce(
-                (acc, meal) => {
-                  const category = categoryLabels[meal.category] || meal.category;
-                  if (!acc[category]) acc[category] = [];
-                  acc[category].push(meal.name);
-                  return acc;
-                },
-                {} as Record<string, string[]>,
-              );
-
-              const mealsHtml = Object.entries(mealsByCategory)
+              const mealsHtml = day.meals
                 .map(
-                  ([category, meals]) => `
-                  <div style="margin-top: 10px;">
-                    <strong style="color: #d4a017;">${category}:</strong>
-                    <ul style="list-style-type: disc; padding-left: 20px; margin: 5px 0 0 0;">
-                      ${meals.map((meal) => `<li style="margin-left: 20px; color: white;">${meal}</li>`).join("")}
-                    </ul>
-                  </div>
-                `,
+                  (meal) =>
+                    `<div style="margin-left: 15px; color: #666;">• ${categoryLabels[meal.category] || meal.category}: ${meal.name}</div>`,
                 )
                 .join("");
-
               return `
         <tr>
-          <td colspan="3" style="padding: 15px; background: #1a1a1a; color: white; border-bottom: 1px solid #333;">
-            <h3 style="color: #d4a017; margin: 0 0 10px;">${day.day}</h3>
+          <td colspan="3" style="padding: 4px 8px 8px 20px; border-bottom: 1px solid #f0f0f0;">
+            <div style="font-weight: 600; color: #667eea; margin-bottom: 4px;">${day.day}</div>
             ${mealsHtml}
           </td>
         </tr>`;
@@ -186,7 +220,8 @@ const handler = async (req: Request): Promise<Response> => {
 
             <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0;">
               <h2 style="color: #667eea; margin-top: 0;">Detaily objednávky</h2>
-              ${orderData.menuSize ? `<p><strong>Typ menu:</strong> ${orderData.menuSize} (${menuCalories} kcal)${vegetarianText}</p>` : ""}
+              <p><strong>Typ menu:</strong> ${formatMenuSize(orderData.menuSize)}</p>
+              <p><strong>Kalórie:</strong> ${formatCalories(orderData.calories)}</p>
               ${orderData.deliveryType ? `<p><strong>Typ doručenia:</strong> ${orderData.deliveryType === "weekly" ? "Týždenné menu" : "Jednorazové"}</p>` : ""}
               
               <h3 style="color: #667eea; margin: 20px 0 10px;">Obsah objednávky</h3>
@@ -220,6 +255,23 @@ const handler = async (req: Request): Promise<Response> => {
               <p><strong>Adresa:</strong> ${orderData.deliveryAddress}</p>
               <p><strong>Telefón:</strong> ${orderData.phone}</p>
               ${orderData.note ? `<p><strong>Poznámka:</strong> ${orderData.note}</p>` : ""}
+              ${
+                deliveryDates.length > 0
+                  ? `
+                <div style="background: #e6ffed; padding: 15px; border-radius: 8px; margin: 15px 0; border: 2px solid #34d399;">
+                  <h4 style="color: #065f46; margin: 0 0 10px;">Čas doručenia</h4>
+                  ${deliveryDates
+                    .map(
+                      (date) => `
+                    <p style="margin: 5px 0;"><strong>${date}</strong>, ${deliveryTime}</p>
+                  `,
+                    )
+                    .join("")}
+                </div>
+                <p style="color: #1f2937;">Prosím, pripravte sa na prevzatie vašej objednávky a hotovosť v celej sume objednávky v uvedenom časovom okne. Náš vodič vám zavolá pred doručením. Ďakujeme za vašu dôveru a prajeme dobrú chuť! <span style="margin-left: 5px;">🍽️</span></p>
+              `
+                  : ""
+              }
             </div>
           </div>
         </body>
@@ -249,7 +301,8 @@ const handler = async (req: Request): Promise<Response> => {
 
             <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0;">
               <h2 style="color: #f5576c; margin-top: 0;">Detaily objednávky</h2>
-              ${orderData.menuSize ? `<p><strong>Typ menu:</strong> ${orderData.menuSize} (${menuCalories} kcal)${vegetarianText}</p>` : ""}
+              <p><strong>Typ menu:</strong> ${formatMenuSize(orderData.menuSize)}</p>
+              <p><strong>Kalórie:</strong> ${formatCalories(orderData.calories)}</p>
               ${orderData.deliveryType ? `<p><strong>Typ doručenia:</strong> ${orderData.deliveryType === "weekly" ? "Týždenné menu" : "Jednorazové"}</p>` : ""}
               
               <h3 style="color: #f5576c; margin: 20px 0 10px;">Obsah objednávky</h3>
