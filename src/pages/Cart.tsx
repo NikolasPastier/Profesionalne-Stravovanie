@@ -66,6 +66,24 @@ const Cart = () => {
     return calorieMap[size] || 2000;
   };
 
+  // Helper function to get price based on size, vegetarian option, and delivery region
+  const getDayPrice = (size: string, isVegetarian: boolean, region: string): number => {
+    const isBratislavaRegion = region === "bratislava" || region === "sered" || region === "trnava" || region === "other";
+    
+    // Vegetarian menu pricing
+    if (isVegetarian) {
+      return isBratislavaRegion ? 22.99 : 16.99;
+    }
+    
+    // XXL+ menu (3500+ kcal) pricing
+    if (size === "XXL+" || (size === "XXL" && getCaloriesFromSize(size) >= 3500)) {
+      return isBratislavaRegion ? 20.99 : 16.99;
+    }
+    
+    // Standard menu pricing (S, M, L, XL, XXL)
+    return isBratislavaRegion ? 20.99 : 14.99;
+  };
+
   useEffect(() => {
     const storedCart = localStorage.getItem("cart");
     if (storedCart) {
@@ -150,6 +168,7 @@ const Cart = () => {
     if (address.length >= 5) {
       const { fee, region } = calculateDeliveryFee(address);
       setDeliveryFee(fee);
+      setDeliveryRegion(region);
     }
   }, [address]);
 
@@ -164,9 +183,9 @@ const Cart = () => {
 
       // Create orders for each cart item
       for (const item of cartItems) {
-        // Calculate price based on size and vegetarian option
+        // Calculate price based on size, vegetarian option, and delivery region
         const isVegetarian = item.isVegetarian || false;
-        const dayPrice = isVegetarian ? 16.99 : 14.99;
+        const dayPrice = getDayPrice(item.size, isVegetarian, deliveryRegion);
 
         // For weekly menu, calculate price based on actual number of selected days
         const numberOfDays = item.type === "week" ? item.selectedDays?.length || item.menu?.items?.length || 5 : 1;
@@ -240,7 +259,7 @@ const Cart = () => {
       try {
         const orderItems = cartItems.map((item) => {
           const isVegetarian = item.isVegetarian || false;
-          const dayPrice = isVegetarian ? 16.99 : 14.99;
+          const dayPrice = getDayPrice(item.size, isVegetarian, deliveryRegion);
           const numberOfDays = item.type === "week" ? item.selectedDays?.length || item.menu?.items?.length || 5 : 1;
           const price = item.type === "week" ? dayPrice * numberOfDays : dayPrice;
 
@@ -494,7 +513,7 @@ const Cart = () => {
 
   const subtotalPrice = cartItems.reduce((sum, item) => {
     const isVegetarian = item.isVegetarian || false;
-    const dayPrice = isVegetarian ? 16.99 : 14.99;
+    const dayPrice = getDayPrice(item.size, isVegetarian, deliveryRegion);
 
     if (item.type === "week") {
       const numberOfDays = item.selectedDays?.length || item.menu?.items?.length || 5;
@@ -576,7 +595,7 @@ const Cart = () => {
                       €
                       {(() => {
                         const isVegetarian = item.isVegetarian || false;
-                        const dayPrice = isVegetarian ? 16.99 : 14.99;
+                        const dayPrice = getDayPrice(item.size, isVegetarian, deliveryRegion);
 
                         if (item.type === "week") {
                           const numberOfDays = item.selectedDays?.length || item.menu?.items?.length || 5;
