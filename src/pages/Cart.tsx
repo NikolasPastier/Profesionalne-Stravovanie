@@ -172,7 +172,6 @@ const Cart = () => {
       setDeliveryFee(fee);
       setDeliveryRegion(region);
     } else {
-      // Upravené: Reset deliveryFee a deliveryRegion, ak adresa nie je zadaná
       setDeliveryFee(0);
       setDeliveryRegion("");
     }
@@ -538,7 +537,6 @@ const Cart = () => {
     }
   }, 0);
 
-  // Upravené: Celková cena sa vypočíta iba ak je zadaná adresa
   const totalPrice = address ? subtotalPrice + deliveryFee : subtotalPrice;
 
   return (
@@ -577,6 +575,41 @@ const Cart = () => {
                       Odstrániť
                     </Button>
                   </div>
+                  {item.type === "week" && item.menu?.items && (
+                    <div className="mt-3 space-y-4">
+                      {(() => {
+                        let daysToShow = item.menu.items;
+                        if (item.selectedDays) {
+                          daysToShow = daysToShow.filter((day: any) => item.selectedDays.includes(day.day));
+                        }
+                        return daysToShow.map((day: any, dayIdx: number) => (
+                          <div key={dayIdx} className="border-t pt-2">
+                            <h4 className="font-semibold text-base text-primary mb-2">{day.day}</h4>
+                            <div className="space-y-2">
+                              {day.meals?.map((meal: any, idx: number) => {
+                                const mealName =
+                                  typeof meal === "string" ? meal.replace(/^[🍳🍽️🥤]\s*/, "") : meal.name;
+                                const categoryLabel =
+                                  meal.category === "breakfast"
+                                    ? "Raňajky"
+                                    : meal.category === "lunch"
+                                      ? "Obed"
+                                      : meal.category === "dinner"
+                                        ? "Večera"
+                                        : "";
+                                return (
+                                  <div key={idx} className="bg-card/30 rounded p-2 border border-border/50">
+                                    <div className="text-xs font-semibold text-accent/80 mb-1">{categoryLabel}</div>
+                                    <div className="text-sm text-foreground">{mealName}</div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        ));
+                      })()}
+                    </div>
+                  )}
                   {item.type === "day" && (
                     <div className="mt-3 space-y-2">
                       {item.meals?.map((meal: any, idx: number) => {
@@ -629,7 +662,6 @@ const Cart = () => {
                   <span className="text-base text-foreground">Jedlo:</span>
                   <span className="text-base font-semibold">€{subtotalPrice.toFixed(2)}</span>
                 </div>
-                {/* Upravené: Zobrazenie dopravy len ak je zadaná adresa */}
                 {address && deliveryFee > 0 && (
                   <div className="flex justify-between items-center">
                     <span className="text-base text-foreground">
@@ -724,7 +756,6 @@ const Cart = () => {
                       <span className="text-base">Jedlo:</span>
                       <span className="text-base font-semibold">€{subtotalPrice.toFixed(2)}</span>
                     </div>
-                    {/* Upravené: Zobrazenie dopravy len ak je zadaná adresa */}
                     {address && deliveryFee > 0 && (
                       <div className="flex justify-between items-center">
                         <span className="text-base">
