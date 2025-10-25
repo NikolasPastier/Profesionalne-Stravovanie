@@ -69,17 +69,17 @@ const Cart = () => {
   // Helper function to get price based on size, vegetarian option, and delivery region
   const getDayPrice = (size: string, isVegetarian: boolean, region: string): number => {
     const isNonNitraRegion = region !== "nitra";
-    
+
     // Vegetarian menu pricing
     if (isVegetarian) {
       return isNonNitraRegion ? 22.99 : 16.99;
     }
-    
+
     // XXL+ menu (3500+ kcal) pricing
     if (size === "XXL+" || (size === "XXL" && getCaloriesFromSize(size) >= 3500)) {
       return isNonNitraRegion ? 20.99 : 16.99;
     }
-    
+
     // Standard menu pricing (S, M, L, XL, XXL)
     return isNonNitraRegion ? 20.99 : 14.99;
   };
@@ -158,7 +158,8 @@ const Cart = () => {
 
   // Auto-detect delivery region when address changes
   useEffect(() => {
-    if (address.length >= 10) { // Only calculate if address is valid (min 10 chars per schema)
+    if (address.length >= 10) {
+      // Only calculate if address is valid (min 10 chars per schema)
       const { fee, region } = calculateDeliveryFee(address, totalDays);
       setDeliveryFee(fee);
       setDeliveryRegion(region);
@@ -620,7 +621,7 @@ const Cart = () => {
                 )}
                 {deliveryRegion === "nitra" && (
                   <div className="flex justify-between items-center text-green-600">
-                    <span className="text-base">D门户
+                    <span className="text-base">Doprava:</span>
                     <span className="text-base font-semibold">Zdarma ✓</span>
                   </div>
                 )}
