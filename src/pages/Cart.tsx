@@ -142,7 +142,7 @@ const Cart = () => {
     }
 
     // Iné vzdialenosti - dohodou
-    return { fee: 0, region: "other" };
+    return { fee: 6, region: "other" };
   };
 
   // Auto-detect delivery region when address changes
@@ -150,7 +150,6 @@ const Cart = () => {
     if (address.length >= 5) {
       const { fee, region } = calculateDeliveryFee(address);
       setDeliveryFee(fee);
-      setDeliveryRegion(region);
     }
   }, [address]);
 
@@ -669,6 +668,41 @@ const Cart = () => {
                     required
                     placeholder="Ulica, číslo domu, mesto, PSČ"
                   />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="deliveryRegion">Oblasť doručenia</Label>
+                  <Select
+                    value={deliveryRegion}
+                    onValueChange={(value) => {
+                      setDeliveryRegion(value);
+                      const fees: Record<string, number> = {
+                        nitra: 0,
+                        sered: 4.0,
+                        trnava: 5.0,
+                        bratislava: 6.0,
+                        other: 0,
+                      };
+                      setDeliveryFee(fees[value]);
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="nitra">Nitra a okolie (zdarma)</SelectItem>
+                      <SelectItem value="sered">Sereď (+€4.00)</SelectItem>
+                      <SelectItem value="trnava">Trnava (+€5.00)</SelectItem>
+                      <SelectItem value="bratislava">Bratislava (+€6.00)</SelectItem>
+                      <SelectItem value="other">Iná vzdialenosť (dohodou)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {deliveryFee > 0 && (
+                    <p className="text-sm text-muted-foreground">Poplatok za dopravu: €{deliveryFee.toFixed(2)}</p>
+                  )}
+                  {deliveryRegion === "other" && (
+                    <p className="text-sm text-amber-500">⚠️ Pre túto oblasť je potrebné dohodnúť si cenu dopravy</p>
+                  )}
                 </div>
 
                 <div className="space-y-2">
