@@ -6,7 +6,14 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
@@ -17,7 +24,10 @@ import { z } from "zod";
 const orderSchema = z.object({
   name: z.string().trim().min(2, "Meno musí mať aspoň 2 znaky").max(100, "Meno je príliš dlhé"),
   email: z.string().trim().email("Neplatný email").max(255, "Email je príliš dlhý"),
-  phone: z.string().trim().regex(/^\+?[0-9]{9,15}$/, "Neplatné telefónne číslo"),
+  phone: z
+    .string()
+    .trim()
+    .regex(/^\+?[0-9]{9,15}$/, "Neplatné telefónne číslo"),
   address: z.string().trim().min(10, "Adresa musí mať aspoň 10 znakov").max(500, "Adresa je príliš dlhá"),
   note: z.string().max(1000, "Poznámka je príliš dlhá").optional(),
 });
@@ -47,11 +57,11 @@ const Cart = () => {
       return customNutrition.calories;
     }
     const calorieMap: Record<string, number> = {
-      "S": 1600,
-      "M": 2000,
-      "L": 2500,
-      "XL": 3000,
-      "XXL": 3500
+      S: 1600,
+      M: 2000,
+      L: 2500,
+      XL: 3000,
+      XXL: 3500,
     };
     return calorieMap[size] || 2000;
   };
@@ -86,36 +96,53 @@ const Cart = () => {
 
   // Calculate delivery fee based on address
   const calculateDeliveryFee = (address: string) => {
-    const lowerAddress = address.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-    
+    const lowerAddress = address
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "");
+
     // Nitra a okolie - zdarma (do 20km)
     const nitraRegions = [
-      'nitra', 'lapas', 'beladice', 'luzianky', 'ludanice', 'cabaj', 'capor',
-      'jelšovce', 'jeľsovce', 'ivanka', 'lehota', 'parovske haje',
-      'mlynarce', 'janíkovce', 'janikovec', 'branc', 'drazovce'
+      "nitra",
+      "lapas",
+      "beladice",
+      "luzianky",
+      "ludanice",
+      "cabaj",
+      "capor",
+      "jelšovce",
+      "jeľsovce",
+      "ivanka",
+      "lehota",
+      "parovske haje",
+      "mlynarce",
+      "janíkovce",
+      "janikovec",
+      "branc",
+      "drazovce",
     ];
-    
-    if (nitraRegions.some(region => lowerAddress.includes(region))) {
-      return { fee: 0.00, region: 'nitra' };
+
+    if (nitraRegions.some((region) => lowerAddress.includes(region))) {
+      return { fee: 0.0, region: "nitra" };
     }
-    
+
     // Sereď - €4.00
-    if (lowerAddress.includes('sered')) {
-      return { fee: 4.00, region: 'sered' };
+    if (lowerAddress.includes("sered")) {
+      return { fee: 4.0, region: "sered" };
     }
-    
+
     // Trnava - €5.00
-    if (lowerAddress.includes('trnava')) {
-      return { fee: 5.00, region: 'trnava' };
+    if (lowerAddress.includes("trnava")) {
+      return { fee: 5.0, region: "trnava" };
     }
-    
+
     // Bratislava - €6.00
-    if (lowerAddress.includes('bratislava')) {
-      return { fee: 6.00, region: 'bratislava' };
+    if (lowerAddress.includes("bratislava")) {
+      return { fee: 6.0, region: "bratislava" };
     }
-    
+
     // Iné vzdialenosti - dohodou
-    return { fee: 0, region: 'other' };
+    return { fee: 0, region: "other" };
   };
 
   // Auto-detect delivery region when address changes
@@ -141,116 +168,111 @@ const Cart = () => {
         // Calculate price based on size and vegetarian option
         const isVegetarian = item.isVegetarian || false;
         const dayPrice = isVegetarian ? 16.99 : 14.99;
-        
+
         // For weekly menu, calculate price based on actual number of selected days
-        const numberOfDays = item.type === 'week' ? (item.selectedDays?.length || item.menu?.items?.length || 5) : 1;
+        const numberOfDays = item.type === "week" ? item.selectedDays?.length || item.menu?.items?.length || 5 : 1;
         const weekPrice = dayPrice * numberOfDays;
-        
+
         // Calculate delivery fee per item (divide by number of items)
         const itemDeliveryFee = deliveryFee / cartItems.length;
-        
-        const orderDetails = item.type === 'week' ? {
-          user_id: userId,
-          menu_id: item.menuId,
-          items: item.menu.items,
-          menu_size: item.size,
-          calories: getCaloriesFromSize(item.size, item.customNutrition),
-          total_price: weekPrice + itemDeliveryFee,
-          delivery_fee: itemDeliveryFee,
-          delivery_type: orderData.deliveryType,
-          address: orderData.address,
-          phone: orderData.phone,
-          name: orderData.name,
-          email: orderData.email,
-          note: orderData.note,
-          payment_type: "cash",
-          status: "pending"
-        } : {
-          user_id: userId,
-          menu_id: item.menuId,
-          items: [{ day: item.day, meals: item.meals }],
-          menu_size: item.size,
-          calories: getCaloriesFromSize(item.size, item.customNutrition),
-          total_price: dayPrice + itemDeliveryFee,
-          delivery_fee: itemDeliveryFee,
-          delivery_type: orderData.deliveryType,
-          address: orderData.address,
-          phone: orderData.phone,
-          name: orderData.name,
-          email: orderData.email,
-          note: orderData.note,
-          payment_type: "cash",
-          status: "pending"
-        };
 
-        const { data: order, error: orderError } = await supabase
-          .from("orders")
-          .insert(orderDetails)
-          .select()
-          .single();
+        const orderDetails =
+          item.type === "week"
+            ? {
+                user_id: userId,
+                menu_id: item.menuId,
+                items: item.menu.items,
+                menu_size: item.size,
+                calories: getCaloriesFromSize(item.size, item.customNutrition),
+                total_price: weekPrice + itemDeliveryFee,
+                delivery_fee: itemDeliveryFee,
+                delivery_type: orderData.deliveryType,
+                address: orderData.address,
+                phone: orderData.phone,
+                name: orderData.name,
+                email: orderData.email,
+                note: orderData.note,
+                payment_type: "cash",
+                status: "pending",
+              }
+            : {
+                user_id: userId,
+                menu_id: item.menuId,
+                items: [{ day: item.day, meals: item.meals }],
+                menu_size: item.size,
+                calories: getCaloriesFromSize(item.size, item.customNutrition),
+                total_price: dayPrice + itemDeliveryFee,
+                delivery_fee: itemDeliveryFee,
+                delivery_type: orderData.deliveryType,
+                address: orderData.address,
+                phone: orderData.phone,
+                name: orderData.name,
+                email: orderData.email,
+                note: orderData.note,
+                payment_type: "cash",
+                status: "pending",
+              };
+
+        const { data: order, error: orderError } = await supabase.from("orders").insert(orderDetails).select().single();
 
         if (orderError) throw orderError;
 
         // Create admin notification
         try {
-          await supabase
-            .from("admin_notifications")
-            .insert({
-              order_id: order.id,
-              seen: false
-            });
+          await supabase.from("admin_notifications").insert({
+            order_id: order.id,
+            seen: false,
+          });
         } catch (err) {
           console.error("Notification error:", err);
         }
       }
 
       // Update user profile
-      await supabase
-        .from("user_profiles")
-        .upsert({
-          user_id: userId,
-          name: orderData.name,
-          email: orderData.email,
-          phone: orderData.phone,
-          address: orderData.address
-        });
+      await supabase.from("user_profiles").upsert({
+        user_id: userId,
+        name: orderData.name,
+        email: orderData.email,
+        phone: orderData.phone,
+        address: orderData.address,
+      });
 
       // Send order confirmation emails
       try {
-        const orderItems = cartItems.map(item => {
+        const orderItems = cartItems.map((item) => {
           const isVegetarian = item.isVegetarian || false;
           const dayPrice = isVegetarian ? 16.99 : 14.99;
-          const numberOfDays = item.type === 'week' ? (item.selectedDays?.length || item.menu?.items?.length || 5) : 1;
-          const price = item.type === 'week' ? (dayPrice * numberOfDays) : dayPrice;
-          
+          const numberOfDays = item.type === "week" ? item.selectedDays?.length || item.menu?.items?.length || 5 : 1;
+          const price = item.type === "week" ? dayPrice * numberOfDays : dayPrice;
+
           const orderItem: any = {
-            name: item.type === 'week' ? 'Týždenné menu' : `Menu - ${item.day}`,
+            name: item.type === "week" ? "Týždenné menu" : `Menu - ${item.day}`,
             size: item.size,
             quantity: 1,
-            price: price
+            price: price,
           };
-          
+
           // Add detailed days and meals for weekly orders
-          if (item.type === 'week' && item.menu?.items) {
+          if (item.type === "week" && item.menu?.items) {
             orderItem.days = item.menu.items.map((day: any) => ({
               day: day.day,
-              meals: day.meals || []
+              meals: day.meals || [],
             }));
           }
-          
+
           return orderItem;
         });
 
         const now = new Date();
-        const orderDate = now.toLocaleDateString('sk-SK', { 
-          year: 'numeric', 
-          month: 'long', 
-          day: 'numeric',
-          hour: '2-digit',
-          minute: '2-digit'
+        const orderDate = now.toLocaleDateString("sk-SK", {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
         });
 
-        await supabase.functions.invoke('send-order-email', {
+        await supabase.functions.invoke("send-order-email", {
           body: {
             orderId: userId,
             customerName: orderData.name,
@@ -259,12 +281,12 @@ const Cart = () => {
             totalPrice: subtotalPrice + deliveryFee,
             deliveryFee: deliveryFee,
             deliveryAddress: orderData.address,
-            deliveryDate: orderData.deliveryType === 'delivery' ? 'Na mieru' : undefined,
+            deliveryDate: orderData.deliveryType === "delivery" ? "Na mieru" : undefined,
             orderDate: orderDate,
-            phone: orderData.phone
-          }
+            phone: orderData.phone,
+          },
         });
-        
+
         console.log("Order confirmation emails sent successfully");
       } catch (emailError) {
         console.error("Failed to send order emails:", emailError);
@@ -338,12 +360,14 @@ const Cart = () => {
     setLoading(true);
     try {
       const { error } = await supabase.auth.updateUser({
-        password: newPassword
+        password: newPassword,
       });
 
       if (error) throw error;
 
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       if (!session) throw new Error("Nepodarilo sa získať session");
 
       const success = await createOrder(session.user.id);
@@ -386,9 +410,9 @@ const Cart = () => {
       }
 
       // Check for "other" region and confirm
-      if (deliveryRegion === 'other') {
+      if (deliveryRegion === "other") {
         const confirmed = window.confirm(
-          'Pre vašu oblasť je potrebné dohodnúť si cenu dopravy. Budeme vás kontaktovať. Chcete pokračovať?'
+          "Pre vašu oblasť je potrebné dohodnúť si cenu dopravy. Budeme vás kontaktovať. Chcete pokračovať?",
         );
         if (!confirmed) {
           setLoading(false);
@@ -397,8 +421,10 @@ const Cart = () => {
       }
 
       // Check if user is already logged in
-      const { data: { session } } = await supabase.auth.getSession();
-      
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
       if (session) {
         // User is logged in, create order directly
         const success = await createOrder(session.user.id);
@@ -409,15 +435,12 @@ const Cart = () => {
       }
 
       // Use secure checkout handler
-      const { data: checkoutData, error: checkoutError } = await supabase.functions.invoke(
-        'checkout-handler',
-        {
-          body: { email, name, phone, address, note, deliveryType }
-        }
-      );
+      const { data: checkoutData, error: checkoutError } = await supabase.functions.invoke("checkout-handler", {
+        body: { email, name, phone, address, note, deliveryType },
+      });
 
       if (checkoutError) {
-        if (checkoutError.message?.includes('rate limit')) {
+        if (checkoutError.message?.includes("rate limit")) {
           toast.error("Príliš veľa pokusov. Skúste to neskôr.");
         } else {
           toast.error("Chyba pri spracovaní objednávky");
@@ -452,9 +475,7 @@ const Cart = () => {
       <div className="min-h-screen bg-background">
         <Navigation />
         <div className="container mx-auto px-4 pt-32 pb-20 text-center">
-          <h1 className="font-display text-4xl font-bold mb-8 text-gradient-gold">
-            Váš košík je prázdny 🛒
-          </h1>
+          <h1 className="font-display text-4xl font-bold mb-8 text-gradient-gold">Váš košík je prázdny 🛒</h1>
           <Button onClick={() => navigate("/menu")} className="bg-primary hover:glow-gold-strong">
             Prejsť na menu
           </Button>
@@ -475,10 +496,10 @@ const Cart = () => {
   const subtotalPrice = cartItems.reduce((sum, item) => {
     const isVegetarian = item.isVegetarian || false;
     const dayPrice = isVegetarian ? 16.99 : 14.99;
-    
-    if (item.type === 'week') {
+
+    if (item.type === "week") {
       const numberOfDays = item.selectedDays?.length || item.menu?.items?.length || 5;
-      return sum + (dayPrice * numberOfDays);
+      return sum + dayPrice * numberOfDays;
     } else {
       return sum + dayPrice;
     }
@@ -491,9 +512,7 @@ const Cart = () => {
       <Navigation />
 
       <div className="container mx-auto px-4 pt-32 pb-20">
-        <h1 className="font-display text-4xl md:text-6xl font-bold text-center mb-12 text-gradient-gold">
-          Košík
-        </h1>
+        <h1 className="font-display text-4xl md:text-6xl font-bold text-center mb-12 text-gradient-gold">Košík</h1>
 
         <div className="grid lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
           {/* Cart Items */}
@@ -507,10 +526,10 @@ const Cart = () => {
                   <div className="flex justify-between items-start mb-2">
                     <div>
                       <h3 className="font-bold text-lg text-primary">
-                        {item.type === 'week' ? 'Týždenné menu' : item.day}
+                        {item.type === "week" ? "Týždenné menu" : item.day}
                       </h3>
                       <p className="text-muted-foreground text-sm">
-                        {item.type === 'week' 
+                        {item.type === "week"
                           ? `${new Date(item.menu.start_date).toLocaleDateString("sk-SK")} - ${new Date(item.menu.end_date).toLocaleDateString("sk-SK")}`
                           : item.weekRange}
                       </p>
@@ -524,11 +543,18 @@ const Cart = () => {
                       Odstrániť
                     </Button>
                   </div>
-                  {item.type === 'day' && (
+                  {item.type === "day" && (
                     <div className="mt-3 space-y-2">
                       {item.meals?.map((meal: any, idx: number) => {
-                        const mealName = typeof meal === 'string' ? meal.replace(/^[🍳🍽️🥤]\s*/, '') : meal.name;
-                        const categoryLabel = meal.category === 'breakfast' ? 'Raňajky' : meal.category === 'lunch' ? 'Obed' : meal.category === 'dinner' ? 'Večera' : '';
+                        const mealName = typeof meal === "string" ? meal.replace(/^[🍳🍽️🥤]\s*/, "") : meal.name;
+                        const categoryLabel =
+                          meal.category === "breakfast"
+                            ? "Raňajky"
+                            : meal.category === "lunch"
+                              ? "Obed"
+                              : meal.category === "dinner"
+                                ? "Večera"
+                                : "";
                         return (
                           <div key={idx} className="bg-card/30 rounded p-2 border border-border/50">
                             <div className="text-xs font-semibold text-accent/80 mb-1">{categoryLabel}</div>
@@ -544,17 +570,16 @@ const Cart = () => {
                         Veľkosť: {item.size} ({getCaloriesFromSize(item.size, item.customNutrition)} kcal)
                       </span>
                       {item.isVegetarian && (
-                        <span className="text-xs text-accent font-semibold">
-                          🌱 Vegetariánske menu
-                        </span>
+                        <span className="text-xs text-accent font-semibold">🌱 Vegetariánske menu</span>
                       )}
                     </div>
                     <span className="font-bold text-xl text-primary">
-                      €{(() => {
+                      €
+                      {(() => {
                         const isVegetarian = item.isVegetarian || false;
                         const dayPrice = isVegetarian ? 16.99 : 14.99;
-                        
-                        if (item.type === 'week') {
+
+                        if (item.type === "week") {
                           const numberOfDays = item.selectedDays?.length || item.menu?.items?.length || 5;
                           return (dayPrice * numberOfDays).toFixed(2);
                         } else {
@@ -576,7 +601,7 @@ const Cart = () => {
                     <span className="text-base font-semibold">€{deliveryFee.toFixed(2)}</span>
                   </div>
                 )}
-                {deliveryRegion === 'nitra' && (
+                {deliveryRegion === "nitra" && (
                   <div className="flex justify-between items-center text-green-600">
                     <span className="text-base">Doprava:</span>
                     <span className="text-base font-semibold">Zdarma ✓</span>
@@ -586,10 +611,8 @@ const Cart = () => {
                   <span className="font-bold text-xl text-foreground">Celkom:</span>
                   <span className="font-bold text-2xl text-gradient-gold">€{totalPrice.toFixed(2)}</span>
                 </div>
-                {deliveryRegion === 'other' && (
-                  <p className="text-sm text-amber-500">
-                    ⚠️ Finálna cena bude potvrdená po dohode o doprave
-                  </p>
+                {deliveryRegion === "other" && (
+                  <p className="text-sm text-amber-500">⚠️ Finálna cena bude potvrdená po dohode o doprave</p>
                 )}
               </div>
             </CardContent>
@@ -649,42 +672,6 @@ const Cart = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="deliveryRegion">Oblasť doručenia</Label>
-                  <Select value={deliveryRegion} onValueChange={(value) => {
-                    setDeliveryRegion(value);
-                    const fees: Record<string, number> = {
-                      'nitra': 0,
-                      'sered': 4.00,
-                      'trnava': 5.00,
-                      'bratislava': 6.00,
-                      'other': 0
-                    };
-                    setDeliveryFee(fees[value]);
-                  }}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="nitra">Nitra a okolie (zdarma)</SelectItem>
-                      <SelectItem value="sered">Sereď (+€4.00)</SelectItem>
-                      <SelectItem value="trnava">Trnava (+€5.00)</SelectItem>
-                      <SelectItem value="bratislava">Bratislava (+€6.00)</SelectItem>
-                      <SelectItem value="other">Iná vzdialenosť (dohodou)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  {deliveryFee > 0 && (
-                    <p className="text-sm text-muted-foreground">
-                      Poplatok za dopravu: €{deliveryFee.toFixed(2)}
-                    </p>
-                  )}
-                  {deliveryRegion === 'other' && (
-                    <p className="text-sm text-amber-500">
-                      ⚠️ Pre túto oblasť je potrebné dohodnúť si cenu dopravy
-                    </p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
                   <Label htmlFor="note">Poznámka (voliteľná)</Label>
                   <Textarea
                     id="note"
@@ -706,7 +693,7 @@ const Cart = () => {
                         <span className="text-base font-semibold">€{deliveryFee.toFixed(2)}</span>
                       </div>
                     )}
-                    {deliveryRegion === 'nitra' && (
+                    {deliveryRegion === "nitra" && (
                       <div className="flex justify-between items-center text-green-600">
                         <span className="text-base">Doprava:</span>
                         <span className="text-base font-semibold">Zdarma ✓</span>
@@ -717,10 +704,8 @@ const Cart = () => {
                     <span className="text-lg font-bold">Celková suma:</span>
                     <span className="text-2xl font-bold text-primary">€{totalPrice.toFixed(2)}</span>
                   </div>
-                  {deliveryRegion === 'other' && (
-                    <p className="text-sm text-amber-500 mb-2">
-                      ⚠️ Finálna cena bude potvrdená po dohode o doprave
-                    </p>
+                  {deliveryRegion === "other" && (
+                    <p className="text-sm text-amber-500 mb-2">⚠️ Finálna cena bude potvrdená po dohode o doprave</p>
                   )}
                   <p className="text-sm text-muted-foreground mb-4">
                     💰 Platba: Hotovosť pri doručení prvej objednávky v celej sume
@@ -763,11 +748,7 @@ const Cart = () => {
             </div>
           </div>
           <DialogFooter>
-            <Button
-              onClick={handleLogin}
-              disabled={loading}
-              className="bg-primary hover:glow-gold-strong"
-            >
+            <Button onClick={handleLogin} disabled={loading} className="bg-primary hover:glow-gold-strong">
               {loading ? "Prihlasovanie..." : "Prihlásiť sa a dokončiť objednávku"}
             </Button>
           </DialogFooter>
@@ -779,9 +760,7 @@ const Cart = () => {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Nastavte si heslo</DialogTitle>
-            <DialogDescription>
-              Váš účet bol vytvorený. Pre dokončenie objednávky si nastavte heslo.
-            </DialogDescription>
+            <DialogDescription>Váš účet bol vytvorený. Pre dokončenie objednávky si nastavte heslo.</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div>
@@ -806,11 +785,7 @@ const Cart = () => {
             </div>
           </div>
           <DialogFooter>
-            <Button
-              onClick={handleSetPassword}
-              disabled={loading}
-              className="bg-primary hover:glow-gold-strong"
-            >
+            <Button onClick={handleSetPassword} disabled={loading} className="bg-primary hover:glow-gold-strong">
               {loading ? "Nastavovanie..." : "Nastaviť heslo a dokončiť objednávku"}
             </Button>
           </DialogFooter>
