@@ -6,16 +6,17 @@ import { useScrollAnimation } from "@/hooks/use-scroll-animation";
 const Doprava = () => {
   const cardsRef = useScrollAnimation();
   const infoRef = useScrollAnimation();
-  return <div className="min-h-screen bg-background">
+  return (
+    <div className="min-h-screen bg-background">
       <Navigation />
 
       <div className="container mx-auto px-4 pt-32 pb-20">
-        
-
-        <Card ref={cardsRef.ref} className={`card-premium max-w-5xl mx-auto mb-16 transition-all duration-700 ${cardsRef.isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
+        <Card
+          ref={cardsRef.ref}
+          className={`card-premium max-w-5xl mx-auto mb-16 transition-all duration-700 ${cardsRef.isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}
+        >
           <CardHeader className="text-center">
             <CardTitle className="text-4xl font-display text-gradient-gold mb-4">Doprava a Rozvoz</CardTitle>
-            
           </CardHeader>
           <CardContent>
             <div className="grid md:grid-cols-2 gap-6 mb-8">
@@ -33,13 +34,19 @@ const Doprava = () => {
                   <Truck className="h-6 w-6 text-primary" />
                   <h3 className="text-xl font-display text-gradient-gold">Mimo okolia Nitry</h3>
                 </div>
-                  <div className="space-y-2">
+                <div className="space-y-2">
                   <p className="text-sm text-muted-foreground mb-3">Smer smerom k Bratislave:</p>
                   <div className="space-y-1">
-                    
-                    
-                    <p className="text-sm"><span className="font-semibold text-primary">Bratislava:</span> €6.00</p>
-                    
+                    <p className="text-sm">
+                      <span className="font-semibold text-primary">Sereď:</span> €4.00
+                    </p>
+                    <p className="text-sm">
+                      <span className="font-semibold text-primary">Trnava:</span> €5.00
+                    </p>
+                    <p className="text-sm">
+                      <span className="font-semibold text-primary">Bratislava:</span> €6.00
+                    </p>
+                    <p className="text-sm text-muted-foreground mt-2">Iné vzdialenosti: dohodou</p>
                   </div>
                 </div>
               </div>
@@ -57,34 +64,42 @@ const Doprava = () => {
                   <Clock className="h-6 w-6 text-primary" />
                   <h3 className="text-xl font-display text-gradient-gold">Čas doručenia</h3>
                 </div>
-                <p className="text-sm text-muted-foreground">Každú Nedeľa - Štvrtok: Nitra a okolie 17:00 - 19:00                                           Smer Bratislava 19:00 - 21:00</p>
+                <p className="text-sm text-muted-foreground">
+                  Každú Nedeľa - Štvrtok: Nitra a okolie 17:00 - 19:00, Smer Bratislava 19:00 - 21:00
+                </p>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card ref={infoRef.ref} className={`card-premium max-w-4xl mx-auto transition-all duration-700 ${infoRef.isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
+        <Card
+          ref={infoRef.ref}
+          className={`card-premium max-w-4xl mx-auto transition-all duration-700 ${infoRef.isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}
+        >
           <CardHeader>
-            <CardTitle className="text-2xl text-gradient-gold text-center">
-              Dôležité informácie
-            </CardTitle>
+            <CardTitle className="text-2xl text-gradient-gold text-center">Dôležité informácie</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-3 text-muted-foreground">
               <p>
-                📦 <strong className="text-primary">Balenie:</strong> Všetky jedlá sú balené v ekologických, recyklovateľných obaloch.
+                📦 <strong className="text-primary">Balenie:</strong> Všetky jedlá sú balené v ekologických,
+                recyklovateľných obaloch.
               </p>
               <p>
-                ❄️ <strong className="text-primary">Skladovanie:</strong> Po doručení jedlá ihneď umiestnite do chladničky. Spotrebujte do 5 dní.
+                ❄️ <strong className="text-primary">Skladovanie:</strong> Po doručení jedlá ihneď umiestnite do
+                chladničky. Spotrebujte do 5 dní.
               </p>
               <p>
-                🔥 <strong className="text-primary">Ohrievanie:</strong> Jedlá je možné ohriať v mikrovlnnej rúre (2-3 minúty) alebo na panvici.
+                🔥 <strong className="text-primary">Ohrievanie:</strong> Jedlá je možné ohriať v mikrovlnnej rúre (2-3
+                minúty) alebo na panvici.
               </p>
               <p>
-                ⚠️ <strong className="text-primary">Alergény:</strong> Všetky jedlá sú označené s informáciami o alergénoch.
+                ⚠️ <strong className="text-primary">Alergény:</strong> Všetky jedlá sú označené s informáciami o
+                alergénoch.
               </p>
               <p>
-                🔄 <strong className="text-primary">Zmena objednávky:</strong> Zmeny v objednávke je možné urobiť najneskôr 48 hodín pred doručením.
+                🔄 <strong className="text-primary">Zmena objednávky:</strong> Zmeny v objednávke je možné urobiť
+                najneskôr 48 hodín pred doručením.
               </p>
             </div>
           </CardContent>
@@ -92,6 +107,7 @@ const Doprava = () => {
       </div>
 
       <Footer />
-    </div>;
+    </div>
+  );
 };
 export default Doprava;
