@@ -1,4 +1,4 @@
-import { FormEvent, useState, useEffect } from "react";
+import { FormEvent, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,8 +9,22 @@ import { Separator } from "@/components/ui/separator";
 import { Tooltip as TooltipUI, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { UtensilsCrossed, Scale, Target, Calendar, Camera, Flame, TrendingUp, Clock, Activity, Weight, Trash2, Plus, Info } from "lucide-react";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import {
+  UtensilsCrossed,
+  Scale,
+  Target,
+  Calendar,
+  Camera,
+  Flame,
+  TrendingUp,
+  Clock,
+  Activity,
+  Weight,
+  Trash2,
+  Plus,
+  Info,
+} from "lucide-react";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { format } from "date-fns";
 import { ProgressGallery } from "./ProgressGallery";
 
@@ -26,7 +40,7 @@ interface UserProfile {
   dislikes?: string[];
   favorite_foods?: string[];
   health_issues?: string;
-  gender?: 'male' | 'female';
+  gender?: "male" | "female";
   goal_weight?: number;
   created_at?: string;
 }
@@ -62,8 +76,8 @@ export function DashboardOverview({ profile, userId, progressData, onWeightAdded
   const calculateBMR = (): number => {
     const currentWeight = getCurrentWeight();
     if (!profile?.gender || !currentWeight || !profile?.height || !profile?.age) return 0;
-    
-    if (profile.gender === 'male') {
+
+    if (profile.gender === "male") {
       return 10 * currentWeight + 6.25 * profile.height - 5 * profile.age + 5;
     } else {
       return 10 * currentWeight + 6.25 * profile.height - 5 * profile.age - 161;
@@ -72,53 +86,48 @@ export function DashboardOverview({ profile, userId, progressData, onWeightAdded
 
   const calculateTDEE = (bmr: number): number => {
     if (!profile?.activity) return bmr;
-    
+
     const activityMultipliers: Record<string, number> = {
-      'sedavy': 1.2,
-      'mierny': 1.375,
-      'aktivny': 1.55,
-      'velmi': 1.725
+      sedavy: 1.2,
+      mierny: 1.375,
+      aktivny: 1.55,
+      velmi: 1.725,
     };
     return Math.round(bmr * (activityMultipliers[profile.activity] || 1.2));
   };
 
   const calculateTargetCalories = (tdee: number): number => {
     if (!profile?.goal) return tdee;
-    
+
     const goalAdjustments: Record<string, number> = {
-      'hubnutie': -500,
-      'udrzat': 0,
-      'udrzanie': 0,
-      'nabrat': 500,
-      'zdravie': 0
+      hubnutie: -500,
+      udrzat: 0,
+      udrzanie: 0,
+      nabrat: 500,
+      zdravie: 0,
     };
     return Math.round(tdee + (goalAdjustments[profile.goal] || 0));
   };
 
   const calculateTimeToGoal = (dailyDeficit: number): { weeks: number; months: number } | null => {
     const currentWeight = getCurrentWeight();
-    if (!profile?.goal_weight || !currentWeight || profile.goal_weight === currentWeight || dailyDeficit === 0) return null;
-    
+    if (!profile?.goal_weight || !currentWeight || profile.goal_weight === currentWeight || dailyDeficit === 0)
+      return null;
+
     const remainingWeight = Math.abs(currentWeight - profile.goal_weight);
     const weeklyWeightChange = Math.abs((dailyDeficit * 7) / 7700);
     const weeks = Math.ceil(remainingWeight / weeklyWeightChange);
     const months = Math.round(weeks / 4.33);
-    
+
     return { weeks, months };
   };
 
   const calculateProgress = (): number => {
     const currentWeight = getCurrentWeight();
     if (!profile?.goal_weight || !currentWeight || profile.goal_weight === currentWeight) return 0;
-    
+
     // Determine starting weight based on goal
-    let startWeight = currentWeight;
-    if (profile.goal === 'hubnutie' && profile.goal_weight < currentWeight) {
-      startWeight = currentWeight + Math.abs(currentWeight - profile.goal_weight);
-    } else if (profile.goal === 'nabrat' && profile.goal_weight > currentWeight) {
-      startWeight = currentWeight;
-    }
-    
+    let startWeight = profile.weight; // Use initial weight from profile
     const totalChange = Math.abs(startWeight - profile.goal_weight);
     const currentChange = Math.abs(startWeight - currentWeight);
     return Math.min(100, Math.round((currentChange / totalChange) * 100));
@@ -152,7 +161,7 @@ export function DashboardOverview({ profile, userId, progressData, onWeightAdded
 
   const getRecommendedMenuSize = () => {
     if (!profile) return "M";
-    
+
     const currentWeight = getCurrentWeight();
     const { goal, activity } = profile;
     let baseCalories = currentWeight * 30;
@@ -173,57 +182,79 @@ export function DashboardOverview({ profile, userId, progressData, onWeightAdded
 
   const getChartData = () => {
     const chartData = [];
-    
+
     // Add initial weight from profile as the first data point
     if (profile?.weight && profile?.created_at) {
       chartData.push({
         date: new Date(profile.created_at).toLocaleDateString("sk-SK", {
           day: "numeric",
-          month: "numeric"
+          month: "numeric",
         }),
         weight: profile.weight,
-        isInitial: true
+        isInitial: true,
       });
     }
-    
+
     // Add all progress entries
-    const progressEntries = progressData.map(entry => ({
+    const progressEntries = progressData.map((entry) => ({
       date: new Date(entry.date).toLocaleDateString("sk-SK", {
         day: "numeric",
-        month: "numeric"
+        month: "numeric",
       }),
       weight: entry.weight,
-      isInitial: false
+      isInitial: false,
     }));
-    
+
     chartData.push(...progressEntries);
-    
-    return chartData;
+
+    return chartData.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
   };
 
   const handleAddWeight = async (e: FormEvent) => {
     e.preventDefault();
-    if (!newWeight || !profile) return;
+    if (!newWeight || !profile) {
+      toast({
+        title: "Chyba",
+        description: "Zadajte váhu",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const weight = parseFloat(newWeight);
+    if (isNaN(weight) || weight < 30 || weight > 300) {
+      toast({
+        title: "Chyba",
+        description: "Váha musí byť medzi 30 a 300 kg",
+        variant: "destructive",
+      });
+      return;
+    }
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) {
+        toast({
+          title: "Chyba",
+          description: "Musíte byť prihlásený",
+          variant: "destructive",
+        });
+        return;
+      }
 
       let photoUrl = null;
-
       if (photoFile) {
         const formData = new FormData();
-        formData.append('file', photoFile);
+        formData.append("file", photoFile);
 
-        const { data: uploadData, error: uploadError } = await supabase.functions.invoke(
-          'upload-progress-photo',
-          {
-            body: formData,
-          }
-        );
+        const { data: uploadData, error: uploadError } = await supabase.functions.invoke("upload-progress-photo", {
+          body: formData,
+        });
 
         if (uploadError || !uploadData?.success) {
-          throw new Error(uploadData?.error || 'Nepodarilo sa nahrať fotografiu');
+          throw new Error(uploadData?.error || "Nepodarilo sa nahrať fotografiu");
         }
 
         photoUrl = uploadData.fileName;
@@ -231,38 +262,27 @@ export function DashboardOverview({ profile, userId, progressData, onWeightAdded
 
       const { error } = await supabase.from("progress").insert({
         user_id: user.id,
-        weight: parseFloat(newWeight),
+        weight: weight,
         date: new Date().toISOString().split("T")[0],
-        photo_url: photoUrl
+        photo_url: photoUrl,
+        created_at: new Date().toISOString(),
       });
 
       if (error) throw error;
 
-      const { error: profileError } = await supabase
-        .from("user_profiles")
-        .update({ weight: parseFloat(newWeight) })
-        .eq("user_id", user.id);
-
-      if (profileError) {
-        if (import.meta.env.DEV) {
-          console.error("Chyba pri aktualizácii profilu:", profileError);
-        }
-      }
-
-      onWeightAdded();
-      
       const newRecommendation = getRecommendedMenuSize();
       toast({
         title: "Úspech",
-        description: `Váha bola úspešne pridaná! Vaše odporúčanie na menu: ${newRecommendation}`
+        description: `Váha bola úspešne pridaná! Vaše odporúčanie na menu: ${newRecommendation}`,
       });
       setNewWeight("");
       setPhotoFile(null);
+      onWeightAdded();
     } catch (error: any) {
       toast({
         title: "Chyba",
         description: error.message || "Nepodarilo sa pridať váhu. Skúste to prosím znova.",
-        variant: "destructive"
+        variant: "destructive",
       });
     }
   };
@@ -281,29 +301,21 @@ export function DashboardOverview({ profile, userId, progressData, onWeightAdded
                   <ResponsiveContainer width="100%" height={400}>
                     <LineChart data={getChartData()}>
                       <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
-                      <XAxis 
-                        dataKey="date" 
-                        stroke="rgba(255,255,255,0.5)"
-                        style={{ fontSize: '12px' }}
-                      />
-                      <YAxis 
-                        domain={['auto', 'auto']} 
-                        stroke="rgba(255,255,255,0.5)"
-                        style={{ fontSize: '12px' }}
-                      />
-                      <Tooltip 
-                        contentStyle={{ 
-                          backgroundColor: 'rgba(0,0,0,0.9)', 
-                          border: '1px solid rgba(255,255,255,0.1)',
-                          borderRadius: '8px'
+                      <XAxis dataKey="date" stroke="rgba(255,255,255,0.5)" style={{ fontSize: "12px" }} />
+                      <YAxis domain={["auto", "auto"]} stroke="rgba(255,255,255,0.5)" style={{ fontSize: "12px" }} />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: "rgba(0,0,0,0.9)",
+                          border: "1px solid rgba(255,255,255,0.1)",
+                          borderRadius: "8px",
                         }}
                       />
-                      <Line 
-                        type="monotone" 
-                        dataKey="weight" 
+                      <Line
+                        type="monotone"
+                        dataKey="weight"
                         stroke="hsl(25, 95%, 53%)"
-                        strokeWidth={3} 
-                        dot={{ fill: 'hsl(25, 95%, 53%)', r: 5 }} 
+                        strokeWidth={3}
+                        dot={{ fill: "hsl(25, 95%, 53%)", r: 5 }}
                         activeDot={{ r: 7 }}
                       />
                     </LineChart>
@@ -331,7 +343,7 @@ export function DashboardOverview({ profile, userId, progressData, onWeightAdded
                     <div className="flex items-baseline gap-2">
                       <span className="text-2xl font-bold text-white">{timeToGoal.months}</span>
                       <span className="text-sm text-white/60">
-                        {timeToGoal.months === 1 ? 'mesiac' : timeToGoal.months < 5 ? 'mesiace' : 'mesiacov'}
+                        {timeToGoal.months === 1 ? "mesiac" : timeToGoal.months < 5 ? "mesiace" : "mesiacov"}
                       </span>
                     </div>
                   </div>
@@ -354,16 +366,16 @@ export function DashboardOverview({ profile, userId, progressData, onWeightAdded
                   <div className="text-xs text-white/60">Aktuálna váha</div>
                 </CardContent>
               </Card>
-              
+
               <Card className="card-premium border-orange-500/20 bg-gradient-to-br from-card to-orange-500/5">
                 <CardContent className="p-4 text-center space-y-1">
-                  <div className="text-2xl font-bold" style={{ color: 'hsl(25, 95%, 53%)' }}>
+                  <div className="text-2xl font-bold" style={{ color: "hsl(25, 95%, 53%)" }}>
                     {getRemainingWeight().toFixed(1)} kg
                   </div>
                   <div className="text-xs text-white/60">Zostáva</div>
                 </CardContent>
               </Card>
-              
+
               <Card className="card-premium border-border/50">
                 <CardContent className="p-4 text-center space-y-1">
                   <div className="text-2xl font-bold text-white">{getGoalWeight().toFixed(1)} kg</div>
@@ -382,7 +394,7 @@ export function DashboardOverview({ profile, userId, progressData, onWeightAdded
                     <div className="text-xs text-white/40">kcal/deň</div>
                   </CardContent>
                 </Card>
-                
+
                 <Card className="bg-muted/30 border-border/30">
                   <CardContent className="p-4 text-center space-y-1">
                     <div className="text-xs text-white/50">TDEE</div>
@@ -390,7 +402,7 @@ export function DashboardOverview({ profile, userId, progressData, onWeightAdded
                     <div className="text-xs text-white/40">kcal/deň</div>
                   </CardContent>
                 </Card>
-                
+
                 <Card className="bg-muted/30 border-border/30">
                   <CardContent className="p-4 text-center space-y-1">
                     <div className="text-xs text-white/50">Cieľ</div>
@@ -398,12 +410,12 @@ export function DashboardOverview({ profile, userId, progressData, onWeightAdded
                     <div className="text-xs text-white/40">kcal/deň</div>
                   </CardContent>
                 </Card>
-                
+
                 <Card className="bg-gradient-to-br from-green-500/10 to-green-500/5 border-green-500/20">
                   <CardContent className="p-4 text-center space-y-1">
                     <div className="text-xs text-white/50">{getDeficitLabel(dailyDeficit)}</div>
-                    <div className="text-xl font-bold" style={{ color: 'hsl(142, 76%, 36%)' }}>
-                      {dailyDeficit > 0 ? '-' : dailyDeficit < 0 ? '+' : ''}
+                    <div className="text-xl font-bold" style={{ color: "hsl(142, 76%, 36%)" }}>
+                      {dailyDeficit > 0 ? "-" : dailyDeficit < 0 ? "+" : ""}
                       {Math.abs(dailyDeficit)}
                     </div>
                     <div className="text-xs text-white/40">kcal/deň</div>
@@ -435,7 +447,9 @@ export function DashboardOverview({ profile, userId, progressData, onWeightAdded
               <h3 className="text-lg font-semibold text-white mb-4">Pridať záznam</h3>
               <form onSubmit={handleAddWeight} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="weight" className="text-white/80">Váha (kg)</Label>
+                  <Label htmlFor="weight" className="text-white/80">
+                    Váha (kg)
+                  </Label>
                   <Input
                     id="weight"
                     type="number"
@@ -444,11 +458,15 @@ export function DashboardOverview({ profile, userId, progressData, onWeightAdded
                     onChange={(e) => setNewWeight(e.target.value)}
                     placeholder="Napr. 75.5"
                     className="bg-muted/30 border-border/30 text-white"
+                    min="30"
+                    max="300"
                     required
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="photo" className="text-white/80">Progress fotka (voliteľné)</Label>
+                  <Label htmlFor="photo" className="text-white/80">
+                    Progress fotka (voliteľné)
+                  </Label>
                   <Input
                     id="photo"
                     type="file"
