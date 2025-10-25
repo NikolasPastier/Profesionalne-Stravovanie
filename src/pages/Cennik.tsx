@@ -49,7 +49,7 @@ const Cennik = () => {
     {
       size: "XXL+",
       calories: "3500+ kcal",
-      price: "€16.99",
+      price: deliveryArea === "Nitra" ? "€16.99" : "€20.99",
       description: "Profesionálni športovci",
       features: ["Pre profesionálov", "Maximálny obsah bielkovín", "Čerstvé suroviny", "Doručenie priamo k dverám"],
     },
