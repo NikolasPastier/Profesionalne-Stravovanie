@@ -68,18 +68,19 @@ const Cart = () => {
 
   // Helper function to get price based on size, vegetarian option, and delivery region
   const getDayPrice = (size: string, isVegetarian: boolean, region: string): number => {
-    const isBratislavaRegion = region === "bratislava" || region === "sered" || region === "trnava" || region === "other";
-    
+    const isBratislavaRegion =
+      region === "bratislava" || region === "sered" || region === "trnava" || region === "other";
+
     // Vegetarian menu pricing
     if (isVegetarian) {
       return isBratislavaRegion ? 22.99 : 16.99;
     }
-    
+
     // XXL+ menu (3500+ kcal) pricing
     if (size === "XXL+" || (size === "XXL" && getCaloriesFromSize(size) >= 3500)) {
       return isBratislavaRegion ? 20.99 : 16.99;
     }
-    
+
     // Standard menu pricing (S, M, L, XL, XXL)
     return isBratislavaRegion ? 20.99 : 14.99;
   };
@@ -177,6 +178,10 @@ const Cart = () => {
       const { fee, region } = calculateDeliveryFee(address, totalDays);
       setDeliveryFee(fee);
       setDeliveryRegion(region);
+    } else {
+      // Upravené: Reset deliveryFee a deliveryRegion, ak adresa nie je zadaná
+      setDeliveryFee(0);
+      setDeliveryRegion("");
     }
   }, [address, cartItems]);
 
@@ -540,7 +545,8 @@ const Cart = () => {
     }
   }, 0);
 
-  const totalPrice = subtotalPrice + deliveryFee;
+  // Upravené: Celková cena sa vypočíta iba ak je zadaná adresa
+  const totalPrice = address ? subtotalPrice + deliveryFee : subtotalPrice;
 
   return (
     <div className="min-h-screen bg-background">
@@ -561,7 +567,7 @@ const Cart = () => {
                   <div className="flex justify-between items-start mb-2">
                     <div>
                       <h3 className="font-bold text-lg text-primary">
-                        {item.type === "week" ? "Týždenné menu" : item.day}
+                        {item.type === "week" ? "annable menu" : item.day}
                       </h3>
                       <p className="text-muted-foreground text-sm">
                         {item.type === "week"
@@ -630,15 +636,16 @@ const Cart = () => {
                   <span className="text-base text-foreground">Jedlo:</span>
                   <span className="text-base font-semibold">€{subtotalPrice.toFixed(2)}</span>
                 </div>
-                {deliveryFee > 0 && (
+                {/* Upravené: Zobrazenie dopravy len ak je zadaná adresa */}
+                {address && deliveryFee > 0 && (
                   <div className="flex justify-between items-center">
-                    <span className="text-base text-foreground">
+                    <span className="text-base">
                       Doprava {totalDays > 1 && `(${totalDays} dní × €${(deliveryFee / totalDays).toFixed(2)})`}:
                     </span>
                     <span className="text-base font-semibold">€{deliveryFee.toFixed(2)}</span>
                   </div>
                 )}
-                {deliveryRegion === "nitra" && (
+                {address && deliveryRegion === "nitra" && (
                   <div className="flex justify-between items-center text-green-600">
                     <span className="text-base">Doprava:</span>
                     <span className="text-base font-semibold">Zdarma ✓</span>
@@ -648,7 +655,7 @@ const Cart = () => {
                   <span className="font-bold text-xl text-foreground">Celkom:</span>
                   <span className="font-bold text-2xl text-gradient-gold">€{totalPrice.toFixed(2)}</span>
                 </div>
-                {deliveryRegion === "other" && (
+                {address && deliveryRegion === "other" && (
                   <p className="text-sm text-amber-500">⚠️ Finálna cena bude potvrdená po dohode o doprave</p>
                 )}
               </div>
@@ -724,7 +731,8 @@ const Cart = () => {
                       <span className="text-base">Jedlo:</span>
                       <span className="text-base font-semibold">€{subtotalPrice.toFixed(2)}</span>
                     </div>
-                    {deliveryFee > 0 && (
+                    {/* Upravené: Zobrazenie dopravy len ak je zadaná adresa */}
+                    {address && deliveryFee > 0 && (
                       <div className="flex justify-between items-center">
                         <span className="text-base">
                           Doprava {totalDays > 1 && `(${totalDays} dní × €${(deliveryFee / totalDays).toFixed(2)})`}:
@@ -732,7 +740,7 @@ const Cart = () => {
                         <span className="text-base font-semibold">€{deliveryFee.toFixed(2)}</span>
                       </div>
                     )}
-                    {deliveryRegion === "nitra" && (
+                    {address && deliveryRegion === "nitra" && (
                       <div className="flex justify-between items-center text-green-600">
                         <span className="text-base">Doprava:</span>
                         <span className="text-base font-semibold">Zdarma ✓</span>
@@ -743,7 +751,7 @@ const Cart = () => {
                     <span className="text-lg font-bold">Celková suma:</span>
                     <span className="text-2xl font-bold text-primary">€{totalPrice.toFixed(2)}</span>
                   </div>
-                  {deliveryRegion === "other" && (
+                  {address && deliveryRegion === "other" && (
                     <p className="text-sm text-amber-500 mb-2">⚠️ Finálna cena bude potvrdená po dohode o doprave</p>
                   )}
                   <p className="text-sm text-muted-foreground mb-4">
