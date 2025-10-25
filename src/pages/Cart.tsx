@@ -47,7 +47,7 @@ const Cart = () => {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [tempOrderData, setTempOrderData] = useState<any>(null);
-  const [deliveryRegion, setDeliveryRegion] = useState("");
+  const [deliveryRegion, setDeliveryRegion] = useState("nitra");
   const [deliveryFee, setDeliveryFee] = useState(0);
   const navigate = useNavigate();
 
@@ -68,20 +68,20 @@ const Cart = () => {
 
   // Helper function to get price based on size, vegetarian option, and delivery region
   const getDayPrice = (size: string, isVegetarian: boolean, region: string): number => {
-    const isNonNitraRegion = region !== "nitra";
+    const isBratislavaRegion = region === "bratislava" || region === "sered" || region === "trnava" || region === "other";
     
     // Vegetarian menu pricing
     if (isVegetarian) {
-      return isNonNitraRegion ? 22.99 : 16.99;
+      return isBratislavaRegion ? 22.99 : 16.99;
     }
     
     // XXL+ menu (3500+ kcal) pricing
     if (size === "XXL+" || (size === "XXL" && getCaloriesFromSize(size) >= 3500)) {
-      return isNonNitraRegion ? 20.99 : 16.99;
+      return isBratislavaRegion ? 20.99 : 16.99;
     }
     
     // Standard menu pricing (S, M, L, XL, XXL)
-    return isNonNitraRegion ? 20.99 : 14.99;
+    return isBratislavaRegion ? 20.99 : 14.99;
   };
 
   useEffect(() => {
@@ -144,8 +144,23 @@ const Cart = () => {
       return { fee: 0.0, region: "nitra", perDayFee: 0 };
     }
 
-    // All other regions (including Bratislava) - €6.00 per day
-    return { fee: 6.0 * numberOfDays, region: "other", perDayFee: 6.0 };
+    // Sereď - €4.00 per day
+    if (lowerAddress.includes("sered")) {
+      return { fee: 4.0 * numberOfDays, region: "sered", perDayFee: 4.0 };
+    }
+
+    // Trnava - €5.00 per day
+    if (lowerAddress.includes("trnava")) {
+      return { fee: 5.0 * numberOfDays, region: "trnava", perDayFee: 5.0 };
+    }
+
+    // Bratislava - €6.00 per day
+    if (lowerAddress.includes("bratislava")) {
+      return { fee: 6.0 * numberOfDays, region: "bratislava", perDayFee: 6.0 };
+    }
+
+    // Iné vzdialenosti - dohodou (€6 per day)
+    return { fee: 6 * numberOfDays, region: "other", perDayFee: 6 };
   };
 
   // Calculate total number of days across all cart items
@@ -156,15 +171,12 @@ const Cart = () => {
     return sum + 1;
   }, 0);
 
-  // Auto-detect delivery region when address changes
+  // Auto-detect delivery region when address or cart changes
   useEffect(() => {
-    if (address.length >= 10) { // Only calculate if address is valid (min 10 chars per schema)
+    if (address.length >= 5) {
       const { fee, region } = calculateDeliveryFee(address, totalDays);
       setDeliveryFee(fee);
       setDeliveryRegion(region);
-    } else {
-      setDeliveryFee(0);
-      setDeliveryRegion("");
     }
   }, [address, cartItems]);
 
@@ -423,6 +435,17 @@ const Cart = () => {
         return;
       }
 
+      // Check for "other" region and confirm
+      if (deliveryRegion === "other") {
+        const confirmed = window.confirm(
+          "Pre vašu oblasť je potrebné dohodnúť si cenu dopravy. Budeme vás kontaktovať. Chcete pokračovať?",
+        );
+        if (!confirmed) {
+          setLoading(false);
+          return;
+        }
+      }
+
       // Check if user is already logged in
       const {
         data: { session },
@@ -471,18 +494,6 @@ const Cart = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  // Check if all required fields are filled
-  const isFormValid = () => {
-    const validationResult = orderSchema.safeParse({
-      name,
-      email,
-      phone,
-      address,
-      note,
-    });
-    return validationResult.success;
   };
 
   if (!cartItems || cartItems.length === 0) {
@@ -610,9 +621,9 @@ const Cart = () => {
                   <span className="text-base text-foreground">Jedlo:</span>
                   <span className="text-base font-semibold">€{subtotalPrice.toFixed(2)}</span>
                 </div>
-                {deliveryRegion && deliveryFee > 0 && (
+                {deliveryFee > 0 && (
                   <div className="flex justify-between items-center">
-                    <span className="text-base">
+                    <span className="text-base text-foreground">
                       Doprava {totalDays > 1 && `(${totalDays} dní × €${(deliveryFee / totalDays).toFixed(2)})`}:
                     </span>
                     <span className="text-base font-semibold">€{deliveryFee.toFixed(2)}</span>
@@ -620,20 +631,17 @@ const Cart = () => {
                 )}
                 {deliveryRegion === "nitra" && (
                   <div className="flex justify-between items-center text-green-600">
-                    <span className="text-base">D门户
-                    <span className="text-base font-semibold">Zdarma ✓</span>
-                  </div>
-                )}
-                {!deliveryRegion && (
-                  <div className="flex justify-between items-center text-muted-foreground">
                     <span className="text-base">Doprava:</span>
-                    <span className="text-base">Zadajte adresu</span>
+                    <span className="text-base font-semibold">Zdarma ✓</span>
                   </div>
                 )}
                 <div className="flex justify-between items-center border-t pt-3">
                   <span className="font-bold text-xl text-foreground">Celkom:</span>
                   <span className="font-bold text-2xl text-gradient-gold">€{totalPrice.toFixed(2)}</span>
                 </div>
+                {deliveryRegion === "other" && (
+                  <p className="text-sm text-amber-500">⚠️ Finálna cena bude potvrdená po dohode o doprave</p>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -707,7 +715,7 @@ const Cart = () => {
                       <span className="text-base">Jedlo:</span>
                       <span className="text-base font-semibold">€{subtotalPrice.toFixed(2)}</span>
                     </div>
-                    {deliveryRegion && deliveryFee > 0 && (
+                    {deliveryFee > 0 && (
                       <div className="flex justify-between items-center">
                         <span className="text-base">
                           Doprava {totalDays > 1 && `(${totalDays} dní × €${(deliveryFee / totalDays).toFixed(2)})`}:
@@ -721,24 +729,21 @@ const Cart = () => {
                         <span className="text-base font-semibold">Zdarma ✓</span>
                       </div>
                     )}
-                    {!deliveryRegion && (
-                      <div className="flex justify-between items-center text-muted-foreground">
-                        <span className="text-base">Doprava:</span>
-                        <span className="text-base">Zadajte adresu</span>
-                      </div>
-                    )}
                   </div>
                   <div className="flex justify-between items-center border-t pt-2 mb-2">
                     <span className="text-lg font-bold">Celková suma:</span>
                     <span className="text-2xl font-bold text-primary">€{totalPrice.toFixed(2)}</span>
                   </div>
+                  {deliveryRegion === "other" && (
+                    <p className="text-sm text-amber-500 mb-2">⚠️ Finálna cena bude potvrdená po dohode o doprave</p>
+                  )}
                   <p className="text-sm text-muted-foreground mb-4">
                     💰 Platba: Hotovosť pri doručení prvej objednávky v celej sume
                   </p>
                   <Button
                     type="submit"
                     className="w-full bg-primary hover:glow-gold-strong text-lg py-6"
-                    disabled={loading || !isFormValid()}
+                    disabled={loading}
                   >
                     {loading ? "Spracovávam..." : "Odoslať objednávku"}
                   </Button>
