@@ -68,23 +68,20 @@ const Cart = () => {
 
   // Helper function to get price based on size, vegetarian option, and delivery region
   const getDayPrice = (size: string, isVegetarian: boolean, region: string): number => {
-    const isBratislavaRegion =
-      region === "bratislava" || region === "sered" || region === "trnava" || region === "other";
-
+    // Ignorujeme región pri určovaní ceny jedla
     // Vegetarian menu pricing
     if (isVegetarian) {
-      return isBratislavaRegion ? 22.99 : 16.99;
+      return 16.99; // Fixná cena pre vegetariánske menu
     }
 
     // XXL+ menu (3500+ kcal) pricing
     if (size === "XXL+" || (size === "XXL" && getCaloriesFromSize(size) >= 3500)) {
-      return isBratislavaRegion ? 20.99 : 16.99;
+      return 16.99; // Fixná cena pre XXL+ menu
     }
 
     // Standard menu pricing (S, M, L, XL, XXL)
-    return isBratislavaRegion ? 20.99 : 14.99;
+    return 14.99; // Fixná cena pre štandardné menu
   };
-
   useEffect(() => {
     const storedCart = localStorage.getItem("cart");
     if (storedCart) {
@@ -145,18 +142,23 @@ const Cart = () => {
       return { fee: 0.0, region: "nitra", perDayFee: 0 };
     }
 
-    // Všetky ostatné regióny (Sereď, Trnava, Bratislava, iné) - €6.00 per day
-    return {
-      fee: 6.0 * numberOfDays,
-      region: lowerAddress.includes("sered")
-        ? "sered"
-        : lowerAddress.includes("trnava")
-          ? "trnava"
-          : lowerAddress.includes("bratislava")
-            ? "bratislava"
-            : "other",
-      perDayFee: 6.0,
-    };
+    // Sereď - €4.00 per day
+    if (lowerAddress.includes("sered")) {
+      return { fee: 4.0 * numberOfDays, region: "sered", perDayFee: 4.0 };
+    }
+
+    // Trnava - €5.00 per day
+    if (lowerAddress.includes("trnava")) {
+      return { fee: 5.0 * numberOfDays, region: "trnava", perDayFee: 5.0 };
+    }
+
+    // Bratislava - €6.00 per day
+    if (lowerAddress.includes("bratislava")) {
+      return { fee: 6.0 * numberOfDays, region: "bratislava", perDayFee: 6.0 };
+    }
+
+    // Iné vzdialenosti - dohodou (€6 per day)
+    return { fee: 6 * numberOfDays, region: "other", perDayFee: 6 };
   };
 
   // Calculate total number of days across all cart items
