@@ -339,9 +339,21 @@ export const WeeklyMenuManagement = () => {
                         <SelectTrigger className="bg-card border-border text-foreground">
                           <SelectValue placeholder="Pridať jedlo" />
                         </SelectTrigger>
-                        <SelectContent className="bg-card border-border">
+                        <SelectContent className="bg-card border-border max-h-[300px] overflow-y-auto">
                           {menuItems
-                            .filter(item => !dayMenu[category].find(m => m.id === item.id))
+                            .filter(item => {
+                              // Filter by category
+                              const itemCategory = item.category?.toLowerCase() || '';
+                              const matchesCategory = 
+                                (category === 'breakfast' && itemCategory.includes('raňajk')) ||
+                                (category === 'lunch' && itemCategory.includes('obed')) ||
+                                (category === 'dinner' && itemCategory.includes('večer'));
+                              
+                              // Don't show already added items
+                              const notAdded = !dayMenu[category].find(m => m.id === item.id);
+                              
+                              return matchesCategory && notAdded;
+                            })
                             .map((item) => (
                               <SelectItem
                                 key={item.id}
