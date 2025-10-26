@@ -39,6 +39,7 @@ import { DashboardOverview } from "@/components/dashboard/DashboardOverview";
 
 interface UserProfile {
   name: string;
+  address?: string;
   age: number;
   height: number;
   weight: number;
@@ -121,6 +122,8 @@ const Dashboard = () => {
   // Edit profile states
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
   const [editFormData, setEditFormData] = useState({
+    name: "",
+    address: "",
     age: "",
     height: "",
     weight: "",
@@ -577,6 +580,8 @@ const Dashboard = () => {
   const handleOpenEditProfile = () => {
     if (!profile) return;
     setEditFormData({
+      name: profile.name || "",
+      address: profile.address || "",
       age: profile.age?.toString() || "",
       height: profile.height?.toString() || "",
       weight: getCurrentWeight().toString() || "",
@@ -596,6 +601,14 @@ const Dashboard = () => {
   const handleSaveProfile = async () => {
     try {
       // Validation
+      if (!editFormData.name.trim()) {
+        toast({
+          title: "Chyba",
+          description: "Meno je povinné",
+          variant: "destructive",
+        });
+        return;
+      }
       const age = parseInt(editFormData.age);
       const height = parseInt(editFormData.height);
       const weight = parseFloat(editFormData.weight);
@@ -636,6 +649,8 @@ const Dashboard = () => {
       const { error: profileError } = await supabase
         .from("user_profiles")
         .update({
+          name: editFormData.name.trim(),
+          address: editFormData.address.trim() || null,
           age,
           height,
           gender: editFormData.gender || null,
@@ -1184,6 +1199,35 @@ const Dashboard = () => {
           </DialogHeader>
 
           <div className="space-y-6">
+            {/* Osobné údaje */}
+            <div className="space-y-4">
+              <h3 className="font-semibold text-lg border-b pb-2">Osobné údaje</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-name">Meno *</Label>
+                  <Input
+                    id="edit-name"
+                    type="text"
+                    value={editFormData.name}
+                    onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
+                    placeholder="Vaše meno"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="edit-address">Adresa</Label>
+                  <Input
+                    id="edit-address"
+                    type="text"
+                    value={editFormData.address}
+                    onChange={(e) => setEditFormData({ ...editFormData, address: e.target.value })}
+                    placeholder="Ulica, číslo, PSČ, Mesto"
+                  />
+                  <p className="text-xs text-muted-foreground">Použije sa pre doručenie objednávok</p>
+                </div>
+              </div>
+            </div>
+
             {/* Základné fitness údaje */}
             <div className="space-y-4">
               <h3 className="font-semibold text-lg border-b pb-2">Základné fitness údaje</h3>
