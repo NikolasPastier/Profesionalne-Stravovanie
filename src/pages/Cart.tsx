@@ -186,6 +186,35 @@ const Cart = () => {
 
       const orderData = tempOrderData || { name, email, phone, address, note, deliveryType };
 
+      // Validate order server-side before creating
+      try {
+        const { data: validationResult, error: validationError } = await supabase.functions.invoke("validate-order", {
+          body: {
+            cartItems: cartItems,
+            totalPrice: subtotalPrice + deliveryFee,
+            deliveryRegion: deliveryRegion,
+          },
+        });
+
+        if (validationError) {
+          console.error("Order validation failed:", validationError);
+          toast.error("Nepodarilo sa overiť objednávku. Skúste to prosím znova.");
+          return false;
+        }
+
+        if (validationResult && !validationResult.valid) {
+          const errorMessages = validationResult.errors?.join(", ") || validationResult.message || "Objednávka nie je validná";
+          toast.error(errorMessages);
+          return false;
+        }
+
+        console.log("Order validation passed:", validationResult);
+      } catch (validationErr) {
+        console.error("Validation error:", validationErr);
+        toast.error("Chyba pri validácii objednávky");
+        return false;
+      }
+
       // Create orders for each cart item
       for (const item of cartItems) {
         // Calculate price based on size, vegetarian option, and delivery region

@@ -4,7 +4,10 @@ project_id = "vmddyjosfwvsdtofnrjf"
 verify_jwt = true
 
 [functions.send-order-email]
-verify_jwt = false
+verify_jwt = true
 
 [functions.delete-user-account]
+verify_jwt = true
+
+[functions.validate-order]
 verify_jwt = true

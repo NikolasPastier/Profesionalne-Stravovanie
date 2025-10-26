@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "https://esm.sh/resend@4.0.0";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.74.0';
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
@@ -7,6 +8,63 @@ const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
+
+// Rate limit: 5 email requests per hour per user
+const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour
+const MAX_REQUESTS_PER_WINDOW = 5;
+
+async function checkRateLimit(supabase: any, userId: string, functionName: string): Promise<boolean> {
+  const { data, error } = await supabase
+    .from('edge_function_rate_limits')
+    .select('last_request_at, request_count')
+    .eq('user_id', userId)
+    .eq('function_name', functionName)
+    .single();
+
+  if (error && error.code !== 'PGRST116') {
+    console.error('Error checking rate limit:', error);
+    return true; // Allow on error
+  }
+
+  if (data) {
+    const timeSinceLastRequest = Date.now() - new Date(data.last_request_at).getTime();
+    
+    if (timeSinceLastRequest < RATE_LIMIT_WINDOW_MS) {
+      if (data.request_count >= MAX_REQUESTS_PER_WINDOW) {
+        return false; // Rate limit exceeded
+      }
+      
+      await supabase
+        .from('edge_function_rate_limits')
+        .update({
+          request_count: data.request_count + 1,
+          last_request_at: new Date().toISOString(),
+        })
+        .eq('user_id', userId)
+        .eq('function_name', functionName);
+    } else {
+      await supabase
+        .from('edge_function_rate_limits')
+        .update({
+          request_count: 1,
+          last_request_at: new Date().toISOString(),
+        })
+        .eq('user_id', userId)
+        .eq('function_name', functionName);
+    }
+  } else {
+    await supabase
+      .from('edge_function_rate_limits')
+      .insert({
+        user_id: userId,
+        function_name: functionName,
+        request_count: 1,
+        last_request_at: new Date().toISOString(),
+      });
+  }
+
+  return true;
+}
 
 interface OrderEmailRequest {
   orderId: string;
@@ -45,8 +103,48 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
+    // Create Supabase client with user's JWT for authentication
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      {
+        global: {
+          headers: { Authorization: req.headers.get('Authorization')! },
+        },
+      }
+    );
+
+    // Verify user is authenticated
+    const {
+      data: { user },
+      error: userError,
+    } = await supabaseClient.auth.getUser();
+
+    if (userError || !user) {
+      console.error('Authentication error:', userError);
+      return new Response(
+        JSON.stringify({ error: 'Neautorizovaný prístup' }),
+        {
+          status: 401,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
+    // Check rate limit
+    const allowed = await checkRateLimit(supabaseClient, user.id, 'send-order-email');
+    if (!allowed) {
+      return new Response(
+        JSON.stringify({ error: 'Prekročený limit odosielania emailov. Maximálne 5 emailov za hodinu.' }),
+        {
+          status: 429,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
     const orderData: OrderEmailRequest = await req.json();
-    console.log("Processing order email request:", JSON.stringify(orderData, null, 2));
+    console.log("Processing order email request for user:", user.id);
 
     const adminEmail = Deno.env.get("ADMIN_EMAIL");
     const fromEmail = Deno.env.get("FROM_EMAIL");

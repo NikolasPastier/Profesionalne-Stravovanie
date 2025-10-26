@@ -171,11 +171,12 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Generate server-side filename based on file type
+    // Generate server-side filename with UUID for unpredictability
     const fileExtension = getFileExtension(file.type);
-    const fileName = `${user.id}/${Date.now()}.${fileExtension}`;
+    const uuid = crypto.randomUUID();
+    const fileName = `${user.id}/${uuid}.${fileExtension}`;
 
-    console.log('Uploading file:', fileName, 'Size:', file.size, 'Type:', file.type);
+    console.log('Uploading file with UUID:', fileName, 'Size:', file.size, 'Type:', file.type);
 
     // Upload to storage
     const { error: uploadError } = await supabaseClient.storage
