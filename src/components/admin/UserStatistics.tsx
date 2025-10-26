@@ -447,28 +447,60 @@ export const UserStatistics = () => {
                     <CardTitle>Graf váhy</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <ResponsiveContainer width="100%" height={300}>
-                      <LineChart
-                        data={[...selectedUser.progressEntries]
-                          .reverse()
-                          .filter((e) => e.weight)
-                          .map((entry) => ({
-                            date: new Date(entry.date).toLocaleDateString("sk-SK"),
-                            weight: entry.weight,
-                          }))}
-                      >
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="date" />
-                        <YAxis />
-                        <Tooltip />
-                        <Line
-                          type="monotone"
-                          dataKey="weight"
-                          stroke="hsl(var(--primary))"
-                          strokeWidth={2}
-                        />
-                      </LineChart>
-                    </ResponsiveContainer>
+                    <div className="bg-muted/20 rounded-2xl p-4 border border-border/30">
+                      <ResponsiveContainer width="100%" height={400}>
+                        <LineChart
+                          data={(() => {
+                            const chartData = [];
+                            
+                            // Add initial weight from profile as the first data point
+                            if (selectedUser.profile.weight && selectedUser.profile.created_at) {
+                              chartData.push({
+                                date: new Date(selectedUser.profile.created_at).toLocaleDateString("sk-SK", {
+                                  day: "numeric",
+                                  month: "numeric",
+                                }),
+                                weight: selectedUser.profile.weight,
+                              });
+                            }
+                            
+                            // Add all progress entries
+                            const progressEntries = [...selectedUser.progressEntries]
+                              .reverse()
+                              .filter((e) => e.weight)
+                              .map((entry) => ({
+                                date: new Date(entry.date).toLocaleDateString("sk-SK", {
+                                  day: "numeric",
+                                  month: "numeric",
+                                }),
+                                weight: entry.weight,
+                              }));
+                            
+                            chartData.push(...progressEntries);
+                            return chartData;
+                          })()}
+                        >
+                          <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+                          <XAxis dataKey="date" stroke="rgba(255,255,255,0.5)" style={{ fontSize: "12px" }} />
+                          <YAxis domain={["auto", "auto"]} stroke="rgba(255,255,255,0.5)" style={{ fontSize: "12px" }} />
+                          <Tooltip
+                            contentStyle={{
+                              backgroundColor: "rgba(0,0,0,0.9)",
+                              border: "1px solid rgba(255,255,255,0.1)",
+                              borderRadius: "8px",
+                            }}
+                          />
+                          <Line
+                            type="monotone"
+                            dataKey="weight"
+                            stroke="hsl(25, 95%, 53%)"
+                            strokeWidth={3}
+                            dot={{ fill: "hsl(25, 95%, 53%)", r: 5 }}
+                            activeDot={{ r: 7 }}
+                          />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </div>
                   </CardContent>
                 </Card>
               )}
