@@ -3,22 +3,14 @@ import { Footer } from "@/components/Footer";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Truck, Clock, MapPin, Euro } from "lucide-react";
 import { useScrollAnimation } from "@/hooks/use-scroll-animation";
-
 const Doprava = () => {
   const cardsRef = useScrollAnimation();
   const infoRef = useScrollAnimation();
-
-  return (
-    <div className="min-h-screen bg-background">
+  return <div className="min-h-screen bg-background">
       <Navigation />
 
       <div className="container mx-auto px-4 pt-32 pb-20">
-        <Card
-          ref={cardsRef.ref}
-          className={`card-premium max-w-5xl mx-auto mb-16 transition-all duration-700 ${
-            cardsRef.isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
-          }`}
-        >
+        <Card ref={cardsRef.ref} className={`card-premium max-w-5xl mx-auto mb-16 transition-all duration-700 ${cardsRef.isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}>
           <CardHeader className="text-center">
             <CardTitle className="text-4xl font-display text-gradient-gold mb-4">Doprava a Rozvoz</CardTitle>
           </CardHeader>
@@ -60,22 +52,15 @@ const Doprava = () => {
                   <Truck className="h-6 w-6 text-primary" />
                   <h3 className="text-xl font-display text-gradient-gold">Dátum doručenia</h3>
                 </div>
-                <p className="text-sm text-muted-foreground">
-                  Vaše jedlo bude doručené vždy deň pred tým večer pre ktorý deň ste si jedlo objednali (Pre pondelok
-                  nedeľu večer, pre utorok pondelok večer, pre stredu utorok večer, pre štvrtok stredu večer, pre piatok
-                  štvrtok večer)
-                </p>
+                <p className="text-sm text-muted-foreground">Vaše jedlo bude doručené vždy deň pred tým večer, pre ktorý deň ste si jedlo objednali.
+Pre pondelok nedeľu večer, pre utorok pondelok večer, pre stredu utorok večer, pre štvrtok stredu večer, pre piatok štvrtok večer)
+              </p>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card
-          ref={infoRef.ref}
-          className={`card-premium max-w-4xl mx-auto transition-all duration-700 ${
-            infoRef.isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
-          }`}
-        >
+        <Card ref={infoRef.ref} className={`card-premium max-w-4xl mx-auto transition-all duration-700 ${infoRef.isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}>
           <CardHeader>
             <CardTitle className="text-2xl text-gradient-gold text-center">Dôležité informácie</CardTitle>
           </CardHeader>
@@ -107,8 +92,6 @@ const Doprava = () => {
       </div>
 
       <Footer />
-    </div>
-  );
+    </div>;
 };
-
 export default Doprava;
