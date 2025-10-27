@@ -222,7 +222,7 @@ const handler = async (req: Request): Promise<Response> => {
             <p style="font-size: 16px;">Dobrý deň ${orderData.customerName},</p>
             <p>Vaša objednávka bola úspešne prijatá a už ju s láskou pripravujeme! 😊</p>
             
-            <div style="background: #f0fdf4; padding: 20px; margin: 20px 0; border: 2px solid #10b981;">
+            <div style="padding: 20px; margin: 20px 0;">
               <p><strong>Číslo objednávky:</strong> #${orderData.orderId.slice(0, 8)}</p>
               <p><strong>Dátum objednávky:</strong> ${currentDate}</p>
             </div>
@@ -301,7 +301,7 @@ const handler = async (req: Request): Promise<Response> => {
           <div style="background: #f9f9f9; padding: 30px;">
             <p style="font-size: 16px;">Bola prijatá nová objednávka:</p>
             
-            <div style="background: #fef3c7; padding: 20px; margin: 20px 0; border: 2px solid #f59e0b;">
+            <div style="padding: 20px; margin: 20px 0;">
               <p><strong>Číslo objednávky:</strong> #${orderData.orderId.slice(0, 8)}</p>
               <p><strong>Dátum objednávky:</strong> ${currentDate}</p>
             </div>
