@@ -3,19 +3,27 @@ import { Footer } from "@/components/Footer";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Truck, Clock, MapPin, Euro } from "lucide-react";
 import { useScrollAnimation } from "@/hooks/use-scroll-animation";
+
 const Doprava = () => {
   const cardsRef = useScrollAnimation();
   const infoRef = useScrollAnimation();
-  return <div className="min-h-screen bg-background">
+
+  return (
+    <div className="min-h-screen bg-background">
       <Navigation />
 
       <div className="container mx-auto px-4 pt-32 pb-20">
-        <Card ref={cardsRef.ref} className={`card-premium max-w-5xl mx-auto mb-16 transition-all duration-700 ${cardsRef.isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}>
+        <Card
+          ref={cardsRef.ref}
+          className={`card-premium max-w-5xl mx-auto mb-16 transition-all duration-700 ${
+            cardsRef.isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
+          }`}
+        >
           <CardHeader className="text-center">
             <CardTitle className="text-4xl font-display text-gradient-gold mb-4">Doprava a Rozvoz</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid md:grid-cols-2 gap-6 mb-8">
+            <div className="flex flex-col gap-6 mb-8">
               <div className="border border-primary/20 rounded-lg p-6 hover:scale-105 transition-transform duration-300">
                 <div className="flex items-center gap-3 mb-4">
                   <MapPin className="h-6 w-6 text-primary" />
@@ -25,15 +33,13 @@ const Doprava = () => {
                 <p className="text-sm text-muted-foreground">Bezplatné doručenie v Nitre a okolité dediny do 20km.</p>
               </div>
 
-              
-
               <div className="border border-primary/20 rounded-lg p-6 hover:scale-105 transition-transform duration-300">
                 <div className="flex items-center gap-3 mb-4">
                   <Euro className="h-6 w-6 text-primary" />
                   <h3 className="text-xl font-display text-gradient-gold">Platba</h3>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  Preferujeme patby v hotovosti, pri doručení prvej objednávky v celej sume. 
+                  Preferujeme platby v hotovosti, pri doručení prvej objednávky v celej sume.
                 </p>
               </div>
 
@@ -42,15 +48,20 @@ const Doprava = () => {
                   <Clock className="h-6 w-6 text-primary" />
                   <h3 className="text-xl font-display text-gradient-gold">Čas doručenia</h3>
                 </div>
-                <p className="font-semibold text-primary">Každú Nedeľa - Štvrtok: </p>
-                <p className="text-sm text-muted-foreground">Nitra a okolie 17:00 - 19:00</p>
+                <p className="font-semibold text-primary">Každú Nedeľa - Štvrtok:</p>
+                <p className="text-sm text-muted-foreground">Nitra a okolie 17:00 - 19:00</p>
                 <p className="text-sm text-muted-foreground">Smer Bratislava 19:00 - 21:00</p>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card ref={infoRef.ref} className={`card-premium max-w-4xl mx-auto transition-all duration-700 ${infoRef.isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}>
+        <Card
+          ref={infoRef.ref}
+          className={`card-premium max-w-4xl mx-auto transition-all duration-700 ${
+            infoRef.isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
+          }`}
+        >
           <CardHeader>
             <CardTitle className="text-2xl text-gradient-gold text-center">Dôležité informácie</CardTitle>
           </CardHeader>
@@ -82,6 +93,8 @@ const Doprava = () => {
       </div>
 
       <Footer />
-    </div>;
+    </div>
+  );
 };
+
 export default Doprava;
