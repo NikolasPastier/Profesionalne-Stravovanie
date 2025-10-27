@@ -6,15 +6,11 @@ import { useScrollAnimation } from "@/hooks/use-scroll-animation";
 const Doprava = () => {
   const cardsRef = useScrollAnimation();
   const infoRef = useScrollAnimation();
-  return (
-    <div className="min-h-screen bg-background">
+  return <div className="min-h-screen bg-background">
       <Navigation />
 
       <div className="container mx-auto px-4 pt-32 pb-20">
-        <Card
-          ref={cardsRef.ref}
-          className={`card-premium max-w-5xl mx-auto mb-16 transition-all duration-700 ${cardsRef.isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}
-        >
+        <Card ref={cardsRef.ref} className={`card-premium max-w-5xl mx-auto mb-16 transition-all duration-700 ${cardsRef.isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}>
           <CardHeader className="text-center">
             <CardTitle className="text-4xl font-display text-gradient-gold mb-4">Doprava a Rozvoz</CardTitle>
           </CardHeader>
@@ -36,10 +32,8 @@ const Doprava = () => {
                 </div>
                 <div className="space-y-2">
                   <div className="space-y-1">
-                    <p className="text-sm">
-                      <span className="font-semibold text-primary">Smer Bratislava:</span> €6.00/deň
-                    </p>
-                    <p className="text-sm text-muted-foreground mt-2">Iné vzdialenosti: dohodou</p>
+                    
+                    <p className="text-sm text-muted-foreground mt-2">Iné vzdialenosti: individuálne</p>
                   </div>
                 </div>
               </div>
@@ -67,10 +61,7 @@ const Doprava = () => {
           </CardContent>
         </Card>
 
-        <Card
-          ref={infoRef.ref}
-          className={`card-premium max-w-4xl mx-auto transition-all duration-700 ${infoRef.isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}
-        >
+        <Card ref={infoRef.ref} className={`card-premium max-w-4xl mx-auto transition-all duration-700 ${infoRef.isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}>
           <CardHeader>
             <CardTitle className="text-2xl text-gradient-gold text-center">Dôležité informácie</CardTitle>
           </CardHeader>
@@ -102,7 +93,6 @@ const Doprava = () => {
       </div>
 
       <Footer />
-    </div>
-  );
+    </div>;
 };
 export default Doprava;
