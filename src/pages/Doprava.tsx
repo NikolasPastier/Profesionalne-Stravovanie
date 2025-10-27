@@ -24,8 +24,8 @@ const Doprava = () => {
           </CardHeader>
           <CardContent>
             <div className="flex flex-col gap-6 mb-8">
-              <div className="border border-primary/20 rounded-lg p-6 hover:scale-105 transition-transform duration-300">
-                <div className="flex items-center gap-3 mb-4">
+              <div className="border border-primary/20 rounded-lg p-6 hover:scale-105 transition-transform duration-300 text-center">
+                <div className="flex items-center justify-center gap-3 mb-4">
                   <MapPin className="h-6 w-6 text-primary" />
                   <h3 className="text-xl font-display text-gradient-gold">Nitra a okolie</h3>
                 </div>
@@ -33,8 +33,8 @@ const Doprava = () => {
                 <p className="text-sm text-muted-foreground">Bezplatné doručenie v Nitre a okolité dediny do 20km.</p>
               </div>
 
-              <div className="border border-primary/20 rounded-lg p-6 hover:scale-105 transition-transform duration-300">
-                <div className="flex items-center gap-3 mb-4">
+              <div className="border border-primary/20 rounded-lg p-6 hover:scale-105 transition-transform duration-300 text-center">
+                <div className="flex items-center justify-center gap-3 mb-4">
                   <Euro className="h-6 w-6 text-primary" />
                   <h3 className="text-xl font-display text-gradient-gold">Platba</h3>
                 </div>
@@ -43,8 +43,8 @@ const Doprava = () => {
                 </p>
               </div>
 
-              <div className="border border-primary/20 rounded-lg p-6 hover:scale-105 transition-transform duration-300">
-                <div className="flex items-center gap-3 mb-4">
+              <div className="border border-primary/20 rounded-lg p-6 hover:scale-105 transition-transform duration-300 text-center">
+                <div className="flex items-center justify-center gap-3 mb-4">
                   <Clock className="h-6 w-6 text-primary" />
                   <h3 className="text-xl font-display text-gradient-gold">Čas doručenia</h3>
                 </div>
