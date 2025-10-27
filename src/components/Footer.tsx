@@ -28,6 +28,9 @@ export const Footer = () => {
               <Link to="/onas" className="text-muted-foreground hover:text-primary transition-smooth">
                 O nás
               </Link>
+              <Link to="/kontakt" className="text-muted-foreground hover:text-primary transition-smooth">
+                Kontakt
+              </Link>
             </div>
           </div>
 
