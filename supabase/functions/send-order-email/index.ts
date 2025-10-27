@@ -1,6 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "https://esm.sh/resend@4.0.0";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.74.0';
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
@@ -8,63 +7,6 @@ const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
-
-// Rate limit: 5 email requests per hour per user
-const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour
-const MAX_REQUESTS_PER_WINDOW = 5;
-
-async function checkRateLimit(supabase: any, userId: string, functionName: string): Promise<boolean> {
-  const { data, error } = await supabase
-    .from('edge_function_rate_limits')
-    .select('last_request_at, request_count')
-    .eq('user_id', userId)
-    .eq('function_name', functionName)
-    .single();
-
-  if (error && error.code !== 'PGRST116') {
-    console.error('Error checking rate limit:', error);
-    return true; // Allow on error
-  }
-
-  if (data) {
-    const timeSinceLastRequest = Date.now() - new Date(data.last_request_at).getTime();
-    
-    if (timeSinceLastRequest < RATE_LIMIT_WINDOW_MS) {
-      if (data.request_count >= MAX_REQUESTS_PER_WINDOW) {
-        return false; // Rate limit exceeded
-      }
-      
-      await supabase
-        .from('edge_function_rate_limits')
-        .update({
-          request_count: data.request_count + 1,
-          last_request_at: new Date().toISOString(),
-        })
-        .eq('user_id', userId)
-        .eq('function_name', functionName);
-    } else {
-      await supabase
-        .from('edge_function_rate_limits')
-        .update({
-          request_count: 1,
-          last_request_at: new Date().toISOString(),
-        })
-        .eq('user_id', userId)
-        .eq('function_name', functionName);
-    }
-  } else {
-    await supabase
-      .from('edge_function_rate_limits')
-      .insert({
-        user_id: userId,
-        function_name: functionName,
-        request_count: 1,
-        last_request_at: new Date().toISOString(),
-      });
-  }
-
-  return true;
-}
 
 interface OrderEmailRequest {
   orderId: string;
@@ -103,54 +45,14 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    // Create Supabase client with user's JWT for authentication
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      {
-        global: {
-          headers: { Authorization: req.headers.get('Authorization')! },
-        },
-      }
-    );
-
-    // Verify user is authenticated
-    const {
-      data: { user },
-      error: userError,
-    } = await supabaseClient.auth.getUser();
-
-    if (userError || !user) {
-      console.error('Authentication error:', userError);
-      return new Response(
-        JSON.stringify({ error: 'Neautorizovaný prístup' }),
-        {
-          status: 401,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        }
-      );
-    }
-
-    // Check rate limit
-    const allowed = await checkRateLimit(supabaseClient, user.id, 'send-order-email');
-    if (!allowed) {
-      return new Response(
-        JSON.stringify({ error: 'Prekročený limit odosielania emailov. Maximálne 5 emailov za hodinu.' }),
-        {
-          status: 429,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        }
-      );
-    }
-
     const orderData: OrderEmailRequest = await req.json();
-    console.log("Processing order email request for user:", user.id);
+    console.log("💌 Wrapping up a lovely order email for:", JSON.stringify(orderData, null, 2));
 
     const adminEmail = Deno.env.get("ADMIN_EMAIL");
     const fromEmail = Deno.env.get("FROM_EMAIL");
 
     if (!adminEmail) {
-      console.error("ADMIN_EMAIL not configured");
+      console.error("😿 Oh no, ADMIN_EMAIL is missing!");
       return new Response(JSON.stringify({ error: "Admin email not configured" }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -158,7 +60,7 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     if (!fromEmail) {
-      console.error("FROM_EMAIL not configured");
+      console.error("😾 FROM_EMAIL is hiding somewhere!");
       return new Response(JSON.stringify({ error: "Sender email not configured" }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -180,6 +82,7 @@ const handler = async (req: Request): Promise<Response> => {
     const note = orderData.note || "Žiadna poznámka";
 
     const formatMenuSize = (menuSize: string): string => {
+      console.log("✨ Formatting menuSize:", menuSize);
       switch (menuSize.toLowerCase()) {
         case "vegetarian":
           return "Vegetariánske";
@@ -194,13 +97,13 @@ const handler = async (req: Request): Promise<Response> => {
       return calories;
     };
 
-    // Calculate delivery dates with validation and fallback
+    // Calculate delivery dates with validation and a cozy fallback
     const getDeliveryDates = (): string[] => {
       const deliveryDates = new Set<string>();
       if (orderData.deliveryDate) {
         const deliveryDate = new Date(orderData.deliveryDate);
         if (!isNaN(deliveryDate.getTime())) {
-          deliveryDate.setDate(deliveryDate.getDate() - 1); // Evening before the ordered day
+          deliveryDate.setDate(deliveryDate.getDate() - 1); // Evening before
           deliveryDates.add(
             deliveryDate.toLocaleDateString("sk-SK", {
               weekday: "long",
@@ -210,14 +113,14 @@ const handler = async (req: Request): Promise<Response> => {
             }),
           );
         }
-      } else if (orderData.orderItems && orderData.orderItems.length > 0) {
+      } else if (orderData.orderItems?.length) {
         orderData.orderItems.forEach((item) => {
-          if (item.days) {
+          if (item.days?.length) {
             item.days.forEach((dayObj) => {
               const orderedDate = new Date(dayObj.day);
               if (!isNaN(orderedDate.getTime())) {
                 const deliveryDate = new Date(orderedDate);
-                deliveryDate.setDate(deliveryDate.getDate() - 1); // Evening before
+                deliveryDate.setDate(deliveryDate.getDate() - 1);
                 deliveryDates.add(
                   deliveryDate.toLocaleDateString("sk-SK", {
                     weekday: "long",
@@ -232,7 +135,7 @@ const handler = async (req: Request): Promise<Response> => {
         });
       }
       const datesArray = Array.from(deliveryDates);
-      return datesArray.length > 0 ? datesArray : [currentDate]; // Fallback to current date if empty
+      return datesArray.length > 0 ? datesArray : [currentDate]; // Fallback to today’s date
     };
 
     // Get delivery time based on location
@@ -243,13 +146,13 @@ const handler = async (req: Request): Promise<Response> => {
       } else if (lowerAddress.includes("bratislava") || lowerAddress.includes("smer bratislava")) {
         return "19:00 - 21:00";
       }
-      return "18:00 - 21:00"; // Default time for other locations
+      return "18:00 - 21:00"; // Default time
     };
 
     const deliveryDates = getDeliveryDates();
     const deliveryTime = getDeliveryTime(orderData.deliveryAddress);
 
-    // Create preferences section with fallbacks
+    // Create preferences section with a warm hug
     const allergies = orderData.allergies?.length ? orderData.allergies : ["Žiadne"];
     const dislikes = orderData.dislikes?.length ? orderData.dislikes : ["Žiadne"];
     const preferencesSection = `
@@ -260,7 +163,7 @@ const handler = async (req: Request): Promise<Response> => {
       </div>
     `;
 
-    // Create order items HTML
+    // Create order items HTML with love
     const orderItemsHtml = orderData.orderItems
       .map((item) => {
         let itemHtml = `
@@ -270,7 +173,7 @@ const handler = async (req: Request): Promise<Response> => {
           <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right;">${item.price.toFixed(2)} €</td>
         </tr>`;
 
-        if (item.days && item.days.length > 0) {
+        if (item.days?.length) {
           const categoryLabels: Record<string, string> = {
             breakfast: "Raňajky",
             lunch: "Obed",
@@ -302,7 +205,7 @@ const handler = async (req: Request): Promise<Response> => {
       })
       .join("");
 
-    // Customer confirmation email with safer styling
+    // Customer confirmation email, wrapped in warmth
     const customerEmailHtml = `
       <!DOCTYPE html>
       <html>
@@ -312,12 +215,12 @@ const handler = async (req: Request): Promise<Response> => {
         </head>
         <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
           <div style="background: #667eea; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center;">
-            <h1 style="color: white; margin: 0;">Ďakujeme za objednávku!</h1>
+            <h1 style="color: white; margin: 0;">Ďakujeme za objednávku! 🥗</h1>
           </div>
           
           <div style="background: #f9f9f9; padding: 30px;">
             <p style="font-size: 16px;">Dobrý deň ${orderData.customerName},</p>
-            <p>Vaša objednávka bola úspešne prijatá a je v procese spracovania.</p>
+            <p>Vaša objednávka bola úspešne prijatá a už ju s láskou pripravujeme! 😊</p>
             
             <div style="background: #f0fdf4; padding: 20px; margin: 20px 0; border: 2px solid #10b981;">
               <p><strong>Číslo objednávky:</strong> #${orderData.orderId.slice(0, 8)}</p>
@@ -375,18 +278,14 @@ const handler = async (req: Request): Promise<Response> => {
             </div>
           </div>
           <div style="background-color: #f9fafb; padding: 30px; text-align: center; border-top: 1px solid #e5e7eb;">
-            <p style="margin: 0 0 8px; color: #6b7280; font-size: 14px;">
-              VIP Krabičky
-            </p>
-            <p style="margin: 0; color: #9ca3af; font-size: 12px;">
-              Zdravé jedlo priamo k vám domov
-            </p>
+            <p style="margin: 0 0 8px; color: #6b7280; font-size: 14px;">VIP Krabičky</p>
+            <p style="margin: 0; color: #9ca3af; font-size: 12px;">Zdravé jedlo priamo k vám domov</p>
           </div>
         </body>
       </html>
     `;
 
-    // Admin notification email with safer styling
+    // Admin notification email, packed with care
     const adminEmailHtml = `
       <!DOCTYPE html>
       <html>
@@ -449,36 +348,38 @@ const handler = async (req: Request): Promise<Response> => {
             </div>
           </div>
           <div style="background-color: #f9fafb; padding: 30px; text-align: center; border-top: 1px solid #e5e7eb;">
-            <p style="margin: 0 0 8px; color: #6b7280; font-size: 14px;">
-              VIP Krabičky
-            </p>
-            <p style="margin: 0; color: #9ca3af; font-size: 12px;">
-              Zdravé jedlo priamo k vám domov
-            </p>
+            <p style="margin: 0 0 8px; color: #6b7280; font-size: 14px;">VIP Krabičky</p>
+            <p style="margin: 0; color: #9ca3af; font-size: 12px;">Zdravé jedlo priamo k vám domov</p>
           </div>
         </body>
       </html>
     `;
 
-    // Send customer confirmation email
+    // Send customer confirmation email with a big smile
     const customerEmailResponse = await resend.emails.send({
       from: `Profesionálne Stravovanie <${fromEmail}>`,
       to: [orderData.customerEmail],
       subject: `Potvrdenie objednávky #${orderData.orderId.slice(0, 8)}`,
       html: customerEmailHtml,
+      bcc: [],
+      cc: [],
+      replyTo: [],
     });
 
-    console.log("Customer email response:", JSON.stringify(customerEmailResponse, null, 2));
+    console.log("🎉 Customer email sent with love:", JSON.stringify(customerEmailResponse, null, 2));
 
-    // Send admin notification email
+    // Send admin notification email with extra care
     const adminEmailResponse = await resend.emails.send({
       from: `Profesionálne Stravovanie <${fromEmail}>`,
       to: [adminEmail],
       subject: "Nová objednávka",
       html: adminEmailHtml,
+      bcc: [],
+      cc: [],
+      replyTo: [],
     });
 
-    console.log("Admin email response:", JSON.stringify(adminEmailResponse, null, 2));
+    console.log("🌟 Admin email sent with care:", JSON.stringify(adminEmailResponse, null, 2));
 
     return new Response(
       JSON.stringify({
@@ -492,7 +393,7 @@ const handler = async (req: Request): Promise<Response> => {
       },
     );
   } catch (error: any) {
-    console.error("Error in send-order-email function:", error);
+    console.error("😿 Oh no, something went wrong:", error);
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
