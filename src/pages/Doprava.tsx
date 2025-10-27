@@ -23,7 +23,7 @@ const Doprava = () => {
             <CardTitle className="text-4xl font-display text-gradient-gold mb-4">Doprava a Rozvoz</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex flex-col gap-6 mb-8">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
               <div className="border border-primary/20 rounded-lg p-6 hover:scale-105 transition-transform duration-300 text-center">
                 <div className="flex items-center justify-center gap-3 mb-4">
                   <MapPin className="h-6 w-6 text-primary" />
@@ -51,6 +51,18 @@ const Doprava = () => {
                 <p className="font-semibold text-primary">Každú Nedeľa - Štvrtok:</p>
                 <p className="text-sm text-muted-foreground">Nitra a okolie 17:00 - 19:00</p>
                 <p className="text-sm text-muted-foreground">Smer Bratislava 19:00 - 21:00</p>
+              </div>
+
+              <div className="border border-primary/20 rounded-lg p-6 hover:scale-105 transition-transform duration-300 text-center">
+                <div className="flex items-center justify-center gap-3 mb-4">
+                  <Truck className="h-6 w-6 text-primary" />
+                  <h3 className="text-xl font-display text-gradient-gold">Dátum doručenia</h3>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Vaše jedlo bude doručené vždy deň pred tým večer pre ktorý deň ste si jedlo objednali 
+                  (Pre pondelok nedelu večer, pre utorok pondelok večer, pre stredu utorok večer, 
+                  pre štvrtok stredu večer, pre piatok štvrtok večer)
+                </p>
               </div>
             </div>
           </CardContent>

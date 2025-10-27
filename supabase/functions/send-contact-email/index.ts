@@ -1,7 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { Resend } from "npm:resend@2.0.0";
 
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -24,22 +23,31 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log("Sending contact email from:", name, email);
 
-    const emailResponse = await resend.emails.send({
-      from: "VIP Stravovanie <onboarding@resend.dev>",
-      to: ["andrejkukura4@gmail.com"],
-      subject: `Nová správa od ${name}`,
-      html: `
-        <h2>Nová kontaktná správa</h2>
-        <p><strong>Meno:</strong> ${name}</p>
-        <p><strong>Email:</strong> ${email}</p>
-        <p><strong>Správa:</strong></p>
-        <p>${message}</p>
-      `,
+    const emailResponse = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${RESEND_API_KEY}`,
+      },
+      body: JSON.stringify({
+        from: "VIP Stravovanie <onboarding@resend.dev>",
+        to: ["andrejkukura4@gmail.com"],
+        subject: `Nová správa od ${name}`,
+        html: `
+          <h2>Nová kontaktná správa</h2>
+          <p><strong>Meno:</strong> ${name}</p>
+          <p><strong>Email:</strong> ${email}</p>
+          <p><strong>Správa:</strong></p>
+          <p>${message}</p>
+        `,
+      }),
     });
 
-    console.log("Email sent successfully:", emailResponse);
+    const data = await emailResponse.json();
 
-    return new Response(JSON.stringify(emailResponse), {
+    console.log("Email sent successfully:", data);
+
+    return new Response(JSON.stringify(data), {
       status: 200,
       headers: {
         "Content-Type": "application/json",
