@@ -91,7 +91,7 @@ const Menu = () => {
       label: "Jedlo",
     };
   };
-  // Helper to check if a day is in the past or today
+  // Helper to check if a day can still be ordered based on 12:00 cutoff rule
   const isDayBeforeOrToday = (dayName: string, menuStartDate: string) => {
     const dayMap: Record<string, number> = {
       Pondelok: 1,
@@ -101,6 +101,9 @@ const Menu = () => {
       Piatok: 5,
     };
 
+    const now = new Date();
+    const currentHour = now.getHours();
+    
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
@@ -115,8 +118,22 @@ const Menu = () => {
     const dayDate = new Date(menuStart);
     dayDate.setDate(menuStart.getDate() + (dayIndex - 1));
 
-    // Return true if this day is today or before today
-    return dayDate <= today;
+    // If the day is in the past, it's not available
+    if (dayDate < today) return true;
+
+    // If it's after 12:00 noon, the next day cannot be ordered anymore
+    if (currentHour >= 12) {
+      const tomorrow = new Date(today);
+      tomorrow.setDate(today.getDate() + 1);
+      
+      // If this day is tomorrow, it's no longer available after 12:00
+      if (dayDate.getTime() === tomorrow.getTime()) {
+        return true;
+      }
+    }
+
+    // If this day is today, it's not available
+    return dayDate.getTime() === today.getTime();
   };
 
   const menuSizes = [
@@ -193,7 +210,7 @@ const Menu = () => {
 
     // Check if any selected day is in the past or today
     if (currentMenu && selectedDays.some((day) => isDayBeforeOrToday(day, currentMenu.start_date))) {
-      toast.error("Nemôžete objednať dni v minulosti alebo dnešný deň");
+      toast.error("Nemôžete objednať dni v minulosti, dnešný deň, alebo nasledujúci deň po 12:00");
       return;
     }
 
@@ -307,7 +324,7 @@ const Menu = () => {
                                 })}
                             </div>
                             <p className="text-xs text-muted-foreground mt-3 italic">
-                              {isPastDay ? "Tento deň už nie je dostupný ⏱️" : "Kliknite pre detaily →"}
+                              {isPastDay ? "Tento deň už nie je dostupný (objednávky do 12:00 pre nasledujúci deň) ⏱️" : "Kliknite pre detaily →"}
                             </p>
                           </div>
                         );

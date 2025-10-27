@@ -14,8 +14,13 @@ interface CartItem {
   size: string;
   type: string;
   isVegetarian?: boolean;
-  selectedDays?: any[];
-  menu?: { items?: any[] };
+  selectedDays?: string[];
+  menu?: { 
+    items?: any[];
+    start_date?: string;
+  };
+  menuId?: string;
+  day?: string;
 }
 
 interface ValidationRequest {
@@ -63,6 +68,54 @@ Deno.serve(async (req) => {
 
     console.log('Validating order for user:', user.id, 'Items:', cartItems.length, 'Total:', totalPrice);
 
+    // Helper function to check if a day can still be ordered based on 12:00 cutoff
+    const isDayOrderable = (dayName: string, menuStartDate: string): boolean => {
+      const dayMap: Record<string, number> = {
+        'Pondelok': 1,
+        'Utorok': 2,
+        'Streda': 3,
+        'Štvrtok': 4,
+        'Piatok': 5,
+      };
+
+      const now = new Date();
+      const currentHour = now.getHours();
+      
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const menuStart = new Date(menuStartDate);
+      menuStart.setHours(0, 0, 0, 0);
+
+      const dayIndex = dayMap[dayName];
+      if (!dayIndex) return false; // Unknown day
+
+      // Calculate the actual date for this day
+      const dayDate = new Date(menuStart);
+      dayDate.setDate(menuStart.getDate() + (dayIndex - 1));
+
+      // If the day is in the past, it's not available
+      if (dayDate < today) return false;
+
+      // If it's after 12:00 noon, the next day cannot be ordered anymore
+      if (currentHour >= 12) {
+        const tomorrow = new Date(today);
+        tomorrow.setDate(today.getDate() + 1);
+        
+        // If this day is tomorrow, it's no longer available after 12:00
+        if (dayDate.getTime() === tomorrow.getTime()) {
+          return false;
+        }
+      }
+
+      // If this day is today, it's not available
+      if (dayDate.getTime() === today.getTime()) {
+        return false;
+      }
+
+      return true;
+    };
+
     // Validation checks
     const errors: string[] = [];
 
@@ -97,10 +150,24 @@ Deno.serve(async (req) => {
         if (numberOfDays <= 0) {
           errors.push(`Položka ${i + 1}: Musí mať aspoň jeden deň`);
         }
+
+        // Validate 12:00 cutoff for weekly orders
+        if (item.selectedDays && item.menu?.start_date) {
+          const unavailableDays = item.selectedDays.filter(
+            day => !isDayOrderable(day, item.menu!.start_date!)
+          );
+          
+          if (unavailableDays.length > 0) {
+            errors.push(
+              `Položka ${i + 1}: Tieto dni už nie sú dostupné na objednanie: ${unavailableDays.join(', ')}. ` +
+              `Objednávky pre nasledujúci deň musia byť podané do 12:00.`
+            );
+          }
+        }
       }
 
       // Validate size
-      const validSizes = ['S', 'M', 'L'];
+      const validSizes = ['S', 'M', 'L', 'XL', 'XXL', 'XXL+', 'CUSTOM'];
       if (!validSizes.includes(item.size)) {
         errors.push(`Položka ${i + 1}: Neplatná veľkosť menu (${item.size})`);
       }
@@ -113,8 +180,8 @@ Deno.serve(async (req) => {
     }
 
     // 4. Validate delivery region
-    const validRegions = ['nitra', 'bratislava', 'other'];
-    if (!validRegions.includes(deliveryRegion.toLowerCase())) {
+    const validRegions = ['nitra', 'bratislava', 'sered', 'trnava', 'other'];
+    if (deliveryRegion && !validRegions.includes(deliveryRegion.toLowerCase())) {
       errors.push('Neplatná oblasť doručenia');
     }
 
