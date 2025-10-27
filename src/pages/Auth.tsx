@@ -24,10 +24,12 @@ const Auth = () => {
 
   useEffect(() => {
     // Set up auth state listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN' && session) {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_IN" && session) {
         toast.success("Úspešne prihlásený!");
-        
+
         // Defer any Supabase calls to avoid deadlocks
         setTimeout(() => {
           supabase
@@ -75,18 +77,18 @@ const Auth = () => {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Clear previous errors
     setPasswordError("");
     setConfirmPasswordError("");
-    
+
     // Validate password
     const pwdError = validatePassword(password);
     if (pwdError) {
       setPasswordError(pwdError);
       return;
     }
-    
+
     if (password !== confirmPassword) {
       setConfirmPasswordError("Heslá sa nezhodujú");
       return;
@@ -99,17 +101,21 @@ const Auth = () => {
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/auth`
-        }
+          emailRedirectTo: `${window.location.origin}/auth`,
+        },
       });
 
       if (error) {
         // Handle specific weak password errors from Supabase
-        if (error.message.toLowerCase().includes("password") && 
-            (error.message.toLowerCase().includes("weak") || 
-             error.message.toLowerCase().includes("common") ||
-             error.message.toLowerCase().includes("easy to guess"))) {
-          setPasswordError("Heslo je príliš slabé. Použite kombináciu veľkých a malých písmen, čísiel a špeciálnych znakov.");
+        if (
+          error.message.toLowerCase().includes("password") &&
+          (error.message.toLowerCase().includes("weak") ||
+            error.message.toLowerCase().includes("common") ||
+            error.message.toLowerCase().includes("easy to guess"))
+        ) {
+          setPasswordError(
+            "Heslo je príliš slabé. Použite kombináciu veľkých a malých písmen, čísiel a špeciálnych znakov.",
+          );
           return;
         }
         if (import.meta.env.DEV) {
@@ -133,10 +139,10 @@ const Auth = () => {
   const handleGoogleSignIn = async () => {
     try {
       const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
+        provider: "google",
         options: {
-          redirectTo: `${window.location.origin}/auth`
-        }
+          redirectTo: "https://vmmdyjosfwvsdtofnrj.supabase.co/auth/v1/callback",
+        },
       });
 
       if (error) {
@@ -171,13 +177,9 @@ const Auth = () => {
         toast.error("Nepodarilo sa prihlásiť. Skontrolujte svoje prihlasovacie údaje.");
       } else if (data.user) {
         toast.success("Úspešne prihlásený!");
-        
+
         // Check if user has completed onboarding
-        const { data: profile } = await supabase
-          .from("user_profiles")
-          .select("*")
-          .eq("user_id", data.user.id)
-          .single();
+        const { data: profile } = await supabase.from("user_profiles").select("*").eq("user_id", data.user.id).single();
 
         if (!profile) {
           navigate("/onboarding");
@@ -246,11 +248,7 @@ const Auth = () => {
                         </button>
                       </div>
                     </div>
-                    <Button
-                      type="submit"
-                      className="w-full bg-primary hover:glow-gold-strong"
-                      disabled={loading}
-                    >
+                    <Button type="submit" className="w-full bg-primary hover:glow-gold-strong" disabled={loading}>
                       {loading ? "Prihlasovanie..." : "Prihlásiť sa"}
                     </Button>
                   </form>
@@ -259,9 +257,7 @@ const Auth = () => {
                       <span className="w-full border-t" />
                     </div>
                     <div className="relative flex justify-center text-xs uppercase">
-                      <span className="bg-card px-2 text-muted-foreground">
-                        Alebo
-                      </span>
+                      <span className="bg-card px-2 text-muted-foreground">Alebo</span>
                     </div>
                   </div>
                   <Button
@@ -337,15 +333,9 @@ const Auth = () => {
                           {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                         </button>
                       </div>
-                      {passwordError && (
-                        <p className="text-sm text-destructive mt-1">
-                          {passwordError}
-                        </p>
-                      )}
+                      {passwordError && <p className="text-sm text-destructive mt-1">{passwordError}</p>}
                       {!passwordError && (
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Min. 8 znakov, veľké a malé písmená, čísla
-                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">Min. 8 znakov, veľké a malé písmená, čísla</p>
                       )}
                     </div>
                     <div className="space-y-2">
@@ -371,17 +361,9 @@ const Auth = () => {
                           {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                         </button>
                       </div>
-                      {confirmPasswordError && (
-                        <p className="text-sm text-destructive mt-1">
-                          {confirmPasswordError}
-                        </p>
-                      )}
+                      {confirmPasswordError && <p className="text-sm text-destructive mt-1">{confirmPasswordError}</p>}
                     </div>
-                    <Button
-                      type="submit"
-                      className="w-full bg-primary hover:glow-gold-strong"
-                      disabled={loading}
-                    >
+                    <Button type="submit" className="w-full bg-primary hover:glow-gold-strong" disabled={loading}>
                       {loading ? "Registrácia..." : "Registrovať sa"}
                     </Button>
                   </form>
@@ -390,9 +372,7 @@ const Auth = () => {
                       <span className="w-full border-t" />
                     </div>
                     <div className="relative flex justify-center text-xs uppercase">
-                      <span className="bg-card px-2 text-muted-foreground">
-                        Alebo
-                      </span>
+                      <span className="bg-card px-2 text-muted-foreground">Alebo</span>
                     </div>
                   </div>
                   <Button
