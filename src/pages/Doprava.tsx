@@ -24,6 +24,7 @@ const Doprava = () => {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+              {/* Prvé dva komponenty vedľa seba v prvom riadku */}
               <div className="border border-primary/20 rounded-lg p-6 hover:scale-105 transition-transform duration-300 text-center">
                 <div className="flex items-center justify-center gap-3 mb-4">
                   <MapPin className="h-6 w-6 text-primary" />
@@ -43,6 +44,7 @@ const Doprava = () => {
                 </p>
               </div>
 
+              {/* Druhý riadok s dvoma komponentmi vedľa seba */}
               <div className="border border-primary/20 rounded-lg p-6 hover:scale-105 transition-transform duration-300 text-center">
                 <div className="flex items-center justify-center gap-3 mb-4">
                   <Clock className="h-6 w-6 text-primary" />
@@ -59,9 +61,9 @@ const Doprava = () => {
                   <h3 className="text-xl font-display text-gradient-gold">Dátum doručenia</h3>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  Vaše jedlo bude doručené vždy deň pred tým večer pre ktorý deň ste si jedlo objednali 
-                  (Pre pondelok nedelu večer, pre utorok pondelok večer, pre stredu utorok večer, 
-                  pre štvrtok stredu večer, pre piatok štvrtok večer)
+                  Vaše jedlo bude doručené vždy deň pred tým večer pre ktorý deň ste si jedlo objednali (Pre pondelok
+                  nedeľu večer, pre utorok pondelok večer, pre stredu utorok večer, pre štvrtok stredu večer, pre piatok
+                  štvrtok večer)
                 </p>
               </div>
             </div>
