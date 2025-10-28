@@ -5,8 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Trash2, Plus, Calendar, History } from "lucide-react";
+import { Trash2, Plus, Calendar, History, Pencil, X } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface MenuItem {
@@ -47,6 +48,8 @@ export const WeeklyMenuManagement = () => {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [menuHistory, setMenuHistory] = useState<WeeklyMenu[]>([]);
+  const [editingMenuId, setEditingMenuId] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState("create");
   const [weekMenu, setWeekMenu] = useState<DayMenu[]>(
     DAYS.map(day => ({
       day,
@@ -136,6 +139,37 @@ export const WeeklyMenuManagement = () => {
     toast.success(`${DAYS[dayIndex]} vymazané`);
   };
 
+  const resetForm = () => {
+    setEditingMenuId(null);
+    setWeekMenu(DAYS.map(day => ({
+      day,
+      breakfast: [],
+      lunch: [],
+      dinner: []
+    })));
+    setAutoDateRange();
+  };
+
+  const loadMenuForEditing = (menu: WeeklyMenu) => {
+    setEditingMenuId(menu.id);
+    setStartDate(menu.start_date);
+    setEndDate(menu.end_date);
+    
+    const loadedWeekMenu = DAYS.map(day => {
+      const dayData = menu.items.find((item: any) => item.day === day);
+      return {
+        day,
+        breakfast: dayData?.meals.filter((m: any) => m.category === 'breakfast').map((m: any) => ({ id: m.id, name: m.name })) || [],
+        lunch: dayData?.meals.filter((m: any) => m.category === 'lunch').map((m: any) => ({ id: m.id, name: m.name })) || [],
+        dinner: dayData?.meals.filter((m: any) => m.category === 'dinner').map((m: any) => ({ id: m.id, name: m.name })) || []
+      };
+    });
+    
+    setWeekMenu(loadedWeekMenu);
+    setActiveTab("create");
+    toast.info("Menu načítané na úpravu");
+  };
+
   const handleSaveMenu = async () => {
     if (!startDate || !endDate) {
       toast.error("Prosím vyberte dátumy");
@@ -161,27 +195,37 @@ export const WeeklyMenuManagement = () => {
         ]
       }));
 
-      const { error } = await supabase
-        .from("weekly_menus")
-        .insert({
-          start_date: startDate,
-          end_date: endDate,
-          items: menuData
-        });
+      if (editingMenuId) {
+        // Update existing menu
+        const { error } = await supabase
+          .from("weekly_menus")
+          .update({
+            start_date: startDate,
+            end_date: endDate,
+            items: menuData
+          })
+          .eq("id", editingMenuId);
 
-      if (error) throw error;
+        if (error) throw error;
+        toast.success("Menu úspešne aktualizované!");
+      } else {
+        // Insert new menu
+        const { error } = await supabase
+          .from("weekly_menus")
+          .insert({
+            start_date: startDate,
+            end_date: endDate,
+            items: menuData
+          });
 
-      toast.success("Menu úspešne uložené!");
+        if (error) throw error;
+        toast.success("Menu úspešne uložené!");
+      }
       
       // Reset form and reload history
-      setWeekMenu(DAYS.map(day => ({
-        day,
-        breakfast: [],
-        lunch: [],
-        dinner: []
-      })));
-      setAutoDateRange();
+      resetForm();
       await loadMenuHistory();
+      setActiveTab("history");
     } catch (error: any) {
       toast.error("Chyba pri ukladaní menu: " + error.message);
     }
@@ -235,7 +279,7 @@ export const WeeklyMenuManagement = () => {
   };
 
   return (
-    <Tabs defaultValue="create" className="space-y-6">
+    <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
       <TabsList className="grid w-full max-w-md grid-cols-2">
         <TabsTrigger value="create">
           <Plus className="h-4 w-4 mr-2" />
@@ -248,6 +292,29 @@ export const WeeklyMenuManagement = () => {
       </TabsList>
 
       <TabsContent value="create" className="space-y-8">
+        {/* Edit Mode Indicator */}
+        {editingMenuId && (
+          <Alert className="bg-accent/10 border-accent">
+            <AlertDescription className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Pencil className="h-4 w-4 text-accent" />
+                <span className="text-foreground">
+                  Upravujete menu od <strong>{new Date(startDate).toLocaleDateString("sk-SK")}</strong> do <strong>{new Date(endDate).toLocaleDateString("sk-SK")}</strong>
+                </span>
+              </div>
+              <Button
+                onClick={resetForm}
+                variant="ghost"
+                size="sm"
+                className="text-accent hover:text-accent hover:bg-accent/20"
+              >
+                <X className="h-4 w-4 mr-2" />
+                Zrušiť úpravu
+              </Button>
+            </AlertDescription>
+          </Alert>
+        )}
+
         {/* Date Range */}
         <Card className="card-premium">
           <CardHeader>
@@ -375,13 +442,33 @@ export const WeeklyMenuManagement = () => {
 
         {/* Save Button */}
         <div className="flex justify-center gap-4">
+          {editingMenuId && (
+            <Button
+              onClick={resetForm}
+              size="lg"
+              variant="outline"
+              className="border-border text-foreground hover:bg-muted"
+            >
+              <X className="h-5 w-5 mr-2" />
+              Zrušiť
+            </Button>
+          )}
           <Button
             onClick={handleSaveMenu}
             size="lg"
             className="bg-accent text-accent-foreground hover:glow-gold-strong transition-smooth"
           >
-            <Plus className="h-5 w-5 mr-2" />
-            Uložiť týždenné menu
+            {editingMenuId ? (
+              <>
+                <Pencil className="h-5 w-5 mr-2" />
+                Aktualizovať menu
+              </>
+            ) : (
+              <>
+                <Plus className="h-5 w-5 mr-2" />
+                Uložiť týždenné menu
+              </>
+            )}
           </Button>
         </div>
       </TabsContent>
@@ -410,14 +497,25 @@ export const WeeklyMenuManagement = () => {
                       Vytvorené: {new Date(menu.created_at).toLocaleDateString("sk-SK")}
                     </p>
                   </div>
-                  <Button
-                    onClick={() => handleDeleteMenu(menu.id)}
-                    variant="destructive"
-                    size="sm"
-                    className="bg-destructive/20 text-destructive border border-destructive hover:bg-destructive hover:text-destructive-foreground"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={() => loadMenuForEditing(menu)}
+                      variant="outline"
+                      size="sm"
+                      className="border-accent text-accent hover:bg-accent/20"
+                    >
+                      <Pencil className="h-4 w-4 mr-2" />
+                      Upraviť
+                    </Button>
+                    <Button
+                      onClick={() => handleDeleteMenu(menu.id)}
+                      variant="destructive"
+                      size="sm"
+                      className="bg-destructive/20 text-destructive border border-destructive hover:bg-destructive hover:text-destructive-foreground"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
