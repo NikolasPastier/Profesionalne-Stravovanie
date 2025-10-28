@@ -1,6 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
-import { createHash } from "https://deno.land/std@0.190.0/node/crypto.ts";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
@@ -43,9 +42,18 @@ const isValidEmail = (email: string): boolean => {
   return emailRegex.test(email) && email.length <= 255;
 };
 
+// Hash identifier using Web Crypto API
+async function hashIdentifier(text: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(text);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
 // Check rate limit
 async function checkRateLimit(supabase: any, ipAddress: string): Promise<boolean> {
-  const identifier = createHash('sha256').update(ipAddress).digest('hex');
+  const identifier = await hashIdentifier(ipAddress);
   
   const { data, error } = await supabase
     .from('edge_function_rate_limits')

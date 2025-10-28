@@ -8,6 +8,16 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// Escape HTML to prevent injection attacks
+const escapeHtml = (text: string): string => {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+};
+
 interface OrderEmailRequest {
   orderId: string;
   customerName: string;
@@ -158,8 +168,8 @@ const handler = async (req: Request): Promise<Response> => {
     const preferencesSection = `
       <div style="margin: 20px 0; padding: 10px 0;">
         <h3 style="color: #92400e; margin: 0 0 10px; font-weight: bold;">Osobné preferencie</h3>
-        <p style="margin: 5px 0;"><strong>Alergie:</strong> ${allergies.join(", ")}</p>
-        <p style="margin: 5px 0;"><strong>Neobľúbené jedlá:</strong> ${dislikes.join(", ")}</p>
+        <p style="margin: 5px 0;"><strong>Alergie:</strong> ${allergies.map(a => escapeHtml(a)).join(", ")}</p>
+        <p style="margin: 5px 0;"><strong>Neobľúbené jedlá:</strong> ${dislikes.map(d => escapeHtml(d)).join(", ")}</p>
       </div>
     `;
 
@@ -168,7 +178,7 @@ const handler = async (req: Request): Promise<Response> => {
       .map((item) => {
         let itemHtml = `
         <tr>
-          <td style="padding: 8px; border-bottom: 1px solid #eee;">${item.name}${item.size ? ` (${item.size})` : ""}</td>
+          <td style="padding: 8px; border-bottom: 1px solid #eee;">${escapeHtml(item.name)}${item.size ? ` (${escapeHtml(item.size)})` : ""}</td>
           <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: center;">${item.quantity}</td>
           <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right;">${item.price.toFixed(2)} €</td>
         </tr>`;
@@ -183,7 +193,7 @@ const handler = async (req: Request): Promise<Response> => {
               const mealsHtml = day.meals
                 .map(
                   (meal) =>
-                    `<div style="margin-left: 15px; color: #666;">• ${categoryLabels[meal.category] || meal.category}: ${meal.name}</div>`,
+                    `<div style="margin-left: 15px; color: #666;">• ${escapeHtml(categoryLabels[meal.category] || meal.category)}: ${escapeHtml(meal.name)}</div>`,
                 )
                 .join("");
               return `
@@ -215,7 +225,7 @@ const handler = async (req: Request): Promise<Response> => {
           </div>
          
           <div style="background: #f9f9f9; padding: 30px;">
-            <p style="font-size: 16px;">Dobrý deň ${orderData.customerName},</p>
+            <p style="font-size: 16px;">Dobrý deň ${escapeHtml(orderData.customerName)},</p>
             <p>Vaša objednávka bola úspešne prijatá a už ju s láskou pripravujeme!</p>
            
             <!-- Clean order info block -->
@@ -258,9 +268,9 @@ const handler = async (req: Request): Promise<Response> => {
               ${preferencesSection}
 
               <h3 style="color: #667eea; margin: 20px 0 10px;">Doručenie</h3>
-              <p><strong>Adresa:</strong> ${orderData.deliveryAddress}</p>
-              <p><strong>Telefón:</strong> ${orderData.phone}</p>
-              <p><strong>Poznámka:</strong> ${note}</p>
+              <p><strong>Adresa:</strong> ${escapeHtml(orderData.deliveryAddress)}</p>
+              <p><strong>Telefón:</strong> ${escapeHtml(orderData.phone)}</p>
+              <p><strong>Poznámka:</strong> ${escapeHtml(note)}</p>
 
               <!-- Clean delivery time block -->
               <div style="margin: 20px 0; padding: 10px 0;">
@@ -342,11 +352,11 @@ const handler = async (req: Request): Promise<Response> => {
               ${preferencesSection}
 
               <h3 style="color: #f5576c; margin: 20px 0 10px;">Kontakt zákazníka</h3>
-              <p><strong>Meno:</strong> ${orderData.customerName}</p>
-              <p><strong>Email:</strong> ${orderData.customerEmail}</p>
-              <p><strong>Telefón:</strong> ${orderData.phone}</p>
-              <p><strong>Adresa:</strong> ${orderData.deliveryAddress}</p>
-              <p><strong>Poznámka:</strong> ${note}</p>
+              <p><strong>Meno:</strong> ${escapeHtml(orderData.customerName)}</p>
+              <p><strong>Email:</strong> ${escapeHtml(orderData.customerEmail)}</p>
+              <p><strong>Telefón:</strong> ${escapeHtml(orderData.phone)}</p>
+              <p><strong>Adresa:</strong> ${escapeHtml(orderData.deliveryAddress)}</p>
+              <p><strong>Poznámka:</strong> ${escapeHtml(note)}</p>
             </div>
           </div>
 

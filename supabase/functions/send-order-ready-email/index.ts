@@ -8,6 +8,16 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// Escape HTML to prevent injection attacks
+const escapeHtml = (text: string): string => {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+};
+
 interface OrderReadyEmailRequest {
   orderId: string;
   customerName: string;
@@ -148,7 +158,7 @@ const handler = async (req: Request): Promise<Response> => {
               return `
               <div style="margin-bottom: 8px;">
                 <div style="font-size: 12px; color: #6b7280; margin-bottom: 2px;">${categoryLabel}</div>
-                <div style="color: #1f2937; font-size: 14px;">${meal.name}</div>
+                <div style="color: #1f2937; font-size: 14px;">${escapeHtml(meal.name)}</div>
               </div>
             `;
             })
@@ -172,7 +182,7 @@ const handler = async (req: Request): Promise<Response> => {
                 ? `
               <div style="margin-bottom: 8px;">
                 <strong style="color: #92400e; font-size: 14px;">Alergie:</strong>
-                <span style="color: #78350f; font-size: 14px; margin-left: 8px;">${allergies.join(", ")}</span>
+                <span style="color: #78350f; font-size: 14px; margin-left: 8px;">${allergies.map(a => escapeHtml(a)).join(", ")}</span>
               </div>
             `
                 : ""
@@ -182,7 +192,7 @@ const handler = async (req: Request): Promise<Response> => {
                 ? `
               <div>
                 <strong style="color: #92400e; font-size: 14px;">Neobľúbené jedlá:</strong>
-                <span style="color: #78350f; font-size: 14px; margin-left: 8px;">${dislikes.join(", ")}</span>
+                <span style="color: #78350f; font-size: 14px; margin-left: 8px;">${dislikes.map(d => escapeHtml(d)).join(", ")}</span>
               </div>
             `
                 : ""
@@ -221,7 +231,7 @@ const handler = async (req: Request): Promise<Response> => {
           <tr>
             <td style="padding: 40px 30px;">
               <p style="margin: 0 0 20px; font-size: 18px; color: #1f2937; line-height: 1.6;">
-                Dobrý deň <strong>${customerName}</strong>,
+                Dobrý deň <strong>${escapeHtml(customerName)}</strong>,
               </p>
               
               <p style="margin: 0 0 30px; font-size: 16px; color: #4b5563; line-height: 1.6;">
@@ -295,7 +305,7 @@ const handler = async (req: Request): Promise<Response> => {
                           <span style="color: #6b7280; font-size: 14px;">Adresa:</span>
                         </td>
                         <td align="right" style="padding: 8px 0;">
-                          <strong style="color: #1f2937; font-size: 14px;">${deliveryAddress}</strong>
+                          <strong style="color: #1f2937; font-size: 14px;">${escapeHtml(deliveryAddress)}</strong>
                         </td>
                       </tr>
                       <tr>
@@ -303,7 +313,7 @@ const handler = async (req: Request): Promise<Response> => {
                           <span style="color: #6b7280; font-size: 14px;">Telefón:</span>
                         </td>
                         <td align="right" style="padding: 8px 0; border-top: 1px solid #e5e7eb;">
-                          <strong style="color: #1f2937; font-size: 14px;">${phone}</strong>
+                          <strong style="color: #1f2937; font-size: 14px;">${escapeHtml(phone)}</strong>
                         </td>
                       </tr>
                       ${
@@ -312,7 +322,7 @@ const handler = async (req: Request): Promise<Response> => {
                         <tr>
                           <td colspan="2" style="padding: 12px 0; border-top: 1px solid #e5e7eb;">
                             <span style="color: #6b7280; font-size: 14px; display: block; margin-bottom: 4px;">Poznámka:</span>
-                            <p style="margin: 0; color: #1f2937; font-size: 14px; background-color: #fef3c7; padding: 8px; border-radius: 4px;">${note}</p>
+                            <p style="margin: 0; color: #1f2937; font-size: 14px; background-color: #fef3c7; padding: 8px; border-radius: 4px;">${escapeHtml(note)}</p>
                           </td>
                         </tr>
                       `
