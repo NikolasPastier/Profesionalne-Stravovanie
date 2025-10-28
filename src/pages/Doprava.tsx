@@ -18,7 +18,10 @@ const Doprava = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
               {/* Prvé dva komponenty vedľa seba v prvom riadku */}
               <div className="border border-primary/20 rounded-lg p-6 hover:scale-105 transition-transform duration-300 text-center">
-                
+                <div className="flex items-center justify-center gap-3 mb-4">
+                  <MapPin className="h-6 w-6 text-primary" />
+                  <h3 className="text-xl font-display text-gradient-gold">Nitra a okolie</h3>
+                </div>
                 <p className="text-primary text-lg font-bold mb-2">Doprava ZDARMA</p>
                 <p className="text-sm text-muted-foreground">Bezplatné doručenie v Nitre a okolité dediny do 20km.</p>
               </div>
