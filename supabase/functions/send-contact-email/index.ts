@@ -2,9 +2,9 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
-const FROM_EMAIL = Deno.env.get("FROM_EMAIL") || "VIP Stravovanie <onboarding@resend.dev>";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const FROM_EMAIL = Deno.env.get("CONTACT_EMAIL") || "VIP Stravovanie <onboarding@resend.dev>";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -20,91 +20,112 @@ interface ContactEmailRequest {
   message: string;
 }
 
-// Sanitize text to prevent injection attacks
+// Sanitize text
 const sanitizeText = (text: string, maxLength: number): string => {
   return text
     .slice(0, maxLength)
     .replace(/[<>"'&]/g, (char) => {
       const entities: Record<string, string> = {
-        '<': '&lt;',
-        '>': '&gt;',
-        '"': '&quot;',
-        "'": '&#39;',
-        '&': '&amp;'
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;",
+        "&": "&amp;",
       };
       return entities[char];
     })
-    .replace(/[\r\n]+/g, ' '); // Remove newlines to prevent header injection
+    .replace(/[\r\n]+/g, " ");
 };
 
-// Validate email format
+// Validate email
 const isValidEmail = (email: string): boolean => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return emailRegex.test(email) && email.length <= 255;
 };
 
-// Hash identifier using Web Crypto API
+// Hash IP
 async function hashIdentifier(text: string): Promise<string> {
   const encoder = new TextEncoder();
   const data = encoder.encode(text);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
   const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
-// Check rate limit
+// Rate limiting
 async function checkRateLimit(supabase: any, ipAddress: string): Promise<boolean> {
   const identifier = await hashIdentifier(ipAddress);
-  
+
   const { data, error } = await supabase
-    .from('edge_function_rate_limits')
-    .select('*')
-    .eq('user_id', identifier)
-    .eq('function_name', 'send-contact-email')
+    .from("edge_function_rate_limits")
+    .select("*")
+    .eq("user_id", identifier)
+    .eq("function_name", "send-contact-email")
     .single();
 
-  if (error && error.code !== 'PGRST116') throw error;
+  if (error && error.code !== "PGRST116") throw error;
 
   const now = new Date();
+
   if (data) {
     const lastRequest = new Date(data.last_request_at);
-    const timeSinceLastRequest = now.getTime() - lastRequest.getTime();
+    const timeSince = now.getTime() - lastRequest.getTime();
 
-    if (timeSinceLastRequest < RATE_LIMIT_WINDOW_MS) {
-      if (data.request_count >= MAX_REQUESTS) {
-        return false; // Rate limited
-      }
+    if (timeSince < RATE_LIMIT_WINDOW_MS) {
+      if (data.request_count >= MAX_REQUESTS) return false;
+
       await supabase
-        .from('edge_function_rate_limits')
+        .from("edge_function_rate_limits")
         .update({
           request_count: data.request_count + 1,
           last_request_at: now.toISOString(),
         })
-        .eq('user_id', identifier)
-        .eq('function_name', 'send-contact-email');
+        .eq("user_id", identifier)
+        .eq("function_name", "send-contact-email");
     } else {
-      // Reset counter
       await supabase
-        .from('edge_function_rate_limits')
+        .from("edge_function_rate_limits")
         .update({
           request_count: 1,
           last_request_at: now.toISOString(),
         })
-        .eq('user_id', identifier)
-        .eq('function_name', 'send-contact-email');
+        .eq("user_id", identifier)
+        .eq("function_name", "send-contact-email");
     }
   } else {
-    // Create new rate limit entry
-    await supabase
-      .from('edge_function_rate_limits')
-      .insert({
-        user_id: identifier,
-        function_name: 'send-contact-email',
-        request_count: 1,
-        last_request_at: now.toISOString(),
-      });
+    await supabase.from("edge_function_rate_limits").insert({
+      user_id: identifier,
+      function_name: "send-contact-email",
+      request_count: 1,
+      last_request_at: now.toISOString(),
+    });
   }
   return true;
+}
+
+// Send email via Resend
+async function sendEmail(to: string, subject: string, html: string, replyTo?: string) {
+  const response = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${RESEND_API_KEY}`,
+    },
+    body: JSON.stringify({
+      from: FROM_EMAIL,
+      to: [to],
+      subject,
+      html,
+      ...(replyTo && { reply_to: replyTo }),
+    }),
+  });
+
+  const data = await response.json();
+  if (!response.ok) {
+    console.error("Resend API error:", data);
+    throw new Error(data.error?.message || "Failed to send email");
+  }
+  return data;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -113,107 +134,105 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    // Initialize Supabase client
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-
-    // Check rate limit
-    const ipAddress = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
+    const ipAddress = req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || "unknown";
     const allowed = await checkRateLimit(supabase, ipAddress);
-    
+
     if (!allowed) {
-      console.log("Rate limit exceeded for IP:", ipAddress);
-      return new Response(
-        JSON.stringify({ error: 'Príliš veľa požiadaviek. Skúste to prosím neskôr (max 3 správy za hodinu).' }),
-        { 
-          status: 429, 
-          headers: { "Content-Type": "application/json", ...corsHeaders } 
-        }
-      );
+      return new Response(JSON.stringify({ error: "Príliš veľa požiadaviek. Max 3 správy za hodinu." }), {
+        status: 429,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
     }
 
-    // Parse and validate input
     const { name: rawName, email: rawEmail, message: rawMessage }: ContactEmailRequest = await req.json();
 
-    // Validate required fields
     if (!rawName || !rawEmail || !rawMessage) {
-      return new Response(
-        JSON.stringify({ error: 'Všetky polia sú povinné.' }),
-        { 
-          status: 400, 
-          headers: { "Content-Type": "application/json", ...corsHeaders } 
-        }
-      );
+      return new Response(JSON.stringify({ error: "Všetky polia sú povinné." }), {
+        status: 400,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
     }
 
-    // Validate email format
     if (!isValidEmail(rawEmail)) {
-      return new Response(
-        JSON.stringify({ error: 'Neplatná e-mailová adresa.' }),
-        { 
-          status: 400, 
-          headers: { "Content-Type": "application/json", ...corsHeaders } 
-        }
-      );
+      return new Response(JSON.stringify({ error: "Neplatná e-mailová adresa." }), {
+        status: 400,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
     }
 
-    // Sanitize inputs
     const name = sanitizeText(rawName.trim(), 100);
     const email = sanitizeText(rawEmail.trim(), 255);
     const message = sanitizeText(rawMessage.trim(), 2000);
 
-    // Additional validation after sanitization
-    if (name.length === 0 || email.length === 0 || message.length === 0) {
-      return new Response(
-        JSON.stringify({ error: 'Polia nemôžu byť prázdne.' }),
-        { 
-          status: 400, 
-          headers: { "Content-Type": "application/json", ...corsHeaders } 
-        }
-      );
+    if (!name || !email || !message) {
+      return new Response(JSON.stringify({ error: "Polia nemôžu byť prázdne po overení." }), {
+        status: 400,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
     }
 
     console.log("Sending contact email from:", name, email);
 
-    const emailResponse = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${RESEND_API_KEY}`,
-      },
-      body: JSON.stringify({
-        from: FROM_EMAIL,
-        to: ["andrejkukura4@gmail.com"],
-        subject: `Nová správa od ${name}`,
-        html: `
-          <h2>Nová kontaktná správa</h2>
-          <p><strong>Meno:</strong> ${name}</p>
-          <p><strong>Email:</strong> ${email}</p>
-          <p><strong>Správa:</strong></p>
-          <p>${message}</p>
-        `,
-      }),
-    });
+    // 1. Email to admin
+    await sendEmail(
+      "admin@profesionalnestravovanie.sk",
+      `Nová správa od ${name}`,
+      `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 20px auto; padding: 24px; border: 1px solid #e5e7eb; border-radius: 12px; background: #fafafa;">
+          <h2 style="color: #d97706; margin-bottom: 16px;">Nová kontaktná správa</h2>
+          <div style="background: white; padding: 16px; border-radius: 8px; margin-bottom: 16px;">
+            <p style="margin: 8px 0;"><strong>Meno:</strong> ${name}</p>
+            <p style="margin: 8px 0;"><strong>Email:</strong> <a href="mailto:${email}">${email}</a></p>
+          </div>
+          <div style="background: #f3f4f6; padding: 16px; border-radius: 8px;">
+            <strong>Správa:</strong><br><br>
+            ${message.replace(/\n/g, "<br>")}
+          </div>
+          <hr style="margin: 24px 0; border: 0; border-top: 1px solid #e5e7eb;">
+          <p style="font-size: 12px; color: #6b7280; text-align: center;">
+            Odoslané z <strong>profesionalnestravovanie.sk</strong>
+          </p>
+        </div>
+      `,
+      email,
+    );
 
-    const data = await emailResponse.json();
+    // 2. Auto-reply to customer
+    await sendEmail(
+      email,
+      "Ďakujeme za správu! Ozveme sa čoskoro",
+      `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 20px auto; padding: 24px; border: 1px solid #e5e7eb; border-radius: 12px; background: #fafafa;">
+          <h2 style="color: #16a34a; margin-bottom: 16px;">Ďakujeme, ${name}!</h2>
+          <p style="font-size: 16px; line-height: 1.6;">
+            Tvoja správa bola úspešne prijatá. Ozveme sa ti <strong>do 24 hodín</strong>.
+          </p>
+          <div style="background: white; padding: 16px; border-radius: 8px; margin: 16px 0;">
+            <p style="margin: 8px 0; font-size: 14px;"><strong>Tvoja správa:</strong></p>
+            <p style="background: #f3f4f6; padding: 12px; border-radius: 6px; font-size: 14px;">
+              ${message.replace(/\n/g, "<br>")}
+            </p>
+          </div>
+          <p style="font-size: 14px; color: #6b7280;">
+            S pozdravom,<br>
+            <strong>VIP Stravovanie</strong><br>
+            <a href="https://profesionalnestravovanie.sk" style="color: #2563eb;">profesionalnestravovanie.sk</a>
+          </p>
+        </div>
+      `,
+    );
 
-    console.log("Email sent successfully:", data);
-
-    return new Response(JSON.stringify(data), {
+    return new Response(JSON.stringify({ success: true, message: "Správa odoslaná!" }), {
       status: 200,
-      headers: {
-        "Content-Type": "application/json",
-        ...corsHeaders,
-      },
+      headers: { "Content-Type": "application/json", ...corsHeaders },
     });
   } catch (error: any) {
-    console.error("Error in send-contact-email function:", error);
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      {
-        status: 500,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
-      }
-    );
+    console.error("Error in send-contact-email:", error);
+    return new Response(JSON.stringify({ error: error.message || "Interná chyba servera" }), {
+      status: 500,
+      headers: { "Content-Type": "application/json", ...corsHeaders },
+    });
   }
 };
 
