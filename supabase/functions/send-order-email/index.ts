@@ -46,13 +46,13 @@ const handler = async (req: Request): Promise<Response> => {
 
   try {
     const orderData: OrderEmailRequest = await req.json();
-    console.log("💌 Wrapping up a lovely order email for:", JSON.stringify(orderData, null, 2));
+    console.log("Wrapping up a lovely order email for:", JSON.stringify(orderData, null, 2));
 
     const adminEmail = Deno.env.get("ADMIN_EMAIL");
     const fromEmail = Deno.env.get("FROM_EMAIL");
 
     if (!adminEmail) {
-      console.error("😿 Oh no, ADMIN_EMAIL is missing!");
+      console.error("ADMIN_EMAIL is missing!");
       return new Response(JSON.stringify({ error: "Admin email not configured" }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -60,7 +60,7 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     if (!fromEmail) {
-      console.error("😾 FROM_EMAIL is hiding somewhere!");
+      console.error("FROM_EMAIL is hiding somewhere!");
       return new Response(JSON.stringify({ error: "Sender email not configured" }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -82,7 +82,7 @@ const handler = async (req: Request): Promise<Response> => {
     const note = orderData.note || "Žiadna poznámka";
 
     const formatMenuSize = (menuSize: string): string => {
-      console.log("✨ Formatting menuSize:", menuSize);
+      console.log("Formatting menuSize:", menuSize);
       switch (menuSize.toLowerCase()) {
         case "vegetarian":
           return "Vegetariánske";
@@ -97,7 +97,7 @@ const handler = async (req: Request): Promise<Response> => {
       return calories;
     };
 
-    // Calculate delivery dates with validation and a cozy fallback
+    // Calculate delivery dates with validation and fallback
     const getDeliveryDates = (): string[] => {
       const deliveryDates = new Set<string>();
       if (orderData.deliveryDate) {
@@ -135,7 +135,7 @@ const handler = async (req: Request): Promise<Response> => {
         });
       }
       const datesArray = Array.from(deliveryDates);
-      return datesArray.length > 0 ? datesArray : [currentDate]; // Fallback to today’s date
+      return datesArray.length > 0 ? datesArray : [currentDate];
     };
 
     // Get delivery time based on location
@@ -152,18 +152,18 @@ const handler = async (req: Request): Promise<Response> => {
     const deliveryDates = getDeliveryDates();
     const deliveryTime = getDeliveryTime(orderData.deliveryAddress);
 
-    // Create preferences section with a warm hug
+    // Clean, flat preferences section (no background/border)
     const allergies = orderData.allergies?.length ? orderData.allergies : ["Žiadne"];
     const dislikes = orderData.dislikes?.length ? orderData.dislikes : ["Žiadne"];
     const preferencesSection = `
-      <div style="background: #fef3c7; padding: 15px; margin: 20px 0;">
-        <h3 style="color: #92400e; margin: 0 0 10px;">⚠️ Osobné preferencie</h3>
+      <div style="margin: 20px 0; padding: 10px 0;">
+        <h3 style="color: #92400e; margin: 0 0 10px; font-weight: bold;">Osobné preferencie</h3>
         <p style="margin: 5px 0;"><strong>Alergie:</strong> ${allergies.join(", ")}</p>
         <p style="margin: 5px 0;"><strong>Neobľúbené jedlá:</strong> ${dislikes.join(", ")}</p>
       </div>
     `;
 
-    // Create order items HTML with love
+    // Create order items HTML
     const orderItemsHtml = orderData.orderItems
       .map((item) => {
         let itemHtml = `
@@ -172,14 +172,12 @@ const handler = async (req: Request): Promise<Response> => {
           <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: center;">${item.quantity}</td>
           <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right;">${item.price.toFixed(2)} €</td>
         </tr>`;
-
         if (item.days?.length) {
           const categoryLabels: Record<string, string> = {
             breakfast: "Raňajky",
             lunch: "Obed",
             dinner: "Večera",
           };
-
           const daysHtml = item.days
             .map((day) => {
               const mealsHtml = day.meals
@@ -197,15 +195,13 @@ const handler = async (req: Request): Promise<Response> => {
         </tr>`;
             })
             .join("");
-
           itemHtml += daysHtml;
         }
-
         return itemHtml;
       })
       .join("");
 
-    // Customer confirmation email, wrapped in warmth
+    // === CUSTOMER EMAIL HTML ===
     const customerEmailHtml = `
       <!DOCTYPE html>
       <html>
@@ -215,16 +211,17 @@ const handler = async (req: Request): Promise<Response> => {
         </head>
         <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
           <div style="background: #667eea; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center;">
-            <h1 style="color: white; margin: 0;">Ďakujeme za objednávku! 🥗</h1>
+            <h1 style="color: white; margin: 0;">Ďakujeme za objednávku!</h1>
           </div>
-          
+         
           <div style="background: #f9f9f9; padding: 30px;">
             <p style="font-size: 16px;">Dobrý deň ${orderData.customerName},</p>
-            <p>Vaša objednávka bola úspešne prijatá a už ju s láskou pripravujeme! 😊</p>
-            
-            <div style="padding: 20px; margin: 20px 0;">
-              <p><strong>Číslo objednávky:</strong> #${orderData.orderId.slice(0, 8)}</p>
-              <p><strong>Dátum objednávky:</strong> ${currentDate}</p>
+            <p>Vaša objednávka bola úspešne prijatá a už ju s láskou pripravujeme!</p>
+           
+            <!-- Clean order info block -->
+            <div style="margin: 20px 0; padding: 10px 0;">
+              <p style="margin: 5px 0;"><strong>Číslo objednávky:</strong> #${orderData.orderId.slice(0, 8)}</p>
+              <p style="margin: 5px 0;"><strong>Dátum objednávky:</strong> ${currentDate}</p>
             </div>
 
             <div style="background: white; padding: 20px; margin: 20px 0;">
@@ -232,9 +229,9 @@ const handler = async (req: Request): Promise<Response> => {
               <p><strong>Typ menu:</strong> ${formatMenuSize(menuSize)}</p>
               <p><strong>Kalórie:</strong> ${formatCalories(calories)}</p>
               <p><strong>Typ doručenia:</strong> ${deliveryType === "weekly" ? "Týždenné menu" : "Jednorazové"}</p>
-              
+             
               <h3 style="color: #667eea; margin: 20px 0 10px;">Obsah objednávky</h3>
-              
+             
               <table style="width: 100%; margin-top: 20px; border-collapse: collapse;">
                 <thead>
                   <tr style="background: #f0f0f0;">
@@ -264,8 +261,10 @@ const handler = async (req: Request): Promise<Response> => {
               <p><strong>Adresa:</strong> ${orderData.deliveryAddress}</p>
               <p><strong>Telefón:</strong> ${orderData.phone}</p>
               <p><strong>Poznámka:</strong> ${note}</p>
-              <div style="background: #e6ffed; padding: 15px; margin: 15px 0; border: 2px solid #34d399;">
-                <h4 style="color: #065f46; margin: 0 0 10px;">Čas doručenia</h4>
+
+              <!-- Clean delivery time block -->
+              <div style="margin: 20px 0; padding: 10px 0;">
+                <h4 style="color: #065f46; margin: 0 0 10px; font-weight: bold;">Čas doručenia</h4>
                 ${deliveryDates
                   .map(
                     (date) => `
@@ -274,9 +273,11 @@ const handler = async (req: Request): Promise<Response> => {
                   )
                   .join("")}
               </div>
-              <p style="color: #1f2937;">Prosím, pripravte sa na prevzatie vašej objednávky a hotovosť v celej sume objednávky v uvedenom časovom okne. Náš vodič vám zavolá pred doručením. Ďakujeme za vašu dôveru a prajeme dobrú chuť! <span style="margin-left: 5px;">🍽️</span></p>
+
+              <p style="color: #1f2937;">Prosím, pripravte sa na prevzatie vašej objednávky a hotovosť v celej sume objednávky v uvedenom časovom okne. Náš vodič vám zavolá pred doručením. Ďakujeme za vašu dôveru a prajeme dobrú chuť!</p>
             </div>
           </div>
+
           <div style="background-color: #f9fafb; padding: 30px; text-align: center; border-top: 1px solid #e5e7eb;">
             <p style="margin: 0 0 8px; color: #6b7280; font-size: 14px;">VIP Krabičky</p>
             <p style="margin: 0; color: #9ca3af; font-size: 12px;">Zdravé jedlo priamo k vám domov</p>
@@ -285,7 +286,7 @@ const handler = async (req: Request): Promise<Response> => {
       </html>
     `;
 
-    // Admin notification email, packed with care
+    // === ADMIN EMAIL HTML ===
     const adminEmailHtml = `
       <!DOCTYPE html>
       <html>
@@ -295,15 +296,16 @@ const handler = async (req: Request): Promise<Response> => {
         </head>
         <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
           <div style="background: #f093fb; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); padding: 30px; text-align: center;">
-            <h1 style="color: white; margin: 0;">🔔 Nová objednávka</h1>
+            <h1 style="color: white; margin: 0;">Nová objednávka</h1>
           </div>
-          
+         
           <div style="background: #f9f9f9; padding: 30px;">
             <p style="font-size: 16px;">Bola prijatá nová objednávka:</p>
-            
-            <div style="padding: 20px; margin: 20px 0;">
-              <p><strong>Číslo objednávky:</strong> #${orderData.orderId.slice(0, 8)}</p>
-              <p><strong>Dátum objednávky:</strong> ${currentDate}</p>
+           
+            <!-- Clean order info block -->
+            <div style="margin: 20px 0; padding: 10px 0;">
+              <p style="margin: 5px 0;"><strong>Číslo objednávky:</strong> #${orderData.orderId.slice(0, 8)}</p>
+              <p style="margin: 5px 0;"><strong>Dátum objednávky:</strong> ${currentDate}</p>
             </div>
 
             <div style="background: white; padding: 20px; margin: 20px 0;">
@@ -311,9 +313,9 @@ const handler = async (req: Request): Promise<Response> => {
               <p><strong>Typ menu:</strong> ${formatMenuSize(menuSize)}</p>
               <p><strong>Kalórie:</strong> ${formatCalories(calories)}</p>
               <p><strong>Typ doručenia:</strong> ${deliveryType === "weekly" ? "Týždenné menu" : "Jednorazové"}</p>
-              
+             
               <h3 style="color: #f5576c; margin: 20px 0 10px;">Obsah objednávky</h3>
-              
+             
               <table style="width: 100%; margin-top: 20px; border-collapse: collapse;">
                 <thead>
                   <tr style="background: #f0f0f0;">
@@ -347,6 +349,7 @@ const handler = async (req: Request): Promise<Response> => {
               <p><strong>Poznámka:</strong> ${note}</p>
             </div>
           </div>
+
           <div style="background-color: #f9fafb; padding: 30px; text-align: center; border-top: 1px solid #e5e7eb;">
             <p style="margin: 0 0 8px; color: #6b7280; font-size: 14px;">VIP Krabičky</p>
             <p style="margin: 0; color: #9ca3af; font-size: 12px;">Zdravé jedlo priamo k vám domov</p>
@@ -355,31 +358,25 @@ const handler = async (req: Request): Promise<Response> => {
       </html>
     `;
 
-    // Send customer confirmation email with a big smile
+    // Send customer email
     const customerEmailResponse = await resend.emails.send({
       from: `Profesionálne Stravovanie <${fromEmail}>`,
       to: [orderData.customerEmail],
       subject: `Potvrdenie objednávky #${orderData.orderId.slice(0, 8)}`,
       html: customerEmailHtml,
-      bcc: [],
-      cc: [],
-      replyTo: [],
     });
 
-    console.log("🎉 Customer email sent with love:", JSON.stringify(customerEmailResponse, null, 2));
+    console.log("Customer email sent:", JSON.stringify(customerEmailResponse, null, 2));
 
-    // Send admin notification email with extra care
+    // Send admin email
     const adminEmailResponse = await resend.emails.send({
       from: `Profesionálne Stravovanie <${fromEmail}>`,
       to: [adminEmail],
       subject: "Nová objednávka",
       html: adminEmailHtml,
-      bcc: [],
-      cc: [],
-      replyTo: [],
     });
 
-    console.log("🌟 Admin email sent with care:", JSON.stringify(adminEmailResponse, null, 2));
+    console.log("Admin email sent:", JSON.stringify(adminEmailResponse, null, 2));
 
     return new Response(
       JSON.stringify({
@@ -393,7 +390,7 @@ const handler = async (req: Request): Promise<Response> => {
       },
     );
   } catch (error: any) {
-    console.error("😿 Oh no, something went wrong:", error);
+    console.error("Error:", error);
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
