@@ -141,7 +141,7 @@ const Auth = () => {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: "https://vmmdyjosfwvsdtofnrj.supabase.co/auth/v1/callback",
+          redirectTo: `${window.location.origin}/auth`,
         },
       });
 
