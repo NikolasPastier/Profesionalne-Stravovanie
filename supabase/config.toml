@@ -6,9 +6,6 @@ verify_jwt = true
 [functions.send-order-email]
 verify_jwt = true
 
-[functions.send-order-modification-email]
-verify_jwt = true
-
 [functions.delete-user-account]
 verify_jwt = true
 
