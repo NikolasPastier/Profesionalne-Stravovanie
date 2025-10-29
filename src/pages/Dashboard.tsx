@@ -110,6 +110,7 @@ const Dashboard = () => {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
   const [isAllOrdersModalOpen, setIsAllOrdersModalOpen] = useState(false);
+  const [removingDayOrderId, setRemovingDayOrderId] = useState<string | null>(null);
 
   // Account management states
   const [isEmailDialogOpen, setIsEmailDialogOpen] = useState(false);
@@ -389,6 +390,138 @@ const Dashboard = () => {
       if (import.meta.env.DEV) {
         console.error("Error loading user orders:", error);
       }
+    }
+  };
+
+  const canRemoveDay = (dayString: string): boolean => {
+    // Try to parse as date first
+    const dayDate = new Date(dayString);
+    
+    // If it's a valid date string (ISO format like "2025-10-27")
+    if (!isNaN(dayDate.getTime())) {
+      const now = new Date();
+      const hoursUntil = (dayDate.getTime() - now.getTime()) / (1000 * 60 * 60);
+      return hoursUntil >= 48;
+    }
+    
+    // Otherwise, handle day names in Slovak
+    const dayMap: { [key: string]: number } = {
+      "Pondelok": 1,
+      "Utorok": 2,
+      "Streda": 3,
+      "Štvrtok": 4,
+      "Piatok": 5,
+      "Sobota": 6,
+      "Nedeľa": 0,
+    };
+
+    const now = new Date();
+    const currentDay = now.getDay();
+    const currentHour = now.getHours();
+    const targetDay = dayMap[dayString];
+
+    if (targetDay === undefined) return false;
+
+    // Calculate hours until the target day
+    let daysUntil = targetDay - currentDay;
+    if (daysUntil < 0) daysUntil += 7;
+    if (daysUntil === 0) daysUntil = 7; // If it's the same day, count as next week
+
+    const hoursUntil = daysUntil * 24 - currentHour;
+
+    // Must be at least 48 hours before
+    return hoursUntil >= 48;
+  };
+
+  const handleRemoveDay = async (orderId: string, dayToRemove: string) => {
+    if (!canRemoveDay(dayToRemove)) {
+      toast({
+        title: "Nemôžete odstrániť tento deň",
+        description: "Deň môžete odstrániť len 48 hodín pred doručením.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setRemovingDayOrderId(orderId);
+
+      // Get the current order
+      const { data: order, error: fetchError } = await supabase
+        .from("orders")
+        .select("*")
+        .eq("id", orderId)
+        .single();
+
+      if (fetchError) throw fetchError;
+
+      // Filter out the day to remove
+      const items = order.items as any[];
+      const updatedItems = items.filter((item: any) => item.day !== dayToRemove);
+
+      if (updatedItems.length === 0) {
+        toast({
+          title: "Nemôžete odstrániť všetky dni",
+          description: "Musí zostať aspoň jeden deň v objednávke.",
+          variant: "destructive",
+        });
+        setRemovingDayOrderId(null);
+        return;
+      }
+
+      // Calculate new total price based on remaining days
+      const pricePerDay = order.total_price / items.length;
+      const newTotalPrice = pricePerDay * updatedItems.length;
+
+      // Update the order in database
+      const { error: updateError } = await supabase
+        .from("orders")
+        .update({
+          items: updatedItems,
+          total_price: newTotalPrice,
+        })
+        .eq("id", orderId);
+
+      if (updateError) throw updateError;
+
+      // Send email notification to admin
+      const remainingDays = updatedItems.map((item: any) => item.day);
+      
+      await supabase.functions.invoke("send-order-modification-email", {
+        body: {
+          userName: order.name || profile?.name || "Zákazník",
+          userEmail: order.email || "",
+          orderId: order.id,
+          removedDay: dayToRemove,
+          remainingDays: remainingDays,
+          orderDate: new Date(order.created_at).toLocaleDateString("sk-SK"),
+        },
+      });
+
+      toast({
+        title: "Deň odstránený",
+        description: `${dayToRemove} bol úspešne odstránený z objednávky.`,
+      });
+
+      // Reload orders
+      await loadUserOrders(userId);
+      
+      // Update selected order if it's currently open
+      if (selectedOrder?.id === orderId) {
+        setSelectedOrder({
+          ...order,
+          items: updatedItems,
+          total_price: newTotalPrice,
+        });
+      }
+    } catch (error: any) {
+      toast({
+        title: "Chyba",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setRemovingDayOrderId(null);
     }
   };
 
@@ -998,22 +1131,51 @@ const Dashboard = () => {
                   <div className="space-y-3">
                     {selectedOrder.items &&
                       Array.isArray(selectedOrder.items) &&
-                      selectedOrder.items.map((day: any, idx: number) => (
-                        <div key={idx} className="border rounded-lg p-4 bg-muted/30">
-                          <h4 className="font-semibold mb-2 text-primary">{day.day}</h4>
-                          <div className="space-y-1">
-                            {day.meals && day.meals.length > 0 ? (
-                              day.meals.map((meal: any, mealIdx: number) => (
-                                <p key={mealIdx} className="text-sm">
-                                  • {typeof meal === "string" ? meal : meal.name}
-                                </p>
-                              ))
-                            ) : (
-                              <p className="text-sm text-muted-foreground italic">Žiadne jedlá</p>
+                      selectedOrder.items.map((day: any, idx: number) => {
+                        // Format day display - check if it's a date or day name
+                        const dayDate = new Date(day.day);
+                        const dayDisplay = !isNaN(dayDate.getTime()) 
+                          ? dayDate.toLocaleDateString("sk-SK", { weekday: "long", day: "numeric", month: "long", year: "numeric" })
+                          : day.day;
+                        
+                        return (
+                          <div key={idx} className="border rounded-lg p-4 bg-muted/30 relative">
+                            <div className="flex items-start justify-between">
+                              <h4 className="font-semibold mb-2 text-primary">{dayDisplay}</h4>
+                              {!isAdmin && (
+                                <Button
+                                  variant="destructive"
+                                  size="sm"
+                                  disabled={!canRemoveDay(day.day) || removingDayOrderId === selectedOrder.id}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleRemoveDay(selectedOrder.id, day.day);
+                                  }}
+                                  className="ml-2"
+                                >
+                                  {removingDayOrderId === selectedOrder.id ? "Odstraňuje sa..." : "Odstrániť"}
+                                </Button>
+                              )}
+                            </div>
+                            {!isAdmin && !canRemoveDay(day.day) && (
+                              <p className="text-xs text-muted-foreground italic mb-2">
+                                Tento deň možno odstrániť len 48 hodín pred doručením
+                              </p>
                             )}
+                            <div className="space-y-1">
+                              {day.meals && day.meals.length > 0 ? (
+                                day.meals.map((meal: any, mealIdx: number) => (
+                                  <p key={mealIdx} className="text-sm">
+                                    • {typeof meal === "string" ? meal : meal.name}
+                                  </p>
+                                ))
+                              ) : (
+                                <p className="text-sm text-muted-foreground italic">Žiadne jedlá</p>
+                              )}
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                   </div>
                 </div>
 
