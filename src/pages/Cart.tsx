@@ -202,7 +202,7 @@ const Cart = () => {
         const orderDetails = item.type === "week" ? {
           user_id: userId,
           menu_id: item.menuId,
-          items: item.menu.items,
+          items: item.menu.items.map((day: any) => ({ ...day, status: "pending" })),
           menu_size: item.size,
           calories: getCaloriesFromSize(item.size, item.customNutrition),
           total_price: weekPrice + itemDeliveryFee,
@@ -220,7 +220,8 @@ const Cart = () => {
           menu_id: item.menuId,
           items: [{
             day: item.day,
-            meals: item.meals
+            meals: item.meals,
+            status: "pending"
           }],
           menu_size: item.size,
           calories: getCaloriesFromSize(item.size, item.customNutrition),

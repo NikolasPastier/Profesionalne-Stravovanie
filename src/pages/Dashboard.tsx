@@ -246,46 +246,83 @@ const Dashboard = () => {
 
   const updateOrderStatus = async (orderId: string, newStatus: string) => {
     try {
+      // Update the order status in the database
+      const { error } = await supabase.from("orders").update({ status: newStatus }).eq("id", orderId);
+      if (error) throw error;
+
+      toast({
+        title: "Úspech",
+        description: "Stav objednávky bol aktualizovaný",
+      });
+      loadOrders();
+    } catch (error: any) {
+      toast({
+        title: "Chyba",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const updateDayStatus = async (orderId: string, dayIndex: number, newStatus: string) => {
+    try {
+      // Get the current order
+      const { data: order, error: fetchError } = await supabase
+        .from("orders")
+        .select("*")
+        .eq("id", orderId)
+        .single();
+
+      if (fetchError) throw fetchError;
+
+      // Update the specific day's status
+      const items = order.items as any[];
+      const updatedItems = items.map((item: any, idx: number) => {
+        if (idx === dayIndex) {
+          return { ...item, status: newStatus };
+        }
+        return item;
+      });
+
+      // Update the order in database
+      const { error: updateError } = await supabase
+        .from("orders")
+        .update({ items: updatedItems })
+        .eq("id", orderId);
+
+      if (updateError) throw updateError;
+
       // If status is being changed to "ready", send notification email to customer
       if (newStatus === "ready") {
         try {
-          // Fetch the order details
-          const { data: orderData, error: orderError } = await supabase
-            .from("orders")
-            .select("*")
-            .eq("id", orderId)
-            .single();
+          // Fetch user profile separately
+          const { data: profile } = await supabase
+            .from("user_profiles")
+            .select("name, email")
+            .eq("user_id", order.user_id)
+            .maybeSingle();
 
-          if (orderError) {
-            console.error("Error fetching order for email:", orderError);
-          } else if (orderData) {
-            // Fetch user profile separately
-            const { data: profile } = await supabase
-              .from("user_profiles")
-              .select("name, email")
-              .eq("user_id", orderData.user_id)
-              .maybeSingle();
+          // Get customer email and name (prefer order fields, fallback to profile)
+          const customerEmail = order.email || profile?.email;
+          const customerName = order.name || profile?.name || "Zákazník";
+          const dayName = items[dayIndex].day;
 
-            // Get customer email and name (prefer order fields, fallback to profile)
-            const customerEmail = orderData.email || profile?.email;
-            const customerName = orderData.name || profile?.name || "Zákazník";
+          if (customerEmail) {
+            // Call the edge function to send the email (non-blocking)
+            const { error: emailError } = await supabase.functions.invoke("send-order-ready-email", {
+              body: {
+                orderId: orderId,
+                customerName: customerName,
+                customerEmail: customerEmail,
+                deliveryDate: order.delivery_date,
+                dayName: dayName,
+              },
+            });
 
-            if (customerEmail) {
-              // Call the edge function to send the email (non-blocking)
-              const { error: emailError } = await supabase.functions.invoke("send-order-ready-email", {
-                body: {
-                  orderId: orderId,
-                  customerName: customerName,
-                  customerEmail: customerEmail,
-                  deliveryDate: orderData.delivery_date,
-                },
-              });
-
-              if (emailError) {
-                console.error("Error sending ready email:", emailError);
-              } else {
-                console.log("Order ready email sent successfully");
-              }
+            if (emailError) {
+              console.error("Error sending ready email:", emailError);
+            } else {
+              console.log("Order ready email sent successfully");
             }
           }
         } catch (emailError) {
@@ -294,20 +331,21 @@ const Dashboard = () => {
         }
       }
 
-      // Update the order status in the database
-      const { error } = await supabase.from("orders").update({ status: newStatus }).eq("id", orderId);
-      if (error) throw error;
-
-      // Show success message
-      const successMessage =
-        newStatus === "ready"
-          ? "Stav objednávky bol aktualizovaný a zákazník bol upovedomený emailom"
-          : "Stav objednávky bol aktualizovaný";
-
       toast({
         title: "Úspech",
-        description: successMessage,
+        description: newStatus === "ready" 
+          ? "Stav dňa bol aktualizovaný a zákazník bol upovedomený emailom"
+          : "Stav dňa bol aktualizovaný",
       });
+      
+      // Update selected order if it's currently open
+      if (selectedOrder?.id === orderId) {
+        setSelectedOrder({
+          ...order,
+          items: updatedItems,
+        });
+      }
+      
       loadOrders();
     } catch (error: any) {
       toast({
@@ -342,6 +380,8 @@ const Dashboard = () => {
         return "bg-green-500";
       case "delivered":
         return "bg-gray-500";
+      case "completed":
+        return "bg-teal-500";
       case "cancelled":
         return "bg-red-500";
       default:
@@ -356,6 +396,7 @@ const Dashboard = () => {
       in_progress: "Pripravuje sa",
       ready: "Pripravené",
       delivered: "Doručené",
+      completed: "Dokončené",
       cancelled: "Zrušené",
     };
     return labels[status] || status;
@@ -962,9 +1003,7 @@ const Dashboard = () => {
                                 >
                                   <option value="pending">Čaká sa</option>
                                   <option value="confirmed">Potvrdené</option>
-                                  <option value="in_progress">Pripravuje sa</option>
-                                  <option value="ready">Pripravené</option>
-                                  <option value="delivered">Doručené</option>
+                                  <option value="completed">Dokončené</option>
                                   <option value="cancelled">Zrušené</option>
                                 </select>
                                 <Button variant="destructive" size="sm" onClick={(e) => handleDeleteOrder(order.id, e)}>
@@ -1140,8 +1179,31 @@ const Dashboard = () => {
                         
                         return (
                           <div key={idx} className="border rounded-lg p-4 bg-muted/30 relative">
-                            <div className="flex items-start justify-between">
-                              <h4 className="font-semibold mb-2 text-primary">{dayDisplay}</h4>
+                            <div className="flex items-start justify-between mb-3">
+                              <div className="flex-1">
+                                <h4 className="font-semibold mb-1 text-primary">{dayDisplay}</h4>
+                                <div className="flex items-center gap-2 mt-2">
+                                  <span className="text-xs text-muted-foreground">Stav:</span>
+                                  {isAdmin ? (
+                                    <select
+                                      value={day.status || "pending"}
+                                      onChange={(e) => updateDayStatus(selectedOrder.id, idx, e.target.value)}
+                                      className="border rounded px-2 py-1 text-xs bg-card"
+                                      onClick={(e) => e.stopPropagation()}
+                                    >
+                                      <option value="pending">Čaká sa</option>
+                                      <option value="in_progress">Pripravuje sa</option>
+                                      <option value="ready">Pripravené</option>
+                                      <option value="delivered">Doručené</option>
+                                      <option value="cancelled">Zrušené</option>
+                                    </select>
+                                  ) : (
+                                    <Badge className={getStatusColor(day.status || "pending")}>
+                                      {getStatusLabel(day.status || "pending")}
+                                    </Badge>
+                                  )}
+                                </div>
+                              </div>
                               {!isAdmin && (
                                 <Button
                                   variant="destructive"
