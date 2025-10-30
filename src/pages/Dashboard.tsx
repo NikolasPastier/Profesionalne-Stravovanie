@@ -13,10 +13,11 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { User, Package, Mail, Lock, Trash2, MapPin, UtensilsCrossed, Calendar, Users } from "lucide-react";
+import { User, Package, Mail, Lock, Trash2, MapPin, UtensilsCrossed, Calendar, Users, Tag } from "lucide-react";
 import { MenuManagement } from "@/components/admin/MenuManagement";
 import { WeeklyMenuManagement } from "@/components/admin/WeeklyMenuManagement";
 import { UserStatistics } from "@/components/admin/UserStatistics";
+import { PromoCodeUsers } from "@/components/admin/PromoCodeUsers";
 import {
   Dialog,
   DialogContent,
@@ -956,6 +957,13 @@ const Dashboard = () => {
                   <Users className="h-4 w-4" />
                   <span className="text-xs md:text-sm">Používatelia</span>
                 </TabsTrigger>
+                <TabsTrigger
+                  value="promo"
+                  className="w-1/2 md:w-auto flex-1 md:flex-none flex-col md:flex-row items-center justify-center gap-1 md:gap-2 py-3"
+                >
+                  <Tag className="h-4 w-4" />
+                  <span className="text-xs md:text-sm">Promo kódy</span>
+                </TabsTrigger>
               </TabsList>
 
               <TabsContent value="orders" className="mt-6">
@@ -1029,6 +1037,10 @@ const Dashboard = () => {
 
               <TabsContent value="users" className="mt-6">
                 <UserStatistics />
+              </TabsContent>
+
+              <TabsContent value="promo" className="mt-6">
+                <PromoCodeUsers />
               </TabsContent>
             </Tabs>
           </div>

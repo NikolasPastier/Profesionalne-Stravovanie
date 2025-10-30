@@ -42,6 +42,7 @@ const Onboarding = () => {
     health_issues: "",
     phone: "",
     address: "",
+    promo_code: "",
   });
 
   const handleInputChange = (field: string, value: string) => {
@@ -101,6 +102,7 @@ const Onboarding = () => {
         health_issues: formData.health_issues,
         phone: formData.phone,
         address: formData.address,
+        promo_code: formData.promo_code.toLowerCase() === "vitaj5" ? formData.promo_code.toLowerCase() : null,
       });
 
       if (error) throw error;
@@ -327,6 +329,20 @@ const Onboarding = () => {
                   onChange={(e) => handleInputChange("health_issues", e.target.value)}
                   className="border-primary/20"
                 />
+              </div>
+
+              <div>
+                <Label htmlFor="promo_code">Promo kód (voliteľné)</Label>
+                <Input
+                  id="promo_code"
+                  value={formData.promo_code}
+                  onChange={(e) => handleInputChange("promo_code", e.target.value)}
+                  placeholder="VITAJ5"
+                  className="border-primary/20"
+                />
+                <p className="text-sm text-muted-foreground mt-1">
+                  Zadajte kód VITAJ5 pre získanie 5% zľavy na vašu prvú objednávku
+                </p>
               </div>
 
               <div className="flex gap-4">

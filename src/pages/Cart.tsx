@@ -149,6 +149,16 @@ const Cart = () => {
         toast.error("Košík je prázdny");
         return false;
       }
+
+      // Check if user has promo code and hasn't used discount yet
+      const { data: profile } = await supabase
+        .from("user_profiles")
+        .select("promo_code, promo_discount_used")
+        .eq("user_id", userId)
+        .single();
+
+      const hasPromoCode = profile?.promo_code?.toLowerCase() === "vitaj5";
+      const canUseDiscount = hasPromoCode && !profile?.promo_discount_used;
       const orderData = tempOrderData || {
         name,
         email,
@@ -195,7 +205,12 @@ const Cart = () => {
 
         // For weekly menu, calculate price based on actual number of selected days
         const numberOfDays = item.type === "week" ? item.selectedDays?.length || item.menu?.items?.length || 5 : 1;
-        const weekPrice = dayPrice * numberOfDays;
+        let weekPrice = dayPrice * numberOfDays;
+
+        // Apply 5% discount if user has promo code and hasn't used it
+        if (canUseDiscount) {
+          weekPrice = weekPrice * 0.95;
+        }
 
         // Calculate delivery fee per item (divide by number of items)
         const itemDeliveryFee = deliveryFee / cartItems.length;
@@ -225,7 +240,7 @@ const Cart = () => {
           }],
           menu_size: item.size,
           calories: getCaloriesFromSize(item.size, item.customNutrition),
-          total_price: dayPrice + itemDeliveryFee,
+          total_price: (canUseDiscount ? dayPrice * 0.95 : dayPrice) + itemDeliveryFee,
           delivery_fee: itemDeliveryFee,
           delivery_type: orderData.deliveryType,
           address: orderData.address,
@@ -253,14 +268,20 @@ const Cart = () => {
         }
       }
 
-      // Update user profile
+      // Update user profile and mark promo discount as used
       await supabase.from("user_profiles").upsert({
         user_id: userId,
         name: orderData.name,
         email: orderData.email,
         phone: orderData.phone,
-        address: orderData.address
+        address: orderData.address,
+        promo_discount_used: canUseDiscount ? true : profile?.promo_discount_used
       });
+
+      // Show discount message if applied
+      if (canUseDiscount) {
+        toast.success("Promo kód uplatnený! Získali ste 5% zľavu.");
+      }
 
       // Send order confirmation emails
       try {

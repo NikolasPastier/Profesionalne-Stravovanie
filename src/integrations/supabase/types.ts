@@ -267,6 +267,8 @@ export type Database = {
           notes: string | null
           phone: string | null
           preferences: string[] | null
+          promo_code: string | null
+          promo_discount_used: boolean | null
           updated_at: string | null
           user_id: string
           weight: number | null
@@ -291,6 +293,8 @@ export type Database = {
           notes?: string | null
           phone?: string | null
           preferences?: string[] | null
+          promo_code?: string | null
+          promo_discount_used?: boolean | null
           updated_at?: string | null
           user_id: string
           weight?: number | null
@@ -315,6 +319,8 @@ export type Database = {
           notes?: string | null
           phone?: string | null
           preferences?: string[] | null
+          promo_code?: string | null
+          promo_discount_used?: boolean | null
           updated_at?: string | null
           user_id?: string
           weight?: number | null
