@@ -7,6 +7,7 @@ import { useState, useEffect } from "react";
 import { useScrollAnimation } from "@/hooks/use-scroll-animation";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
+import { PromoPopup } from "@/components/PromoPopup";
 import client1 from "@/assets/client-1.png";
 import client2 from "@/assets/client-2.png";
 import client3 from "@/assets/client-3.png";
@@ -93,6 +94,7 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
+      <PromoPopup />
 
       {/* Hero Section */}
       <section className="pt-32 pb-20 px-4 relative overflow-hidden">
