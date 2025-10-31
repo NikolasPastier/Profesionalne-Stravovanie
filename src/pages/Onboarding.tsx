@@ -102,7 +102,7 @@ const Onboarding = () => {
         health_issues: formData.health_issues,
         phone: formData.phone,
         address: formData.address,
-        promo_code: formData.promo_code.toLowerCase() === "vitaj5" ? formData.promo_code.toLowerCase() : null,
+        promo_code: ["vitaj5", "cyril5", "meggy5"].includes(formData.promo_code.toLowerCase()) ? formData.promo_code.toLowerCase() : null,
       });
 
       if (error) throw error;
@@ -337,11 +337,11 @@ const Onboarding = () => {
                   id="promo_code"
                   value={formData.promo_code}
                   onChange={(e) => handleInputChange("promo_code", e.target.value)}
-                  placeholder="VITAJ5"
+                  placeholder="VITAJ5, CYRIL5 alebo MEGGY5"
                   className="border-primary/20"
                 />
                 <p className="text-sm text-muted-foreground mt-1">
-                  Zadajte kód VITAJ5 pre získanie 5% zľavy na vašu prvú objednávku
+                  Zadajte kód VITAJ5, CYRIL5 alebo MEGGY5 pre získanie 5% zľavy na vašu prvú objednávku
                 </p>
               </div>
 

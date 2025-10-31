@@ -157,7 +157,7 @@ const Cart = () => {
         .eq("user_id", userId)
         .single();
 
-      const hasPromoCode = profile?.promo_code?.toLowerCase() === "vitaj5";
+      const hasPromoCode = ["vitaj5", "cyril5", "meggy5"].includes(profile?.promo_code?.toLowerCase() || "");
       const canUseDiscount = hasPromoCode && !profile?.promo_discount_used;
       const orderData = tempOrderData || {
         name,
