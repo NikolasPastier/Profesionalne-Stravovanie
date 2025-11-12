@@ -20,9 +20,24 @@ const Auth = () => {
   const [loading, setLoading] = useState(false);
   const [passwordError, setPasswordError] = useState("");
   const [confirmPasswordError, setConfirmPasswordError] = useState("");
+  const [showPasswordReset, setShowPasswordReset] = useState(false);
+  const [resetEmail, setResetEmail] = useState("");
+  const [isResettingPassword, setIsResettingPassword] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmNewPassword, setConfirmNewPassword] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
+    // Check for password reset token in URL
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    const accessToken = hashParams.get('access_token');
+    const type = hashParams.get('type');
+    
+    if (type === 'recovery' && accessToken) {
+      setIsResettingPassword(true);
+      toast.info("Zadajte svoje nové heslo");
+    }
+
     // Set up auth state listener FIRST
     const {
       data: { subscription },
@@ -45,6 +60,11 @@ const Auth = () => {
               }
             });
         }, 0);
+      }
+      
+      if (event === "PASSWORD_RECOVERY") {
+        setIsResettingPassword(true);
+        toast.info("Zadajte svoje nové heslo");
       }
     });
 
@@ -197,6 +217,84 @@ const Auth = () => {
     }
   };
 
+  const handlePasswordReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+        redirectTo: `${window.location.origin}/auth`,
+      });
+
+      if (error) {
+        if (import.meta.env.DEV) {
+          console.error("Password reset error:", error);
+        }
+        toast.error("Nepodarilo sa odoslať reset link. Skúste to prosím znova.");
+      } else {
+        toast.success("Reset link bol odoslaný na váš email!");
+        setShowPasswordReset(false);
+        setResetEmail("");
+      }
+    } catch (error: any) {
+      if (import.meta.env.DEV) {
+        console.error("Password reset error:", error);
+      }
+      toast.error("Nepodarilo sa odoslať reset link. Skúste to prosím znova.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePasswordUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Clear previous errors
+    setPasswordError("");
+    setConfirmPasswordError("");
+
+    // Validate new password
+    const pwdError = validatePassword(newPassword);
+    if (pwdError) {
+      setPasswordError(pwdError);
+      return;
+    }
+
+    if (newPassword !== confirmNewPassword) {
+      setConfirmPasswordError("Heslá sa nezhodujú");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword,
+      });
+
+      if (error) {
+        if (import.meta.env.DEV) {
+          console.error("Password update error:", error);
+        }
+        toast.error("Nepodarilo sa zmeniť heslo. Skúste to prosím znova.");
+      } else {
+        toast.success("Heslo úspešne zmenené! Môžete sa teraz prihlásiť.");
+        setIsResettingPassword(false);
+        setNewPassword("");
+        setConfirmNewPassword("");
+        // Clear the hash from URL
+        window.history.replaceState(null, "", window.location.pathname);
+      }
+    } catch (error: any) {
+      if (import.meta.env.DEV) {
+        console.error("Password update error:", error);
+      }
+      toast.error("Nepodarilo sa zmeniť heslo. Skúste to prosím znova.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
@@ -211,82 +309,191 @@ const Auth = () => {
             <TabsContent value="signin">
               <Card className="card-premium">
                 <CardHeader>
-                  <CardTitle className="text-gradient-gold text-2xl">Prihlásenie</CardTitle>
-                  <CardDescription>Prihlás sa do svojho účtu</CardDescription>
+                  <CardTitle className="text-gradient-gold text-2xl">
+                    {isResettingPassword ? "Nové heslo" : showPasswordReset ? "Reset hesla" : "Prihlásenie"}
+                  </CardTitle>
+                  <CardDescription>
+                    {isResettingPassword 
+                      ? "Zadajte svoje nové heslo" 
+                      : showPasswordReset 
+                      ? "Zadajte váš email pre reset hesla" 
+                      : "Prihlás sa do svojho účtu"
+                    }
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <form onSubmit={handleSignIn} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="signin-email">Email</Label>
-                      <Input
-                        id="signin-email"
-                        type="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        required
-                        placeholder="vas@email.sk"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="signin-password">Heslo</Label>
-                      <div className="relative">
-                        <Input
-                          id="signin-password"
-                          type={showPassword ? "text" : "password"}
-                          value={password}
-                          onChange={(e) => setPassword(e.target.value)}
-                          required
-                          placeholder="••••••••"
-                          className="pr-10"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowPassword(!showPassword)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                        >
-                          {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                        </button>
+                  {isResettingPassword ? (
+                    <form onSubmit={handlePasswordUpdate} className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="new-password">Nové heslo</Label>
+                        <div className="relative">
+                          <Input
+                            id="new-password"
+                            type={showPassword ? "text" : "password"}
+                            value={newPassword}
+                            onChange={(e) => {
+                              setNewPassword(e.target.value);
+                              setPasswordError("");
+                            }}
+                            required
+                            placeholder="••••••••"
+                            className={`pr-10 ${passwordError ? "border-destructive" : ""}`}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                          >
+                            {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                          </button>
+                        </div>
+                        {passwordError && <p className="text-sm text-destructive mt-1">{passwordError}</p>}
+                        {!passwordError && (
+                          <p className="text-xs text-muted-foreground mt-1">Min. 8 znakov, veľké a malé písmená, čísla</p>
+                        )}
                       </div>
-                    </div>
-                    <Button type="submit" className="w-full bg-primary hover:glow-gold-strong" disabled={loading}>
-                      {loading ? "Prihlasovanie..." : "Prihlásiť sa"}
-                    </Button>
-                  </form>
-                  <div className="relative my-4">
-                    <div className="absolute inset-0 flex items-center">
-                      <span className="w-full border-t" />
-                    </div>
-                    <div className="relative flex justify-center text-xs uppercase">
-                      <span className="bg-card px-2 text-muted-foreground">Alebo</span>
-                    </div>
-                  </div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="w-full"
-                    onClick={handleGoogleSignIn}
-                    disabled={loading}
-                  >
-                    <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
-                      <path
-                        d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                        fill="#4285F4"
-                      />
-                      <path
-                        d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                        fill="#34A853"
-                      />
-                      <path
-                        d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                        fill="#FBBC05"
-                      />
-                      <path
-                        d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                        fill="#EA4335"
-                      />
-                    </svg>
-                    Prihlásiť sa cez Google
-                  </Button>
+                      <div className="space-y-2">
+                        <Label htmlFor="confirm-new-password">Potvrdenie hesla</Label>
+                        <div className="relative">
+                          <Input
+                            id="confirm-new-password"
+                            type={showConfirmPassword ? "text" : "password"}
+                            value={confirmNewPassword}
+                            onChange={(e) => {
+                              setConfirmNewPassword(e.target.value);
+                              setConfirmPasswordError("");
+                            }}
+                            required
+                            placeholder="••••••••"
+                            className={`pr-10 ${confirmPasswordError ? "border-destructive" : ""}`}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                          >
+                            {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                          </button>
+                        </div>
+                        {confirmPasswordError && <p className="text-sm text-destructive mt-1">{confirmPasswordError}</p>}
+                      </div>
+                      <Button type="submit" className="w-full bg-primary hover:glow-gold-strong" disabled={loading}>
+                        {loading ? "Mením heslo..." : "Zmeniť heslo"}
+                      </Button>
+                    </form>
+                  ) : showPasswordReset ? (
+                    <form onSubmit={handlePasswordReset} className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="reset-email">Email</Label>
+                        <Input
+                          id="reset-email"
+                          type="email"
+                          value={resetEmail}
+                          onChange={(e) => setResetEmail(e.target.value)}
+                          required
+                          placeholder="vas@email.sk"
+                        />
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Pošleme vám link na reset hesla
+                        </p>
+                      </div>
+                      <Button type="submit" className="w-full bg-primary hover:glow-gold-strong" disabled={loading}>
+                        {loading ? "Odosielam..." : "Odoslať reset link"}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        className="w-full"
+                        onClick={() => setShowPasswordReset(false)}
+                      >
+                        Späť na prihlásenie
+                      </Button>
+                    </form>
+                  ) : (
+                    <>
+                      <form onSubmit={handleSignIn} className="space-y-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="signin-email">Email</Label>
+                          <Input
+                            id="signin-email"
+                            type="email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            required
+                            placeholder="vas@email.sk"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="signin-password">Heslo</Label>
+                          <div className="relative">
+                            <Input
+                              id="signin-password"
+                              type={showPassword ? "text" : "password"}
+                              value={password}
+                              onChange={(e) => setPassword(e.target.value)}
+                              required
+                              placeholder="••••••••"
+                              className="pr-10"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setShowPassword(!showPassword)}
+                              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                            >
+                              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                            </button>
+                          </div>
+                        </div>
+                        <div className="flex justify-end">
+                          <button
+                            type="button"
+                            onClick={() => setShowPasswordReset(true)}
+                            className="text-sm text-primary hover:underline"
+                          >
+                            Zabudli ste heslo?
+                          </button>
+                        </div>
+                        <Button type="submit" className="w-full bg-primary hover:glow-gold-strong" disabled={loading}>
+                          {loading ? "Prihlasovanie..." : "Prihlásiť sa"}
+                        </Button>
+                      </form>
+                      <div className="relative my-4">
+                        <div className="absolute inset-0 flex items-center">
+                          <span className="w-full border-t" />
+                        </div>
+                        <div className="relative flex justify-center text-xs uppercase">
+                          <span className="bg-card px-2 text-muted-foreground">Alebo</span>
+                        </div>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="w-full"
+                        onClick={handleGoogleSignIn}
+                        disabled={loading}
+                      >
+                        <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
+                          <path
+                            d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                            fill="#4285F4"
+                          />
+                          <path
+                            d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                            fill="#34A853"
+                          />
+                          <path
+                            d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                            fill="#FBBC05"
+                          />
+                          <path
+                            d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                            fill="#EA4335"
+                          />
+                        </svg>
+                        Prihlásiť sa cez Google
+                      </Button>
+                    </>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>
