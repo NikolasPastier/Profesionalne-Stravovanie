@@ -200,6 +200,26 @@ const Cart = () => {
         return false;
       }
 
+  // Helper function to map Slovak day names to ISO dates
+      const mapDayNameToDate = (dayName: string, startDate: string): string => {
+        const dayMapping: { [key: string]: number } = {
+          "Pondelok": 0,
+          "Utorok": 1,
+          "Streda": 2,
+          "Štvrtok": 3,
+          "Piatok": 4,
+          "Sobota": 5,
+          "Nedeľa": 6
+        };
+        
+        const offset = dayMapping[dayName];
+        if (offset === undefined) return startDate;
+        
+        const date = new Date(startDate);
+        date.setDate(date.getDate() + offset);
+        return date.toISOString().split('T')[0]; // Return as "YYYY-MM-DD"
+      };
+
       // Create orders for each cart item
       for (const item of cartItems) {
         // Calculate price based on size, vegetarian option, and delivery region
@@ -217,10 +237,26 @@ const Cart = () => {
 
         // Calculate delivery fee per item (divide by number of items)
         const itemDeliveryFee = deliveryFee / cartItems.length;
+        
+        // Fetch the start_date for weekly menus to calculate actual dates
+        let menuStartDate: string | null = null;
+        if (item.type === "week" && item.menuId) {
+          const { data: menuData } = await supabase
+            .from('weekly_menus')
+            .select('start_date')
+            .eq('id', item.menuId)
+            .single();
+          menuStartDate = menuData?.start_date || null;
+        }
         const orderDetails = item.type === "week" ? {
           user_id: userId,
           menu_id: item.menuId,
-          items: item.menu.items.map((day: any) => ({ ...day, status: "pending" })),
+          items: item.menu.items.map((day: any) => ({ 
+            ...day, 
+            day: menuStartDate ? mapDayNameToDate(day.day, menuStartDate) : day.day,
+            dayName: day.day,
+            status: "pending" 
+          })),
           menu_size: item.size,
           calories: getCaloriesFromSize(item.size, item.customNutrition),
           total_price: weekPrice + itemDeliveryFee,
@@ -291,7 +327,7 @@ const Cart = () => {
 
       // Send order confirmation emails
       try {
-        const orderItems = cartItems.map(item => {
+        const orderItems = await Promise.all(cartItems.map(async item => {
           const isVegetarian = item.isVegetarian || false;
           const dayPrice = getDayPrice(item.size, isVegetarian, deliveryRegion);
           const numberOfDays = item.type === "week" ? item.selectedDays?.length || item.menu?.items?.length || 5 : 1;
@@ -303,15 +339,24 @@ const Cart = () => {
             price: price
           };
 
-          // Add detailed days and meals for weekly orders
-          if (item.type === "week" && item.menu?.items) {
+          // Add detailed days and meals for weekly orders with actual dates
+          if (item.type === "week" && item.menu?.items && item.menuId) {
+            const { data: menuData } = await supabase
+              .from('weekly_menus')
+              .select('start_date')
+              .eq('id', item.menuId)
+              .single();
+            
+            const menuStartDate = menuData?.start_date;
+            
             orderItem.days = item.menu.items.map((day: any) => ({
-              day: day.day,
+              day: menuStartDate ? mapDayNameToDate(day.day, menuStartDate) : day.day,
+              dayName: day.day,
               meals: day.meals || []
             }));
           }
           return orderItem;
-        });
+        }));
         const now = new Date();
         const orderDate = now.toLocaleDateString("sk-SK", {
           year: "numeric",
