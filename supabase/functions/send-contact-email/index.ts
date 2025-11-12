@@ -216,7 +216,7 @@ const handler = async (req: Request): Promise<Response> => {
           </div>
           <p style="font-size: 14px; color: #6b7280;">
             S pozdravom,<br>
-            <strong>VIP Stravovanie</strong><br>
+            <strong>Profesionálne Stravovanie</strong><br>
             <a href="https://profesionalnestravovanie.sk" style="color: #2563eb;">profesionalnestravovanie.sk</a>
           </p>
         </div>
