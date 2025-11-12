@@ -19,6 +19,7 @@ const profileSchema = z.object({
     .trim()
     .regex(/^\+?[0-9]{9,15}$/, "Neplatné telefónne číslo"),
   address: z.string().trim().min(10, "Adresa musí mať aspoň 10 znakov").max(500, "Adresa je príliš dlhá"),
+  kraj: z.string().min(1, "Musíte vybrať kraj"),
   health_issues: z.string().max(2000, "Text je príliš dlhý").optional(),
 });
 
@@ -42,6 +43,7 @@ const Onboarding = () => {
     health_issues: "",
     phone: "",
     address: "",
+    kraj: "",
     promo_code: "",
   });
 
@@ -59,6 +61,7 @@ const Onboarding = () => {
         weight: parseFloat(formData.weight),
         phone: formData.phone,
         address: formData.address,
+        kraj: formData.kraj,
         health_issues: formData.health_issues,
       });
 
@@ -102,6 +105,7 @@ const Onboarding = () => {
         health_issues: formData.health_issues,
         phone: formData.phone,
         address: formData.address,
+        kraj: formData.kraj,
         promo_code: ["vitaj5", "cyril5", "meggy5", "martin5"].includes(formData.promo_code.toLowerCase()) ? formData.promo_code.toLowerCase() : null,
       });
 
@@ -197,6 +201,25 @@ const Onboarding = () => {
                   onChange={(e) => handleInputChange("phone", e.target.value)}
                   className="border-primary/20"
                 />
+              </div>
+
+              <div>
+                <Label htmlFor="kraj">Kraj *</Label>
+                <Select value={formData.kraj} onValueChange={(value) => handleInputChange("kraj", value)}>
+                  <SelectTrigger className="border-primary/20">
+                    <SelectValue placeholder="Vyberte kraj" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Nitriansky">Nitriansky kraj</SelectItem>
+                    <SelectItem value="Bratislavský">Bratislavský kraj</SelectItem>
+                    <SelectItem value="Trenčiansky">Trenčiansky kraj</SelectItem>
+                    <SelectItem value="Trnavský">Trnavský kraj</SelectItem>
+                    <SelectItem value="Žilinský">Žilinský kraj</SelectItem>
+                    <SelectItem value="Banskobystrický">Banskobystrický kraj</SelectItem>
+                    <SelectItem value="Prešovský">Prešovský kraj</SelectItem>
+                    <SelectItem value="Košický">Košický kraj</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               <div>

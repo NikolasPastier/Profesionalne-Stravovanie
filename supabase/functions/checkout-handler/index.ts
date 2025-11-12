@@ -15,6 +15,7 @@ interface CheckoutRequest {
   name: string;
   phone: string;
   address: string;
+  kraj: string;
   note?: string;
   deliveryType: string;
 }

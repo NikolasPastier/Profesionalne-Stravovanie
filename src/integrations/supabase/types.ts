@@ -159,6 +159,7 @@ export type Database = {
           email: string | null
           id: string
           items: Json
+          kraj: string | null
           menu_id: string | null
           menu_size: string
           name: string | null
@@ -179,6 +180,7 @@ export type Database = {
           email?: string | null
           id?: string
           items: Json
+          kraj?: string | null
           menu_id?: string | null
           menu_size: string
           name?: string | null
@@ -199,6 +201,7 @@ export type Database = {
           email?: string | null
           id?: string
           items?: Json
+          kraj?: string | null
           menu_id?: string | null
           menu_size?: string
           name?: string | null
@@ -263,6 +266,7 @@ export type Database = {
           health_issues: string | null
           height: number | null
           id: string
+          kraj: string | null
           name: string | null
           notes: string | null
           phone: string | null
@@ -289,6 +293,7 @@ export type Database = {
           health_issues?: string | null
           height?: number | null
           id?: string
+          kraj?: string | null
           name?: string | null
           notes?: string | null
           phone?: string | null
@@ -315,6 +320,7 @@ export type Database = {
           health_issues?: string | null
           height?: number | null
           id?: string
+          kraj?: string | null
           name?: string | null
           notes?: string | null
           phone?: string | null

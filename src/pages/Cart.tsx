@@ -18,6 +18,7 @@ const orderSchema = z.object({
   email: z.string().trim().email("Neplatný email").max(255, "Email je príliš dlhý"),
   phone: z.string().trim().regex(/^\+?[0-9]{9,15}$/, "Neplatné telefónne číslo"),
   address: z.string().trim().min(10, "Adresa musí mať aspoň 10 znakov").max(500, "Adresa je príliš dlhá"),
+  kraj: z.string().min(1, "Musíte vybrať kraj"),
   note: z.string().max(1000, "Poznámka je príliš dlhá").optional()
 });
 const Cart = () => {
@@ -26,6 +27,7 @@ const Cart = () => {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
+  const [kraj, setKraj] = useState("");
   const [note, setNote] = useState("");
   const [deliveryType, setDeliveryType] = useState("weekly");
   const [loading, setLoading] = useState(false);
@@ -92,6 +94,7 @@ const Cart = () => {
           setEmail(profile.email || session.user.email || "");
           setPhone(profile.phone || "");
           setAddress(profile.address || "");
+          setKraj(profile.kraj || "");
         } else {
           setEmail(session.user.email || "");
         }
@@ -99,24 +102,23 @@ const Cart = () => {
     });
   }, []);
 
-  // Calculate delivery fee based on address and number of days
-  const calculateDeliveryFee = (address: string, numberOfDays: number = 1) => {
-    const lowerAddress = address.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-
-    // Nitra a okolie - zdarma (do 20km)
-    const nitraRegions = ["nitra", "lapas", "beladice", "luzianky", "ludanice", "cabaj", "capor", "jelšovce", "jeľsovce", "ivanka", "lehota", "parovske haje", "mlynarce", "janíkovce", "janikovec", "branc", "drazovce"];
-    if (nitraRegions.some(region => lowerAddress.includes(region))) {
+  // Calculate delivery fee based on kraj (region) and number of days
+  const calculateDeliveryFee = (kraj: string, numberOfDays: number = 1) => {
+    const normalizedKraj = kraj.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    
+    // Nitriansky kraj - free delivery
+    if (normalizedKraj.includes("nitriansky")) {
       return {
         fee: 0.0,
-        region: "nitra",
+        region: "nitriansky",
         perDayFee: 0
       };
     }
-
-    // Všetky ostatné regióny (Sereď, Trnava, Bratislava, iné) - €6.00 per day
+    
+    // All other regions - €6.00 per day
     return {
       fee: 6.0 * numberOfDays,
-      region: lowerAddress.includes("sered") ? "sered" : lowerAddress.includes("trnava") ? "trnava" : lowerAddress.includes("bratislava") ? "bratislava" : "other",
+      region: normalizedKraj.includes("bratislavsky") ? "bratislavsky" : "other",
       perDayFee: 6.0
     };
   };
@@ -129,20 +131,20 @@ const Cart = () => {
     return sum + 1;
   }, 0);
 
-  // Auto-detect delivery region when address or cart changes
+  // Auto-detect delivery fee when kraj or cart changes
   useEffect(() => {
-    if (address.length >= 5) {
+    if (kraj) {
       const {
         fee,
         region
-      } = calculateDeliveryFee(address, totalDays);
+      } = calculateDeliveryFee(kraj, totalDays);
       setDeliveryFee(fee);
       setDeliveryRegion(region);
     } else {
       setDeliveryFee(0);
       setDeliveryRegion("");
     }
-  }, [address, cartItems]);
+  }, [kraj, cartItems]);
   const createOrder = async (userId: string) => {
     try {
       if (!cartItems || cartItems.length === 0) {
@@ -164,6 +166,7 @@ const Cart = () => {
         email,
         phone,
         address,
+        kraj,
         note,
         deliveryType
       };
@@ -224,6 +227,7 @@ const Cart = () => {
           delivery_fee: itemDeliveryFee,
           delivery_type: orderData.deliveryType,
           address: orderData.address,
+          kraj: orderData.kraj,
           phone: orderData.phone,
           name: orderData.name,
           email: orderData.email,
@@ -244,6 +248,7 @@ const Cart = () => {
           delivery_fee: itemDeliveryFee,
           delivery_type: orderData.deliveryType,
           address: orderData.address,
+          kraj: orderData.kraj,
           phone: orderData.phone,
           name: orderData.name,
           email: orderData.email,
@@ -275,6 +280,7 @@ const Cart = () => {
         email: orderData.email,
         phone: orderData.phone,
         address: orderData.address,
+        kraj: orderData.kraj,
         promo_discount_used: canUseDiscount ? true : profile?.promo_discount_used
       });
 
@@ -437,6 +443,7 @@ const Cart = () => {
         email,
         phone,
         address,
+        kraj,
         note
       });
       if (!validationResult.success) {
@@ -485,6 +492,7 @@ const Cart = () => {
           name,
           phone,
           address,
+          kraj,
           note,
           deliveryType
         }
@@ -508,6 +516,7 @@ const Cart = () => {
           email,
           phone,
           address,
+          kraj,
           note,
           deliveryType
         });
@@ -519,6 +528,7 @@ const Cart = () => {
           email,
           phone,
           address,
+          kraj,
           note,
           deliveryType
         });
@@ -690,6 +700,30 @@ const Cart = () => {
                 <div className="space-y-2">
                   <Label htmlFor="address">Adresa doručenia *</Label>
                   <Textarea id="address" value={address} onChange={e => setAddress(e.target.value)} required placeholder="Ulica, číslo domu, mesto, PSČ" />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="kraj">Kraj *</Label>
+                  <Select value={kraj} onValueChange={setKraj} required>
+                    <SelectTrigger className="border-primary/20">
+                      <SelectValue placeholder="Vyberte kraj" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Nitriansky">Nitriansky kraj</SelectItem>
+                      <SelectItem value="Bratislavský">Bratislavský kraj</SelectItem>
+                      <SelectItem value="Trenčiansky">Trenčiansky kraj</SelectItem>
+                      <SelectItem value="Trnavský">Trnavský kraj</SelectItem>
+                      <SelectItem value="Žilinský">Žilinský kraj</SelectItem>
+                      <SelectItem value="Banskobystrický">Banskobystrický kraj</SelectItem>
+                      <SelectItem value="Prešovský">Prešovský kraj</SelectItem>
+                      <SelectItem value="Košický">Košický kraj</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {kraj && (
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {kraj === "Nitriansky" ? "🎉 Bezplatná doprava!" : "Doprava: €6.00 za deň"}
+                    </p>
+                  )}
                 </div>
 
                 <div className="space-y-2">
