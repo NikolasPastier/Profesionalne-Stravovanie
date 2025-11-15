@@ -397,7 +397,9 @@ const Cart = () => {
         const firstItem = cartItems[0];
         const menuSize = firstItem.isVegetarian ? "vegetarian" : "standard";
         const calories = getCaloriesFromSize(firstItem.size, firstItem.customNutrition);
-        await supabase.functions.invoke("send-order-email", {
+        
+        console.log("Sending order confirmation email...");
+        const emailResult = await supabase.functions.invoke("send-order-email", {
           body: {
             orderId: userId,
             customerName: orderData.name,
@@ -415,9 +417,17 @@ const Cart = () => {
             deliveryType: orderData.deliveryType
           }
         });
-        console.log("Order confirmation emails sent successfully");
-      } catch (emailError) {
+        
+        if (emailResult.error) {
+          console.error("Email sending error:", emailResult.error);
+          toast.error("Objednávka vytvorená, ale email sa nepodarilo odoslať. Skontrolujte si dashboard.");
+        } else {
+          console.log("Order confirmation emails sent successfully");
+        }
+      } catch (emailError: any) {
         console.error("Failed to send order emails:", emailError);
+        console.error("Email error details:", emailError?.message || emailError);
+        toast.error("Objednávka vytvorená, ale email sa nepodarilo odoslať.");
         // Don't fail the order if email fails
       }
       localStorage.removeItem("cart");

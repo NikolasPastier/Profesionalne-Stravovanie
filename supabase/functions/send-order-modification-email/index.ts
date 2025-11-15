@@ -28,6 +28,8 @@ const handler = async (req: Request): Promise<Response> => {
     
     const adminEmail = Deno.env.get("ADMIN_EMAIL");
     const fromEmail = Deno.env.get("FROM_EMAIL") || "onboarding@resend.dev";
+    
+    console.log("Preparing to send order modification email with FROM_EMAIL:", fromEmail);
 
     if (!adminEmail) {
       throw new Error("Admin email not configured");
@@ -89,8 +91,21 @@ const handler = async (req: Request): Promise<Response> => {
     });
   } catch (error: any) {
     console.error("Error sending order modification email:", error);
+    console.error("Error details:", JSON.stringify(error, null, 2));
+    
+    // Check for Resend-specific errors
+    if (error.message?.includes("API key")) {
+      console.error("Resend API key issue detected");
+    }
+    if (error.message?.includes("domain")) {
+      console.error("Domain verification issue detected - check Resend dashboard");
+    }
+    
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message,
+        details: "Check edge function logs for more information"
+      }),
       {
         status: 500,
         headers: { "Content-Type": "application/json", ...corsHeaders },
