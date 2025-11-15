@@ -37,7 +37,7 @@ const Cart = () => {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [tempOrderData, setTempOrderData] = useState<any>(null);
-  const [deliveryRegion, setDeliveryRegion] = useState("nitra");
+  const [deliveryRegion, setDeliveryRegion] = useState("");
   const [deliveryFee, setDeliveryFee] = useState(0);
   const navigate = useNavigate();
 
@@ -110,7 +110,7 @@ const Cart = () => {
     if (normalizedKraj.includes("nitriansky")) {
       return {
         fee: 0.0,
-        region: "nitriansky",
+        region: "nitra",
         perDayFee: 0
       };
     }
@@ -118,7 +118,7 @@ const Cart = () => {
     // All other regions - €6.00 per day
     return {
       fee: 6.0 * numberOfDays,
-      region: normalizedKraj.includes("bratislavsky") ? "bratislavsky" : "other",
+      region: normalizedKraj.includes("bratislavsky") ? "bratislava" : "other",
       perDayFee: 6.0
     };
   };
