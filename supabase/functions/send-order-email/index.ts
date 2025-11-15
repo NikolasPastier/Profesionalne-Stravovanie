@@ -50,7 +50,9 @@ const handler = async (req: Request): Promise<Response> => {
     console.log("Order data:", JSON.stringify(orderData, null, 2));
 
     const adminEmail = Deno.env.get("ADMIN_EMAIL");
-    const fromEmail = Deno.env.get("FROM_EMAIL");
+    const fromEmail = Deno.env.get("FROM_EMAIL") || "onboarding@resend.dev";
+    
+    console.log("Preparing to send emails with FROM_EMAIL:", fromEmail);
     if (!adminEmail || !fromEmail) {
       return new Response(JSON.stringify({ error: "Missing admin / from email" }), {
         status: 500,
@@ -383,11 +385,27 @@ const handler = async (req: Request): Promise<Response> => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e: any) {
-    console.error(e);
-    return new Response(JSON.stringify({ error: e.message }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    console.error("Error in send-order-email function:", e);
+    console.error("Error details:", JSON.stringify(e, null, 2));
+    
+    // Check for Resend-specific errors
+    if (e.message?.includes("API key")) {
+      console.error("Resend API key issue detected");
+    }
+    if (e.message?.includes("domain")) {
+      console.error("Domain verification issue detected - check Resend dashboard");
+    }
+    
+    return new Response(
+      JSON.stringify({ 
+        error: e.message,
+        details: "Check edge function logs for more information"
+      }),
+      {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      }
+    );
   }
 };
 
