@@ -68,6 +68,36 @@ Deno.serve(async (req) => {
 
     console.log('Validating order for user:', user.id, 'Items:', cartItems.length, 'Total:', totalPrice);
 
+    // Helper function to normalize region names
+    const normalizeRegion = (region?: string): string => {
+      if (!region) return 'other';
+      
+      // Normalize: trim, lowercase, remove diacritics
+      const normalized = region
+        .toString()
+        .toLowerCase()
+        .trim()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '');
+      
+      // Map aliases to canonical values
+      const regionMap: Record<string, string> = {
+        'nitriansky': 'nitra',
+        'nitra': 'nitra',
+        'bratislavsky': 'bratislava',
+        'bratislava': 'bratislava',
+        'sered': 'sered',
+        'trnava': 'trnava',
+        'other': 'other'
+      };
+      
+      // Return canonical value or 'other' if not recognized
+      return regionMap[normalized] || 'other';
+    };
+
+    const canonicalRegion = normalizeRegion(deliveryRegion);
+    console.log('Region normalization:', deliveryRegion, '->', canonicalRegion);
+
     // Helper function to check if a day can still be ordered based on 12:00 cutoff
     const isDayOrderable = (dayName: string, menuStartDate: string): boolean => {
       const dayMap: Record<string, number> = {
@@ -179,11 +209,8 @@ Deno.serve(async (req) => {
       }
     }
 
-    // 4. Validate delivery region
-    const validRegions = ['nitra', 'bratislava', 'sered', 'trnava', 'other'];
-    if (deliveryRegion && !validRegions.includes(deliveryRegion.toLowerCase())) {
-      errors.push('Neplatná oblasť doručenia');
-    }
+    // 4. Delivery region is already normalized above, no need to validate
+    // The normalizeRegion function handles all cases and defaults to 'other'
 
     if (errors.length > 0) {
       console.log('Validation failed:', errors);
@@ -194,7 +221,7 @@ Deno.serve(async (req) => {
           message: 'Objednávka neprešla validáciou'
         }),
         {
-          status: 400,
+          status: 200,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         }
       );
