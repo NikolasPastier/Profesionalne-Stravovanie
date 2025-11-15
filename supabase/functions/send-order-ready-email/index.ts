@@ -83,31 +83,6 @@ const handler = async (req: Request): Promise<Response> => {
   try {
     console.log("Processing order ready email request");
 
-    // Verify authentication
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
-      console.error("Missing authorization header");
-      return new Response(
-        JSON.stringify({ error: "Unauthorized" }),
-        { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
-      );
-    }
-
-    const supabaseClient = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_ANON_KEY") ?? "",
-      { global: { headers: { Authorization: authHeader } } }
-    );
-
-    const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
-    if (userError || !user) {
-      console.error("Authentication failed:", userError);
-      return new Response(
-        JSON.stringify({ error: "Unauthorized" }),
-        { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
-      );
-    }
-
     const fromEmail = Deno.env.get("FROM_EMAIL");
 
     if (!fromEmail) {
