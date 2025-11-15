@@ -102,6 +102,29 @@ const Cart = () => {
     });
   }, []);
 
+  // Helper function to normalize region names (matching backend logic)
+  const normalizeRegion = (region: string): string => {
+    if (!region) return 'other';
+    
+    const normalized = region
+      .toLowerCase()
+      .trim()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '');
+    
+    const regionMap: Record<string, string> = {
+      'nitriansky': 'nitra',
+      'nitra': 'nitra',
+      'bratislavsky': 'bratislava',
+      'bratislava': 'bratislava',
+      'sered': 'sered',
+      'trnava': 'trnava',
+      'other': 'other'
+    };
+    
+    return regionMap[normalized] || 'other';
+  };
+
   // Calculate delivery fee based on kraj (region) and number of days
   const calculateDeliveryFee = (kraj: string, numberOfDays: number = 1) => {
     const normalizedKraj = kraj.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
@@ -172,6 +195,9 @@ const Cart = () => {
       };
 
       // Validate order server-side before creating
+      // Normalize region before validation (matching backend logic)
+      const canonicalRegion = normalizeRegion(deliveryRegion || calculateDeliveryFee(orderData.kraj, totalDays).region || 'other');
+      
       try {
         const {
           data: validationResult,
@@ -180,7 +206,7 @@ const Cart = () => {
           body: {
             cartItems: cartItems,
             totalPrice: subtotalPrice + deliveryFee,
-            deliveryRegion: deliveryRegion
+            deliveryRegion: canonicalRegion
           }
         });
         if (validationError) {
@@ -188,6 +214,7 @@ const Cart = () => {
           toast.error("Nepodarilo sa overiť objednávku. Skúste to prosím znova.");
           return false;
         }
+        // Backend returns 200 with valid: false for validation errors
         if (validationResult && !validationResult.valid) {
           const errorMessages = validationResult.errors?.join(", ") || validationResult.message || "Objednávka nie je validná";
           toast.error(errorMessages);
@@ -749,6 +776,9 @@ const Cart = () => {
 
                 <div className="space-y-2">
                   <Label htmlFor="kraj">Kraj *</Label>
+                  <p className="text-sm text-muted-foreground mb-2">
+                    Doprava zdarma v Nitrianskom kraji. Ostatné regióny: €6/deň.
+                  </p>
                   <Select value={kraj} onValueChange={setKraj} required>
                     <SelectTrigger className="border-primary/20">
                       <SelectValue placeholder="Vyberte kraj" />
